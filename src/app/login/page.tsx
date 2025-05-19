@@ -1522,7 +1522,7 @@ export default function LoginPage() {
             {/* Front wheel with detailed rim */}
             <div style={{ 
               position: 'absolute', 
-              bottom: '0', 
+              bottom: '-9px', 
               left: '20px', 
               width: '22px', 
               height: '22px', 
@@ -1545,7 +1545,7 @@ export default function LoginPage() {
             {/* Middle wheel with detailed rim */}
             <div style={{ 
               position: 'absolute', 
-              bottom: '0', 
+              bottom: '-9px', 
               left: '90px', 
               width: '22px', 
               height: '22px', 
@@ -1568,7 +1568,7 @@ export default function LoginPage() {
             {/* Rear wheel with detailed rim */}
             <div style={{ 
               position: 'absolute', 
-              bottom: '0', 
+              bottom: '-9px', 
               right: '20px', 
               width: '22px', 
               height: '22px', 
@@ -1988,7 +1988,7 @@ export default function LoginPage() {
             {/* Front wheel with detailed rim */}
             <div style={{ 
               position: 'absolute', 
-              bottom: '0', 
+              bottom: '-7px', 
               right: '20px', 
               width: '18px', 
               height: '18px', 
@@ -2739,7 +2739,7 @@ export default function LoginPage() {
             {/* Front wheel with detailed rim */}
             <div style={{ 
               position: 'absolute', 
-              bottom: '0', 
+              bottom: '-7px', 
               right: '15px', 
               width: '20px', 
               height: '20px', 

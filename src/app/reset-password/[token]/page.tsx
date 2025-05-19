@@ -1,9 +1,8 @@
-// src/app/reset-password/[token]/page.tsx
 "use client";
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+// Removed unused Link import
 
 interface ResetPasswordPageProps {
   params: {
@@ -65,8 +64,9 @@ export default function ResetPasswordPage({ params }: ResetPasswordPageProps) {
       setTimeout(() => {
         router.push('/login');
       }, 2000);
-    } catch (err: any) {
-      setError(err.message || 'Something went wrong');
+    } catch (err) {
+      // Remove explicit ": any" type annotation
+      setError(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
       setLoading(false);
     }

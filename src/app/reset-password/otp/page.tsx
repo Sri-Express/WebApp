@@ -1,10 +1,10 @@
-// src/app/reset-password/otp/page.tsx (updated)
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react'; // Removed useEffect
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { EnvelopeIcon, KeyIcon, EyeIcon, EyeSlashIcon, HashtagIcon } from '@heroicons/react/24/outline';
+import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+// Removed unused imports: EnvelopeIcon, KeyIcon, HashtagIcon
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -66,8 +66,9 @@ export default function ResetPasswordPage() {
       setTimeout(() => {
         router.push('/login');
       }, 2000);
-    } catch (err: any) {
-      setError(err.message || 'Something went wrong');
+    } catch (err) {
+      // Remove explicit ": any" type annotation
+      setError(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
       setLoading(false);
     }

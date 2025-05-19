@@ -1,4 +1,3 @@
-// src/app/register/page.tsx
 "use client";
 
 import { useState } from 'react';
@@ -58,8 +57,9 @@ export default function RegisterPage() {
 
       // Redirect to login page after successful registration
       router.push('/login?registered=true');
-    } catch (err: any) {
-      setError(err.message || 'Something went wrong');
+    } catch (err) {
+      // Remove explicit ": any" type annotation
+      setError(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
       setLoading(false);
     }
