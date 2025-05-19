@@ -1,22 +1,25 @@
-// src/app/forgot-password/page.tsx (improved flow)
 "use client";
 
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { EnvelopeIcon, HashtagIcon } from '@heroicons/react/24/outline';
+import { EnvelopeIcon } from '@heroicons/react/24/outline';
+// Removed unused HashtagIcon
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
-  const [otp, setOtp] = useState('');
-  const [showOtpField, setShowOtpField] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleRequestOtp = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email) {
+      setError('Email is required');
+      return;
+    }
+
     setLoading(true);
     setError('');
     setMessage('');
@@ -36,24 +39,20 @@ export default function ForgotPasswordPage() {
         throw new Error(data.message || 'Something went wrong');
       }
 
-      setMessage('Password reset OTP has been sent to your email. Please check your inbox and spam folders.');
-      setShowOtpField(true);
-    } catch (err: any) {
-      setError(err.message || 'Something went wrong');
+      setMessage('Password reset instructions have been sent to your email');
+      
+      // Redirect to OTP verification after 2 seconds
+      setTimeout(() => {
+        router.push(`/reset-password/otp?email=${encodeURIComponent(email)}`);
+      }, 2000);
+    } catch (err) {
+      // Remove explicit ": any" type annotation
+      setError(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
       setLoading(false);
     }
   };
 
-  const goToResetPage = () => {
-    if (!otp) {
-      setError('Please enter the OTP sent to your email');
-      return;
-    }
-    router.push(`/reset-password/otp?email=${encodeURIComponent(email)}&otp=${encodeURIComponent(otp)}`);
-  };
-
-  // Inline styles
   const containerStyle = {
     minHeight: '100vh',
     display: 'flex',
@@ -108,20 +107,26 @@ export default function ForgotPasswordPage() {
     marginBottom: '0.5rem',
   };
 
+  const inputContainerStyle = {
+    position: 'relative' as const,
+    marginBottom: '1.5rem',
+  };
+
   const inputStyle = {
     width: '100%',
     padding: '0.625rem 0.75rem',
+    paddingLeft: '2.5rem', // Space for the icon
     border: '1px solid #dadce0',
     borderRadius: '0.375rem',
-    marginBottom: '1rem',
     outline: 'none',
   };
 
-  const otpInputStyle = {
-    ...inputStyle,
-    fontFamily: 'monospace',
-    letterSpacing: '0.25rem',
-    textAlign: 'center' as const,
+  const iconStyle = {
+    position: 'absolute' as const,
+    left: '0.75rem',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    color: '#5f6368',
   };
 
   const buttonStyle = {
@@ -150,70 +155,46 @@ export default function ForgotPasswordPage() {
     <div style={containerStyle}>
       <div style={cardStyle}>
         <h1 style={headingStyle}>ශ්‍රී Express</h1>
-        <p style={subtitleStyle}>Forgot Password</p>
+        <p style={subtitleStyle}>Forgot Your Password?</p>
 
         {error && <div style={errorStyle}>{error}</div>}
         {message && <div style={messageStyle}>{message}</div>}
 
-        {!showOtpField ? (
-          // Step 1: Request OTP form
-          <form onSubmit={handleRequestOtp}>
-            <label style={labelStyle} htmlFor="email">
-              Email
-            </label>
+        <form onSubmit={handleSubmit}>
+          <label style={labelStyle} htmlFor="email">
+            Email
+          </label>
+          <div style={inputContainerStyle}>
             <input
               style={inputStyle}
               type="email"
               id="email"
+              placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
             />
-
-            <button
-              style={{
-                ...buttonStyle,
-                opacity: loading ? 0.7 : 1,
-              }}
-              type="submit"
-              disabled={loading}
-            >
-              {loading ? 'Sending...' : 'Send Reset OTP'}
-            </button>
-          </form>
-        ) : (
-          // Step 2: Enter OTP form
-          <div>
-            <label style={labelStyle} htmlFor="otp">
-              OTP Code
-            </label>
-            <input
-              style={otpInputStyle}
-              type="text"
-              id="otp"
-              placeholder="Enter 6-digit code"
-              maxLength={6}
-              value={otp}
-              onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, ''))}
-              required
-            />
-
-            <button
-              style={{
-                ...buttonStyle,
-                marginTop: '1rem',
-              }}
-              onClick={goToResetPage}
-            >
-              Continue to Reset Password
-            </button>
+            <div style={iconStyle}>
+              <EnvelopeIcon width={20} height={20} />
+            </div>
           </div>
-        )}
+
+          <button
+            style={{
+              ...buttonStyle,
+              opacity: loading ? 0.7 : 1,
+            }}
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? 'Sending...' : 'Reset Password'}
+          </button>
+        </form>
 
         <p style={linkTextStyle}>
           Remember your password?{' '}
           <Link href="/login" style={linkStyle}>
-            Back to Login
+            Sign in
           </Link>
         </p>
       </div>
