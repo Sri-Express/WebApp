@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-export default function ResetPasswordClient({ token }: { token: string }) {
+// Export as named export, not default
+export function ResetPasswordClient({ token }: { token: string }) {
   const router = useRouter();
   
   const [formData, setFormData] = useState({
