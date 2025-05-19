@@ -1,16 +1,13 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-// Removed unused Link import
 
-interface ResetPasswordPageProps {
-  params: {
-    token: string;
-  };
-}
-
-export default function ResetPasswordPage({ params }: ResetPasswordPageProps) {
+export default function ResetPasswordPage({
+  params,
+}: {
+  params: { token: string };
+}) {
   const router = useRouter();
   const { token } = params;
   
@@ -65,7 +62,6 @@ export default function ResetPasswordPage({ params }: ResetPasswordPageProps) {
         router.push('/login');
       }, 2000);
     } catch (err) {
-      // Remove explicit ": any" type annotation
       setError(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
       setLoading(false);
