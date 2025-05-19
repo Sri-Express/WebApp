@@ -48,8 +48,12 @@ export default function LoginPage() {
       // Save token to localStorage or using a state management library
       localStorage.setItem('token', data.token);
       router.push('/dashboard');
-    } catch (err: any) {
-      setError(err.message || 'Something went wrong');
+    } catch (err: unknown) { // <<< 1. FIX: TypeScript 'any' type
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('Something went wrong');
+      }
     } finally {
       setLoading(false);
     }
@@ -3413,7 +3417,7 @@ export default function LoginPage() {
             boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
           }}>
             <p style={{ color: '#ffffff', fontSize: '0.95rem' }}>
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "} {/* <<< 2. FIX: Unescaped apostrophe */}
               <Link
                 href="/register"
                 style={{
