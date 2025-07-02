@@ -1,6 +1,6 @@
-"use client";
 
-import { useState } from 'react';
+"use client";
+// FIX: Removed 'useState' from the import as it was unused.
 import Link from 'next/link';
 import { 
   MapIcon, 
@@ -18,7 +18,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 export default function LandingPage() {
-  const [activeFeature, setActiveFeature] = useState(0);
+  // Removed unused useState: const [activeFeature, setActiveFeature] = useState(0);
 
   // Animation keyframes - same as login page
   const animationStyles = `
@@ -245,10 +245,9 @@ export default function LandingPage() {
       
       {/* Complete animated background - EXACTLY same as login page */}
       <div style={{
-        position: 'fixed',
+        position: 'absolute',
         inset: 0,
-        background: 'linear-gradient(to bottom right, #fffbeb, #fef3c7, #fde68a)',
-        zIndex: -1
+        background: 'linear-gradient(to bottom right, #fffbeb, #fef3c7, #fde68a)'
       }}>
         {/* Main Road */}
         <div style={{
@@ -514,6 +513,59 @@ export default function LandingPage() {
               
               <div style={{ 
                 position: 'absolute', 
+                bottom: '72px', 
+                right: '8px',
+                width: '65px', 
+                height: '5px', 
+                background: '#4c1d95',
+                borderRadius: '2px',
+                boxShadow: '0 -1px 2px rgba(0, 0, 0, 0.3)'
+              }}></div>
+              
+              <div style={{ 
+                position: 'absolute', 
+                bottom: '5px', 
+                left: '0', 
+                width: '15px', 
+                height: '18px',
+                background: 'linear-gradient(135deg, #9f1239 0%, #7f1d1d 100%)',
+                clipPath: 'polygon(0 0, 100% 0, 100% 35%, 50% 100%, 0 35%)',
+                borderRadius: '2px'
+              }}></div>
+              
+              <div style={{ 
+                position: 'absolute', 
+                bottom: '15px', 
+                left: '3px', 
+                width: '10px', 
+                height: '4px', 
+                backgroundColor: '#64748b',
+                borderRadius: '1px',
+                border: '1px solid #475569'
+              }}></div>
+              
+              <div style={{ 
+                position: 'absolute', 
+                top: '3px', 
+                left: '40px', 
+                padding: '3px 5px',
+                backgroundColor: '#fef3c7', 
+                borderRadius: '3px',
+                border: '1px solid #7f1d1d',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)',
+                fontSize: '9px',
+                fontWeight: 'bold',
+                color: '#7f1d1d',
+                whiteSpace: 'nowrap',
+                fontFamily: "'Noto Sans Sinhala', 'Iskoola Pota', sans-serif",
+                zIndex: 10,
+                transform: 'rotate(-2deg)'
+              }}>
+                දුම්රිය සේවය
+              </div>
+              
+              <div style={{ 
+                position: 'absolute', 
                 bottom: '42px', 
                 left: '22px', 
                 width: '14px', 
@@ -564,7 +616,49 @@ export default function LandingPage() {
                   borderRadius: '50%',
                   opacity: 0.9
                 }}></div>
+                <div className="animate-steam animation-delay-600" style={{ 
+                  position: 'absolute', 
+                  top: '-14px', 
+                  left: '-4px', 
+                  width: '17px', 
+                  height: '15px', 
+                  background: 'radial-gradient(circle, rgba(255, 255, 255, 0.95) 30%, rgba(255, 255, 255, 0.6) 80%)', 
+                  borderRadius: '50%',
+                  opacity: 0.8
+                }}></div>
+                <div className="animate-steam animation-delay-800" style={{ 
+                  position: 'absolute', 
+                  top: '-22px', 
+                  left: '1px', 
+                  width: '22px', 
+                  height: '20px', 
+                  background: 'radial-gradient(circle, rgba(255, 255, 255, 0.95) 30%, rgba(255, 255, 255, 0.6) 80%)', 
+                  borderRadius: '50%',
+                  opacity: 0.7
+                }}></div>
               </div>
+              
+              <div style={{ 
+                position: 'absolute', 
+                bottom: '42px', 
+                left: '45px', 
+                width: '8px', 
+                height: '10px', 
+                background: 'linear-gradient(to bottom, #fbbf24 0%, #d97706 100%)', 
+                borderRadius: '4px 4px 8px 8px',
+                border: '1px solid #b45309'
+              }}></div>
+              
+              <div style={{ 
+                position: 'absolute', 
+                bottom: '42px', 
+                left: '60px', 
+                width: '6px', 
+                height: '8px', 
+                background: 'linear-gradient(to bottom, #94a3b8 0%, #64748b 100%)', 
+                borderRadius: '3px 3px 0 0',
+                border: '1px solid #475569'
+              }}></div>
               
               <div className="animate-wheels" style={{ 
                 position: 'absolute', 
@@ -577,7 +671,53 @@ export default function LandingPage() {
                 border: '3px solid #cbd5e1',
                 boxSizing: 'border-box',
                 boxShadow: '0 3px 6px rgba(0, 0, 0, 0.4)'
-              }}></div>
+              }}>
+                <div style={{ 
+                  position: 'absolute', 
+                  top: '1px', 
+                  left: '1px',
+                  right: '1px',
+                  bottom: '1px',
+                  borderRadius: '50%',
+                  border: '2px solid #94a3b8'
+                }}></div>
+                <div style={{ 
+                  position: 'absolute', 
+                  top: 'calc(50% - 1px)', 
+                  left: '0', 
+                  width: '100%', 
+                  height: '2px', 
+                  backgroundColor: '#cbd5e1' 
+                }}></div>
+                <div style={{ 
+                  position: 'absolute', 
+                  top: '0', 
+                  left: 'calc(50% - 1px)', 
+                  width: '2px', 
+                  height: '100%', 
+                  backgroundColor: '#cbd5e1' 
+                }}></div>
+                <div style={{ 
+                  position: 'absolute', 
+                  top: '0', 
+                  left: '0', 
+                  width: '100%', 
+                  height: '100%', 
+                  background: 'conic-gradient(from 0deg, transparent 0deg, transparent 10deg, #cbd5e1 10deg, #cbd5e1 15deg, transparent 15deg, transparent 55deg, #cbd5e1 55deg, #cbd5e1 60deg, transparent 60deg, transparent 100deg, #cbd5e1 100deg, #cbd5e1 105deg, transparent 105deg, transparent 145deg, #cbd5e1 145deg, #cbd5e1 150deg, transparent 150deg, transparent 190deg, #cbd5e1 190deg, #cbd5e1 195deg, transparent 195deg, transparent 235deg, #cbd5e1 235deg, #cbd5e1 240deg, transparent 240deg, transparent 280deg, #cbd5e1 280deg, #cbd5e1 285deg, transparent 285deg, transparent 325deg, #cbd5e1 325deg, #cbd5e1 330deg, transparent 330deg)',
+                  borderRadius: '50%'
+                }}></div>
+                <div style={{ 
+                  position: 'absolute', 
+                  top: 'calc(50% - 4px)', 
+                  left: 'calc(50% - 4px)', 
+                  width: '8px', 
+                  height: '8px', 
+                  background: 'radial-gradient(circle, #f8fafc 0%, #cbd5e1 100%)', 
+                  borderRadius: '50%',
+                  border: '1px solid #64748b',
+                  boxShadow: 'inset 0 0 2px rgba(0, 0, 0, 0.2)'
+                }}></div>
+              </div>
               
               <div className="animate-wheels" style={{ 
                 position: 'absolute', 
@@ -590,6 +730,156 @@ export default function LandingPage() {
                 border: '3px solid #cbd5e1',
                 boxSizing: 'border-box',
                 boxShadow: '0 3px 6px rgba(0, 0, 0, 0.4)'
+              }}>
+                <div style={{ 
+                  position: 'absolute', 
+                  top: '1px', 
+                  left: '1px',
+                  right: '1px',
+                  bottom: '1px',
+                  borderRadius: '50%',
+                  border: '2px solid #94a3b8'
+                }}></div>
+                <div style={{ 
+                  position: 'absolute', 
+                  top: 'calc(50% - 1px)', 
+                  left: '0', 
+                  width: '100%', 
+                  height: '2px', 
+                  backgroundColor: '#cbd5e1' 
+                }}></div>
+                <div style={{ 
+                  position: 'absolute', 
+                  top: '0', 
+                  left: 'calc(50% - 1px)', 
+                  width: '2px', 
+                  height: '100%', 
+                  backgroundColor: '#cbd5e1' 
+                }}></div>
+                <div style={{ 
+                  position: 'absolute', 
+                  top: '0', 
+                  left: '0', 
+                  width: '100%', 
+                  height: '100%', 
+                  background: 'conic-gradient(from 0deg, transparent 0deg, transparent 10deg, #cbd5e1 10deg, #cbd5e1 15deg, transparent 15deg, transparent 55deg, #cbd5e1 55deg, #cbd5e1 60deg, transparent 60deg, transparent 100deg, #cbd5e1 100deg, #cbd5e1 105deg, transparent 105deg, transparent 145deg, #cbd5e1 145deg, #cbd5e1 150deg, transparent 150deg, transparent 190deg, #cbd5e1 190deg, #cbd5e1 195deg, transparent 195deg, transparent 235deg, #cbd5e1 235deg, #cbd5e1 240deg, transparent 240deg, transparent 280deg, #cbd5e1 280deg, #cbd5e1 285deg, transparent 285deg, transparent 325deg, #cbd5e1 325deg, #cbd5e1 330deg, transparent 330deg)',
+                  borderRadius: '50%'
+                }}></div>
+                <div style={{ 
+                  position: 'absolute', 
+                  top: 'calc(50% - 4px)', 
+                  left: 'calc(50% - 4px)', 
+                  width: '8px', 
+                  height: '8px', 
+                  background: 'radial-gradient(circle, #f8fafc 0%, #cbd5e1 100%)', 
+                  borderRadius: '50%',
+                  border: '1px solid #64748b',
+                  boxShadow: 'inset 0 0 2px rgba(0, 0, 0, 0.2)'
+                }}></div>
+              </div>
+              
+              <div className="animate-wheels" style={{ 
+                position: 'absolute', 
+                bottom: '0', 
+                right: '60px',
+                width: '24px', 
+                height: '24px', 
+                background: 'linear-gradient(135deg, #64748b 0%, #334155 100%)', 
+                borderRadius: '50%',
+                border: '3px solid #cbd5e1',
+                boxSizing: 'border-box',
+                boxShadow: '0 3px 6px rgba(0, 0, 0, 0.4)'
+              }}>
+                <div style={{ 
+                  position: 'absolute', 
+                  top: '1px', 
+                  left: '1px',
+                  right: '1px',
+                  bottom: '1px',
+                  borderRadius: '50%',
+                  border: '2px solid #94a3b8'
+                }}></div>
+                <div style={{ 
+                  position: 'absolute', 
+                  top: 'calc(50% - 1px)', 
+                  left: '0', 
+                  width: '100%', 
+                  height: '2px', 
+                  backgroundColor: '#cbd5e1' 
+                }}></div>
+                <div style={{ 
+                  position: 'absolute', 
+                  top: '0', 
+                  left: 'calc(50% - 1px)', 
+                  width: '2px', 
+                  height: '100%', 
+                  backgroundColor: '#cbd5e1' 
+                }}></div>
+                <div style={{ 
+                  position: 'absolute', 
+                  top: '0', 
+                  left: '0', 
+                  width: '100%', 
+                  height: '100%', 
+                  background: 'conic-gradient(from 0deg, transparent 0deg, transparent 10deg, #cbd5e1 10deg, #cbd5e1 15deg, transparent 15deg, transparent 55deg, #cbd5e1 55deg, #cbd5e1 60deg, transparent 60deg, transparent 100deg, #cbd5e1 100deg, #cbd5e1 105deg, transparent 105deg, transparent 145deg, #cbd5e1 145deg, #cbd5e1 150deg, transparent 150deg, transparent 190deg, #cbd5e1 190deg, #cbd5e1 195deg, transparent 195deg, transparent 235deg, #cbd5e1 235deg, #cbd5e1 240deg, transparent 240deg, transparent 280deg, #cbd5e1 280deg, #cbd5e1 285deg, transparent 285deg, transparent 325deg, #cbd5e1 325deg, #cbd5e1 330deg, transparent 330deg)',
+                  borderRadius: '50%'
+                }}></div>
+                <div style={{ 
+                  position: 'absolute', 
+                  top: 'calc(50% - 4px)', 
+                  left: 'calc(50% - 4px)', 
+                  width: '8px', 
+                  height: '8px', 
+                  background: 'radial-gradient(circle, #f8fafc 0%, #cbd5e1 100%)', 
+                  borderRadius: '50%',
+                  border: '1px solid #64748b',
+                  boxShadow: 'inset 0 0 2px rgba(0, 0, 0, 0.2)'
+                }}></div>
+              </div>
+              
+              <div style={{ 
+                position: 'absolute', 
+                bottom: '24px', 
+                left: '22px',
+                width: '30px', 
+                height: '8px', 
+                backgroundColor: '#64748b',
+                borderRadius: '4px',
+                border: '1px solid #475569',
+                zIndex: 3
+              }}>
+                <div className="animate-piston" style={{ 
+                  position: 'absolute', 
+                  top: '2px', 
+                  left: '3px',
+                  width: '22px', 
+                  height: '2px', 
+                  backgroundColor: '#94a3b8',
+                  borderRadius: '1px'
+                }}></div>
+              </div>
+              
+              <div style={{ 
+                position: 'absolute', 
+                bottom: '47px', 
+                right: '15px',
+                width: '15px', 
+                height: '12px', 
+                background: 'linear-gradient(135deg, #93c5fd 0%, #bfdbfe 50%, #93c5fd 100%)', 
+                borderRadius: '2px',
+                border: '2px solid #7f1d1d',
+                boxShadow: 'inset 0 0 4px rgba(255, 255, 255, 0.5)'
+              }}></div>
+              <div style={{ 
+                position: 'absolute', 
+                bottom: '47px', 
+                right: '40px',
+                width: '15px', 
+                height: '12px', 
+                background: 'linear-gradient(135deg, #93c5fd 0%, #bfdbfe 50%, #93c5fd 100%)', 
+                borderRadius: '2px',
+                border: '2px solid #7f1d1d',
+                boxShadow: 'inset 0 0 4px rgba(255, 255, 255, 0.5)'
               }}></div>
               
               <div className="animate-light-blink" style={{ 
@@ -622,6 +912,61 @@ export default function LandingPage() {
                 boxSizing: 'border-box',
                 border: '1px solid #881337',
                 boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
+              }}>
+                <div style={{ 
+                  position: 'absolute', 
+                  top: '18px', 
+                  left: '0', 
+                  width: '100%', 
+                  height: '3px', 
+                  backgroundColor: '#fbbf24', 
+                  opacity: 0.8
+                }}></div>
+              </div>
+              
+              <div style={{ 
+                position: 'absolute', 
+                bottom: '33px', 
+                left: '2px', 
+                width: '96%', 
+                height: '4px', 
+                background: 'linear-gradient(to bottom, #7f1d1d 0%, #881337 100%)', 
+                borderRadius: '40% 40% 0 0 / 100% 100% 0 0',
+                boxShadow: '0 -1px 2px rgba(0, 0, 0, 0.3)'
+              }}></div>
+              
+              <div style={{
+                position: 'absolute',
+                top: '5px',
+                left: '10px',
+                width: '15px',
+                height: '10px',
+                background: 'linear-gradient(135deg, #93c5fd 0%, #bfdbfe 50%, #93c5fd 100%)', 
+                borderRadius: '2px',
+                border: '1px solid #881337',
+                boxShadow: 'inset 0 0 3px rgba(255, 255, 255, 0.5)'
+              }}></div>
+              <div style={{
+                position: 'absolute',
+                top: '5px',
+                left: '35px',
+                width: '15px',
+                height: '10px',
+                background: 'linear-gradient(135deg, #93c5fd 0%, #bfdbfe 50%, #93c5fd 100%)', 
+                borderRadius: '2px',
+                border: '1px solid #881337',
+                boxShadow: 'inset 0 0 3px rgba(255, 255, 255, 0.5)'
+              }}></div>
+              <div style={{
+                position: 'absolute',
+                top: '5px',
+                left: '60px',
+                width: '15px',
+                height: '10px',
+                background: 'linear-gradient(135deg, #93c5fd 0%, #bfdbfe 50%, #93c5fd 100%)', 
+                borderRadius: '2px',
+                border: '1px solid #881337',
+                boxShadow: 'inset 0 0 3px rgba(255, 255, 255, 0.5)'
               }}></div>
               
               <div className="animate-wheels" style={{ 
@@ -635,7 +980,44 @@ export default function LandingPage() {
                 border: '3px solid #cbd5e1',
                 boxSizing: 'border-box',
                 boxShadow: '0 3px 6px rgba(0, 0, 0, 0.4)'
-              }}></div>
+              }}>
+                <div style={{ 
+                  position: 'absolute', 
+                  top: '1px', 
+                  left: '1px',
+                  right: '1px',
+                  bottom: '1px',
+                  borderRadius: '50%',
+                  border: '2px solid #94a3b8'
+                }}></div>
+                <div style={{ 
+                  position: 'absolute', 
+                  top: 'calc(50% - 1px)', 
+                  left: '0', 
+                  width: '100%', 
+                  height: '2px', 
+                  backgroundColor: '#cbd5e1' 
+                }}></div>
+                <div style={{ 
+                  position: 'absolute', 
+                  top: '0', 
+                  left: 'calc(50% - 1px)', 
+                  width: '2px', 
+                  height: '100%', 
+                  backgroundColor: '#cbd5e1' 
+                }}></div>
+                <div style={{ 
+                  position: 'absolute', 
+                  top: 'calc(50% - 3px)', 
+                  left: 'calc(50% - 3px)', 
+                  width: '6px', 
+                  height: '6px', 
+                  background: 'radial-gradient(circle, #f8fafc 0%, #cbd5e1 100%)', 
+                  borderRadius: '50%',
+                  border: '1px solid #64748b',
+                  boxShadow: 'inset 0 0 2px rgba(0, 0, 0, 0.2)'
+                }}></div>
+              </div>
               
               <div className="animate-wheels" style={{ 
                 position: 'absolute', 
@@ -648,7 +1030,44 @@ export default function LandingPage() {
                 border: '3px solid #cbd5e1',
                 boxSizing: 'border-box',
                 boxShadow: '0 3px 6px rgba(0, 0, 0, 0.4)'
-              }}></div>
+              }}>
+                <div style={{ 
+                  position: 'absolute', 
+                  top: '1px', 
+                  left: '1px',
+                  right: '1px',
+                  bottom: '1px',
+                  borderRadius: '50%',
+                  border: '2px solid #94a3b8'
+                }}></div>
+                <div style={{ 
+                  position: 'absolute', 
+                  top: 'calc(50% - 1px)', 
+                  left: '0', 
+                  width: '100%', 
+                  height: '2px', 
+                  backgroundColor: '#cbd5e1' 
+                }}></div>
+                <div style={{ 
+                  position: 'absolute', 
+                  top: '0', 
+                  left: 'calc(50% - 1px)', 
+                  width: '2px', 
+                  height: '100%', 
+                  backgroundColor: '#cbd5e1' 
+                }}></div>
+                <div style={{ 
+                  position: 'absolute', 
+                  top: 'calc(50% - 3px)', 
+                  left: 'calc(50% - 3px)', 
+                  width: '6px', 
+                  height: '6px', 
+                  background: 'radial-gradient(circle, #f8fafc 0%, #cbd5e1 100%)', 
+                  borderRadius: '50%',
+                  border: '1px solid #64748b',
+                  boxShadow: 'inset 0 0 2px rgba(0, 0, 0, 0.2)'
+                }}></div>
+              </div>
             </div>
             
             <div style={{ 
@@ -667,6 +1086,73 @@ export default function LandingPage() {
                 boxSizing: 'border-box',
                 border: '1px solid #701a75',
                 boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
+              }}>
+                <div style={{ 
+                  position: 'absolute', 
+                  top: '18px', 
+                  left: '0', 
+                  width: '100%', 
+                  height: '3px', 
+                  backgroundColor: '#fbbf24', 
+                  opacity: 0.8
+                }}></div>
+              </div>
+              
+              <div style={{ 
+                position: 'absolute', 
+                bottom: '33px', 
+                left: '2px', 
+                width: '96%', 
+                height: '4px', 
+                background: 'linear-gradient(to bottom, #701a75 0%, #86198f 100%)', 
+                borderRadius: '40% 40% 0 0 / 100% 100% 0 0',
+                boxShadow: '0 -1px 2px rgba(0, 0, 0, 0.3)'
+              }}></div>
+              
+              <div style={{
+                position: 'absolute',
+                top: '5px',
+                left: '10px',
+                width: '15px',
+                height: '10px',
+                background: 'linear-gradient(135deg, #93c5fd 0%, #bfdbfe 50%, #93c5fd 100%)', 
+                borderRadius: '2px',
+                border: '1px solid #701a75',
+                boxShadow: 'inset 0 0 3px rgba(255, 255, 255, 0.5)'
+              }}></div>
+              <div style={{
+                position: 'absolute',
+                top: '5px',
+                left: '35px',
+                width: '15px',
+                height: '10px',
+                background: 'linear-gradient(135deg, #93c5fd 0%, #bfdbfe 50%, #93c5fd 100%)', 
+                borderRadius: '2px',
+                border: '1px solid #701a75',
+                boxShadow: 'inset 0 0 3px rgba(255, 255, 255, 0.5)'
+              }}></div>
+              <div style={{
+                position: 'absolute',
+                top: '5px',
+                left: '60px',
+                width: '15px',
+                height: '10px',
+                background: 'linear-gradient(135deg, #93c5fd 0%, #bfdbfe 50%, #93c5fd 100%)', 
+                borderRadius: '2px',
+                border: '1px solid #701a75',
+                boxShadow: 'inset 0 0 3px rgba(255, 255, 255, 0.5)'
+              }}></div>
+              
+              <div className="animate-light-blink animation-delay-500" style={{ 
+                position: 'absolute', 
+                bottom: '15px', 
+                right: '3px', 
+                width: '6px', 
+                height: '6px', 
+                background: 'radial-gradient(circle, #fef3c7 0%, #f87171 100%)', 
+                borderRadius: '50%',
+                boxShadow: '0 0 8px #f87171',
+                border: '1px solid #7f1d1d'
               }}></div>
               
               <div className="animate-wheels" style={{ 
@@ -680,7 +1166,44 @@ export default function LandingPage() {
                 border: '3px solid #cbd5e1',
                 boxSizing: 'border-box',
                 boxShadow: '0 3px 6px rgba(0, 0, 0, 0.4)'
-              }}></div>
+              }}>
+                <div style={{ 
+                  position: 'absolute', 
+                  top: '1px', 
+                  left: '1px',
+                  right: '1px',
+                  bottom: '1px',
+                  borderRadius: '50%',
+                  border: '2px solid #94a3b8'
+                }}></div>
+                <div style={{ 
+                  position: 'absolute', 
+                  top: 'calc(50% - 1px)', 
+                  left: '0', 
+                  width: '100%', 
+                  height: '2px', 
+                  backgroundColor: '#cbd5e1' 
+                }}></div>
+                <div style={{ 
+                  position: 'absolute', 
+                  top: '0', 
+                  left: 'calc(50% - 1px)', 
+                  width: '2px', 
+                  height: '100%', 
+                  backgroundColor: '#cbd5e1' 
+                }}></div>
+                <div style={{ 
+                  position: 'absolute', 
+                  top: 'calc(50% - 3px)', 
+                  left: 'calc(50% - 3px)', 
+                  width: '6px', 
+                  height: '6px', 
+                  background: 'radial-gradient(circle, #f8fafc 0%, #cbd5e1 100%)', 
+                  borderRadius: '50%',
+                  border: '1px solid #64748b',
+                  boxShadow: 'inset 0 0 2px rgba(0, 0, 0, 0.2)'
+                }}></div>
+              </div>
               
               <div className="animate-wheels" style={{ 
                 position: 'absolute', 
@@ -693,12 +1216,59 @@ export default function LandingPage() {
                 border: '3px solid #cbd5e1',
                 boxSizing: 'border-box',
                 boxShadow: '0 3px 6px rgba(0, 0, 0, 0.4)'
+              }}>
+                <div style={{ 
+                  position: 'absolute', 
+                  top: '1px', 
+                  left: '1px',
+                  right: '1px',
+                  bottom: '1px',
+                  borderRadius: '50%',
+                  border: '2px solid #94a3b8'
+                }}></div>
+                <div style={{ 
+                  position: 'absolute', 
+                  top: 'calc(50% - 1px)', 
+                  left: '0', 
+                  width: '100%', 
+                  height: '2px', 
+                  backgroundColor: '#cbd5e1' 
+                }}></div>
+                <div style={{ 
+                  position: 'absolute', 
+                  top: '0', 
+                  left: 'calc(50% - 1px)', 
+                  width: '2px', 
+                  height: '100%', 
+                  backgroundColor: '#cbd5e1' 
+                }}></div>
+                <div style={{ 
+                  position: 'absolute', 
+                  top: 'calc(50% - 3px)', 
+                  left: 'calc(50% - 3px)', 
+                  width: '6px', 
+                  height: '6px', 
+                  background: 'radial-gradient(circle, #f8fafc 0%, #cbd5e1 100%)', 
+                  borderRadius: '50%',
+                  border: '1px solid #64748b',
+                  boxShadow: 'inset 0 0 2px rgba(0, 0, 0, 0.2)'
+                }}></div>
+              </div>
+              
+              <div style={{ 
+                position: 'absolute', 
+                bottom: '15px', 
+                left: '-8px', 
+                width: '10px', 
+                height: '4px', 
+                backgroundColor: '#64748b', 
+                borderRadius: '1px',
+                zIndex: 1
               }}></div>
             </div>
           </div>
         </div>
 
-        {/* START: All Vehicle Components from Login Page */}
         {/* Enhanced Yellow Public Bus - Main Road */}
         <div className="animate-car-right animation-delay-1000" style={{
           position: 'absolute',
@@ -722,6 +1292,75 @@ export default function LandingPage() {
               border: '1px solid #b45309',
               boxShadow: 'inset 0 -4px 10px rgba(0, 0, 0, 0.2), inset 2px 0 8px rgba(255, 255, 255, 0.3)' 
             }}></div>
+            
+            {/* Bus front/hood */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '6px', 
+              left: '0', 
+              width: '40px', 
+              height: '44px', 
+              background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)', 
+              borderRadius: '12px 5px 0 8px',
+              boxShadow: 'inset 1px 1px 5px rgba(255, 255, 255, 0.4)'
+            }}></div>
+            
+            {/* Bus front steps/entry */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '0', 
+              left: '40px', 
+              width: '25px', 
+              height: '48px', 
+              background: 'linear-gradient(to right, #f59e0b 0%, #fbbf24 100%)', 
+              borderLeft: '2px solid #b45309',
+              borderRight: '2px solid #b45309',
+              boxShadow: 'inset 0 -3px 6px rgba(0, 0, 0, 0.15)'
+            }}>
+              {/* Entry door with glass */}
+              <div style={{ 
+                position: 'absolute', 
+                top: '6px', 
+                left: '0', 
+                right: '0', 
+                height: '42px', 
+                background: 'linear-gradient(to right, rgba(219, 234, 254, 0.7) 0%, rgba(147, 197, 253, 0.7) 100%)', 
+                borderRadius: '3px',
+                border: '1px solid #d97706',
+                boxShadow: 'inset 0 0 5px rgba(255, 255, 255, 0.6)',
+                overflow: 'hidden'
+              }}>
+                {/* Door handle */}
+                <div style={{ 
+                  position: 'absolute', 
+                  top: '20px', 
+                  right: '3px', 
+                  width: '4px', 
+                  height: '8px', 
+                  background: 'linear-gradient(to bottom, #94a3b8 0%, #64748b 100%)', 
+                  borderRadius: '4px',
+                  border: '1px solid #475569'
+                }}></div>
+                
+                {/* Door divider/steps */}
+                <div style={{ 
+                  position: 'absolute', 
+                  top: '18px', 
+                  left: '0', 
+                  right: '0', 
+                  height: '1px', 
+                  backgroundColor: '#d97706' 
+                }}></div>
+                <div style={{ 
+                  position: 'absolute', 
+                  top: '28px', 
+                  left: '0', 
+                  right: '0', 
+                  height: '1px', 
+                  backgroundColor: '#d97706' 
+                }}></div>
+              </div>
+            </div>
             
             {/* Windows section */}
             <div style={{ 
@@ -749,6 +1388,7 @@ export default function LandingPage() {
                     borderRight: i < 4 ? '2px solid #d97706' : 'none',
                     position: 'relative'
                   }}>
+                    {/* Passenger silhouettes in windows */}
                     {i % 2 === 0 && (
                       <div style={{ 
                         position: 'absolute', 
@@ -766,11 +1406,163 @@ export default function LandingPage() {
               </div>
             </div>
             
+            {/* Bus roof */}
+            <div style={{
+              position: 'absolute',
+              bottom: '50px',
+              left: '5px',
+              right: '5px',
+              height: '8px',
+              background: 'linear-gradient(to bottom, #f59e0b 0%, #fbbf24 100%)',
+              borderRadius: '50% 50% 0 0 / 100% 100% 0 0',
+              border: '1px solid #b45309',
+              borderBottom: 'none',
+              boxShadow: '0 -2px 4px rgba(0, 0, 0, 0.1)'
+            }}></div>
+            
+            {/* Bus destination board */}
+            <div style={{
+              position: 'absolute',
+              top: '5px',
+              left: '40px',
+              width: '25px',
+              height: '13px',
+              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+              border: '1px solid #b45309',
+              borderRadius: '3px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)'
+            }}>
+              <div style={{ 
+                fontSize: '5px', 
+                fontWeight: 'bold', 
+                color: '#1f2937',
+                fontFamily: "'Noto Sans Sinhala', 'Iskoola Pota', sans-serif",
+                transform: 'scaleY(0.9)'
+              }}>
+                කොළඹ
+              </div>
+            </div>
+            
+            {/* Front lights */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '8px', 
+              left: '5px', 
+              width: '12px', 
+              height: '8px', 
+              background: 'linear-gradient(to right, #fef3c7 0%, #fcd34d 100%)', 
+              borderRadius: '40% 60% 60% 40% / 50% 50% 50% 50%',
+              border: '1px solid #b45309',
+              boxShadow: '0 0 10px rgba(252, 211, 77, 0.7)',
+              overflow: 'hidden'
+            }}>
+              <div style={{ 
+                position: 'absolute', 
+                top: '1px', 
+                left: '1px', 
+                width: '4px', 
+                height: '4px', 
+                background: 'radial-gradient(circle, #fef9c3 0%, #fef3c7 100%)', 
+                borderRadius: '50%' 
+              }}></div>
+            </div>
+            
+            {/* Front light beam effect */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '8px', 
+              left: '-20px', 
+              width: '30px', 
+              height: '12px', 
+              background: 'linear-gradient(to left, rgba(252, 211, 77, 0.2) 0%, rgba(252, 211, 77, 0) 100%)', 
+              borderRadius: '50%',
+              transform: 'scaleX(2)'
+            }}></div>
+            
+            {/* Turn signals */}
+            <div className="animate-light-blink animation-delay-300" style={{ 
+              position: 'absolute', 
+              bottom: '18px', 
+              left: '5px', 
+              width: '6px', 
+              height: '6px', 
+              background: 'radial-gradient(circle, #fef3c7 0%, #fcd34d 100%)', 
+              borderRadius: '50%',
+              border: '1px solid #b45309',
+              boxShadow: '0 0 8px rgba(252, 211, 77, 0.6)'
+            }}></div>
+            
+            {/* Rear lights */}
+            <div className="animate-light-blink animation-delay-700" style={{ 
+              position: 'absolute', 
+              bottom: '18px', 
+              right: '5px', 
+              width: '10px', 
+              height: '6px', 
+              background: 'radial-gradient(circle, #f87171 50%, #ef4444 100%)', 
+              borderRadius: '2px',
+              border: '1px solid #7f1d1d',
+              boxShadow: '0 0 8px rgba(239, 68, 68, 0.6)'
+            }}></div>
+            
+            {/* Bus Company Logo */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '30px', 
+              right: '20px', 
+              width: '25px', 
+              height: '15px', 
+              backgroundColor: 'rgba(255, 255, 255, 0.9)', 
+              borderRadius: '8px',
+              border: '1px solid #b45309',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
+            }}>
+              <div style={{ 
+                fontSize: '4px', 
+                fontWeight: 'bold', 
+                color: '#b45309',
+                lineHeight: '1',
+                textAlign: 'center'
+              }}>
+                <div>ශ්‍රී</div>
+                <div style={{ marginTop: '1px' }}>EXPRESS</div>
+              </div>
+            </div>
+            
             {/* Front wheel with detailed rim */}
             <div style={{ 
               position: 'absolute', 
               bottom: '-9px', 
               left: '20px', 
+              width: '22px', 
+              height: '22px', 
+              backgroundColor: '#0f172a', 
+              borderRadius: '50%',
+              border: '4px solid #94a3b8',
+              boxSizing: 'border-box',
+              boxShadow: '0 3px 5px rgba(0, 0, 0, 0.5)',
+              overflow: 'hidden'
+            }}>
+              <div className="animate-wheels" style={{
+                position: 'absolute',
+                inset: '1px',
+                borderRadius: '50%',
+                border: '2px solid #64748b',
+                background: 'radial-gradient(circle at center, #e2e8f0 15%, transparent 15%), conic-gradient(#cbd5e1 0deg, #cbd5e1 30deg, transparent 30deg, transparent 60deg, #cbd5e1 60deg, #cbd5e1 90deg, transparent 90deg, transparent 120deg, #cbd5e1 120deg, #cbd5e1 150deg, transparent 150deg, transparent 180deg, #cbd5e1 180deg, #cbd5e1 210deg, transparent 210deg, transparent 240deg, #cbd5e1 240deg, #cbd5e1 270deg, transparent 270deg, transparent 300deg, #cbd5e1 300deg, #cbd5e1 330deg, transparent 330deg, transparent 360deg)'
+              }}></div>
+            </div>
+            
+            {/* Middle wheel with detailed rim */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '-9px', 
+              left: '90px', 
               width: '22px', 
               height: '22px', 
               backgroundColor: '#0f172a', 
@@ -812,31 +1604,197 @@ export default function LandingPage() {
               }}></div>
             </div>
             
-            {/* Front headlight */}
+            {/* Wheel arches */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '22px', 
+              left: '20px', 
+              width: '26px', 
+              height: '12px', 
+              borderTop: '2px solid #b45309', 
+              borderLeft: '2px solid #b45309', 
+              borderRight: '2px solid #b45309', 
+              borderRadius: '50% 50% 0 0',
+              borderBottom: 'none'
+            }}></div>
+            
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '22px', 
+              left: '90px', 
+              width: '26px', 
+              height: '12px', 
+              borderTop: '2px solid #b45309', 
+              borderLeft: '2px solid #b45309', 
+              borderRight: '2px solid #b45309', 
+              borderRadius: '50% 50% 0 0',
+              borderBottom: 'none'
+            }}></div>
+            
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '22px', 
+              right: '20px', 
+              width: '26px', 
+              height: '12px', 
+              borderTop: '2px solid #b45309', 
+              borderLeft: '2px solid #b45309', 
+              borderRight: '2px solid #b45309', 
+              borderRadius: '50% 50% 0 0',
+              borderBottom: 'none'
+            }}></div>
+            
+            {/* Bus number plate */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '5px', 
+              left: '50%', 
+              transform: 'translateX(-50%)',
+              width: '35px', 
+              height: '12px', 
+              backgroundColor: 'white', 
+              borderRadius: '2px',
+              border: '1px solid #d97706',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)'
+            }}>
+              <div style={{ fontSize: '6px', fontWeight: 'bold', color: '#1f2937' }}>NA-5432</div>
+            </div>
+            
+            {/* Roof rack/luggage */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '58px', 
+              left: '40px', 
+              right: '20px', 
+              height: '8px', 
+              background: 'linear-gradient(to bottom, #64748b 0%, #475569 100%)', 
+              borderRadius: '3px',
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3)'
+            }}>
+              {/* Luggage items */}
+              <div style={{ 
+                position: 'absolute', 
+                top: '-4px', 
+                left: '10px', 
+                width: '15px', 
+                height: '8px', 
+                background: 'linear-gradient(to bottom, #78716c 0%, #57534e 100%)', 
+                borderRadius: '2px',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.4)'
+              }}></div>
+              <div style={{ 
+                position: 'absolute', 
+                top: '-6px', 
+                left: '35px', 
+                width: '20px', 
+                height: '10px', 
+                background: 'linear-gradient(to bottom, #a1a1aa 0%, #71717a 100%)', 
+                borderRadius: '2px',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.4)'
+              }}></div>
+              <div style={{ 
+                position: 'absolute', 
+                top: '-3px', 
+                right: '15px', 
+                width: '12px', 
+                height: '7px', 
+                background: 'linear-gradient(to bottom, #4b5563 0%, #374151 100%)', 
+                borderRadius: '2px',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.4)'
+              }}></div>
+            </div>
+            
+            {/* Wipers */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '35px', 
+              left: '15px', 
+              width: '15px', 
+              height: '2px', 
+              backgroundColor: '#334155', 
+              borderRadius: '1px',
+              transformOrigin: 'left center',
+              transform: 'rotate(-10deg)'
+            }}></div>
+            
+            {/* Driver */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '30px', 
+              left: '25px', 
+              width: '12px', 
+              height: '12px', 
+              backgroundColor: 'rgba(0,0,0,0.8)', 
+              borderRadius: '6px 6px 0 0'
+            }}>
+              <div style={{ 
+                position: 'absolute', 
+                top: '3px', 
+                left: '2px', 
+                width: '3px', 
+                height: '2px', 
+                backgroundColor: '#f8fafc', 
+                borderRadius: '50%'
+              }}></div>
+              <div style={{ 
+                position: 'absolute', 
+                top: '3px', 
+                right: '2px', 
+                width: '3px', 
+                height: '2px', 
+                backgroundColor: '#f8fafc', 
+                borderRadius: '50%'
+              }}></div>
+            </div>
+            
+            {/* Exhaust pipe */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '5px', 
+              right: '5px', 
+              width: '8px', 
+              height: '4px', 
+              background: 'linear-gradient(to bottom, #9ca3af 0%, #6b7280 100%)', 
+              borderRadius: '0 2px 2px 0',
+              boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.4)'
+            }}></div>
+            
+            {/* Exhaust smoke */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '5px', 
+              right: '-8px', 
+              width: '10px', 
+              height: '10px', 
+              background: 'radial-gradient(circle, rgba(209, 213, 219, 0.8) 0%, rgba(209, 213, 219, 0) 70%)', 
+              borderRadius: '50%',
+              opacity: 0.6,
+              animation: 'steam 1.2s ease-out infinite'
+            }}></div>
             <div style={{ 
               position: 'absolute', 
               bottom: '8px', 
-              left: '5px', 
+              right: '-15px', 
               width: '12px', 
-              height: '8px', 
-              background: 'linear-gradient(to right, #fef3c7 0%, #fcd34d 100%)', 
-              borderRadius: '40% 60% 60% 40% / 50% 50% 50% 50%',
-              border: '1px solid #b45309',
-              boxShadow: '0 0 10px rgba(252, 211, 77, 0.7)',
-              overflow: 'hidden'
+              height: '12px', 
+              background: 'radial-gradient(circle, rgba(209, 213, 219, 0.6) 0%, rgba(209, 213, 219, 0) 70%)', 
+              borderRadius: '50%',
+              opacity: 0.5,
+              animation: 'steam 1.5s ease-out infinite'
             }}></div>
-            
-            {/* Rear lights */}
-            <div className="animate-light-blink animation-delay-700" style={{ 
+            <div style={{ 
               position: 'absolute', 
-              bottom: '18px', 
-              right: '5px', 
-              width: '10px', 
-              height: '6px', 
-              background: 'radial-gradient(circle, #f87171 50%, #ef4444 100%)', 
-              borderRadius: '2px',
-              border: '1px solid #7f1d1d',
-              boxShadow: '0 0 8px rgba(239, 68, 68, 0.6)'
+              bottom: '12px', 
+              right: '-22px', 
+              width: '15px', 
+              height: '15px', 
+              background: 'radial-gradient(circle, rgba(209, 213, 219, 0.4) 0%, rgba(209, 213, 219, 0) 70%)', 
+              borderRadius: '50%',
+              opacity: 0.4,
+              animation: 'steam 1.8s ease-out infinite'
             }}></div>
           </div>
         </div>
@@ -865,6 +1823,18 @@ export default function LandingPage() {
               boxShadow: 'inset 0 -4px 10px rgba(0, 0, 0, 0.2), inset -2px 0 8px rgba(255, 255, 255, 0.3)' 
             }}></div>
             
+            {/* Minibus hood */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '8px', 
+              right: '0', 
+              width: '30px', 
+              height: '27px', 
+              background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)', 
+              borderRadius: '5px 10px 8px 0',
+              boxShadow: 'inset 1px 1px 5px rgba(255, 255, 255, 0.4)'
+            }}></div>
+            
             {/* Minibus cabin/windows */}
             <div style={{ 
               position: 'absolute', 
@@ -875,10 +1845,163 @@ export default function LandingPage() {
               background: 'linear-gradient(to bottom, rgba(219, 234, 254, 0.7) 0%, rgba(147, 197, 253, 0.7) 100%)', 
               borderRadius: '5px 0 0 0',
               border: '2px solid #d97706',
-              boxShadow: 'inset 0 0 10px rgba(255, 255, 255, 0.6)'
-            }}></div>
+              boxShadow: 'inset 0 0 10px rgba(255, 255, 255, 0.6)',
+              overflow: 'hidden'
+            }}>
+              {/* Window dividers */}
+              <div style={{ 
+                display: 'flex', 
+                height: '100%', 
+                width: '100%'
+              }}>
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} style={{ 
+                    flex: '1', 
+                    height: '100%', 
+                    borderRight: i < 3 ? '2px solid #d97706' : 'none',
+                    position: 'relative'
+                  }}>
+                    {/* Passenger silhouettes in windows */}
+                    {(i === 0 || i === 2) && (
+                      <div style={{ 
+                        position: 'absolute', 
+                        bottom: '3px', 
+                        left: '50%', 
+                        transform: 'translateX(-50%)', 
+                        width: '6px', 
+                        height: '7px', 
+                        backgroundColor: 'rgba(0,0,0,0.7)', 
+                        borderRadius: '3px 3px 0 0'
+                      }}></div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
             
-            {/* Front wheel */}
+            {/* Windshield */}
+            <div style={{ 
+              position: 'absolute', 
+              top: '8px', 
+              right: '10px', 
+              width: '25px', 
+              height: '20px', 
+              background: 'linear-gradient(to bottom right, rgba(219, 234, 254, 0.8) 0%, rgba(147, 197, 253, 0.8) 100%)', 
+              borderRadius: '0 5px 0 0',
+              border: '2px solid #d97706',
+              boxShadow: 'inset 0 0 5px rgba(255, 255, 255, 0.6)'
+            }}>
+              {/* Windshield reflection */}
+              <div style={{ 
+                position: 'absolute', 
+                top: '3px', 
+                left: '5px', 
+                width: '15px', 
+                height: '2px', 
+                background: 'linear-gradient(to bottom, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.2) 100%)', 
+                borderRadius: '50%',
+                transform: 'rotate(10deg)'
+              }}></div>
+            </div>
+            
+            {/* Driver silhouette */}
+            <div style={{ 
+              position: 'absolute', 
+              top: '15px', 
+              right: '22px', 
+              width: '8px', 
+              height: '8px', 
+              backgroundColor: 'rgba(0,0,0,0.8)', 
+              borderRadius: '4px 4px 0 0'
+            }}>
+              <div style={{ 
+                position: 'absolute', 
+                top: '2px', 
+                left: '1px', 
+                width: '2px', 
+                height: '1px', 
+                backgroundColor: '#f8fafc', 
+                borderRadius: '50%'
+              }}></div>
+              <div style={{ 
+                position: 'absolute', 
+                top: '2px', 
+                right: '1px', 
+                width: '2px', 
+                height: '1px', 
+                backgroundColor: '#f8fafc', 
+                borderRadius: '50%'
+              }}></div>
+            </div>
+            
+            {/* Entry door */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '0px', 
+              left: '25px', 
+              width: '20px', 
+              height: '28px', 
+              backgroundColor: 'rgba(219, 234, 254, 0.7)', 
+              borderRadius: '3px 3px 0 0',
+              border: '2px solid #d97706',
+              borderBottom: 'none',
+              boxShadow: 'inset 0 0 5px rgba(255, 255, 255, 0.6)'
+            }}>
+              {/* Door handle */}
+              <div style={{ 
+                position: 'absolute', 
+                top: '14px', 
+                right: '2px', 
+                width: '3px', 
+                height: '6px', 
+                background: 'linear-gradient(to bottom, #94a3b8 0%, #64748b 100%)', 
+                borderRadius: '3px',
+                border: '1px solid #475569'
+              }}></div>
+              
+              {/* Door steps */}
+              <div style={{ 
+                position: 'absolute', 
+                top: '18px', 
+                left: '0', 
+                right: '0', 
+                height: '1px', 
+                backgroundColor: '#d97706' 
+              }}></div>
+              <div style={{ 
+                position: 'absolute', 
+                top: '23px', 
+                left: '0', 
+                right: '0', 
+                height: '1px', 
+                backgroundColor: '#d97706' 
+              }}></div>
+            </div>
+            
+            {/* Minibus route number display */}
+            <div style={{
+              position: 'absolute',
+              top: '3px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: '18px',
+              height: '10px',
+              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+              border: '1px solid #b45309',
+              borderRadius: '3px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)'
+            }}>
+              <div style={{ 
+                fontSize: '5px', 
+                fontWeight: 'bold', 
+                color: '#1f2937' 
+              }}>154</div>
+            </div>
+            
+            {/* Front wheel with detailed rim */}
             <div style={{ 
               position: 'absolute', 
               bottom: '-7px', 
@@ -887,17 +2010,21 @@ export default function LandingPage() {
               height: '18px', 
               backgroundColor: '#0f172a', 
               borderRadius: '50%',
-              border: '3px solid #94a3b8'
+              border: '3px solid #94a3b8',
+              boxSizing: 'border-box',
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.5)',
+              overflow: 'hidden'
             }}>
               <div className="animate-wheels" style={{
                 position: 'absolute',
                 inset: '1px',
                 borderRadius: '50%',
-                border: '1px solid #64748b'
+                border: '1px solid #64748b',
+                background: 'radial-gradient(circle at center, #e2e8f0 15%, transparent 15%), conic-gradient(#cbd5e1 0deg, #cbd5e1 30deg, transparent 30deg, transparent 60deg, #cbd5e1 60deg, #cbd5e1 90deg, transparent 90deg, transparent 120deg, #cbd5e1 120deg, #cbd5e1 150deg, transparent 150deg, transparent 180deg, #cbd5e1 180deg, #cbd5e1 210deg, transparent 210deg, transparent 240deg, #cbd5e1 240deg, #cbd5e1 270deg, transparent 270deg, transparent 300deg, #cbd5e1 300deg, #cbd5e1 330deg, transparent 330deg, transparent 360deg)'
               }}></div>
             </div>
             
-            {/* Rear wheel */}
+            {/* Rear wheel with detailed rim */}
             <div style={{ 
               position: 'absolute', 
               bottom: '0', 
@@ -906,15 +2033,222 @@ export default function LandingPage() {
               height: '18px', 
               backgroundColor: '#0f172a', 
               borderRadius: '50%',
-              border: '3px solid #94a3b8'
+              border: '3px solid #94a3b8',
+              boxSizing: 'border-box',
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.5)',
+              overflow: 'hidden'
             }}>
               <div className="animate-wheels" style={{
                 position: 'absolute',
                 inset: '1px',
                 borderRadius: '50%',
-                border: '1px solid #64748b'
+                border: '1px solid #64748b',
+                background: 'radial-gradient(circle at center, #e2e8f0 15%, transparent 15%), conic-gradient(#cbd5e1 0deg, #cbd5e1 30deg, transparent 30deg, transparent 60deg, #cbd5e1 60deg, #cbd5e1 90deg, transparent 90deg, transparent 120deg, #cbd5e1 120deg, #cbd5e1 150deg, transparent 150deg, transparent 180deg, #cbd5e1 180deg, #cbd5e1 210deg, transparent 210deg, transparent 240deg, #cbd5e1 240deg, #cbd5e1 270deg, transparent 270deg, transparent 300deg, #cbd5e1 300deg, #cbd5e1 330deg, transparent 330deg, transparent 360deg)'
               }}></div>
             </div>
+            
+            {/* Wheel arches */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '18px', 
+              right: '20px', 
+              width: '22px', 
+              height: '10px', 
+              borderTop: '2px solid #b45309', 
+              borderLeft: '2px solid #b45309', 
+              borderRight: '2px solid #b45309', 
+              borderRadius: '50% 50% 0 0',
+              borderBottom: 'none'
+            }}></div>
+            
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '18px', 
+              left: '20px', 
+              width: '22px', 
+              height: '10px', 
+              borderTop: '2px solid #b45309', 
+              borderLeft: '2px solid #b45309', 
+              borderRight: '2px solid #b45309', 
+              borderRadius: '50% 50% 0 0',
+              borderBottom: 'none'
+            }}></div>
+            
+            {/* Front headlight */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '12px', 
+              right: '5px', 
+              width: '10px', 
+              height: '6px', 
+              background: 'linear-gradient(to left, #fef3c7 0%, #fcd34d 100%)', 
+              borderRadius: '60% 40% 40% 60% / 50% 50% 50% 50%',
+              border: '1px solid #b45309',
+              boxShadow: '0 0 8px rgba(252, 211, 77, 0.6)',
+              transform: 'rotate(5deg)'
+            }}>
+              <div style={{ 
+                position: 'absolute', 
+                top: '1px', 
+                right: '1px', 
+                width: '3px', 
+                height: '2px', 
+                backgroundColor: 'rgba(255, 255, 255, 0.8)', 
+                borderRadius: '50%' 
+              }}></div>
+            </div>
+            
+            {/* Front light beam effect */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '10px', 
+              right: '-20px', 
+              width: '30px', 
+              height: '12px', 
+              background: 'linear-gradient(to right, rgba(252, 211, 77, 0.2) 0%, rgba(252, 211, 77, 0) 100%)', 
+              borderRadius: '50%',
+              transform: 'rotate(5deg) scaleX(2)'
+            }}></div>
+            
+            {/* Turn signals */}
+            <div className="animate-light-blink animation-delay-400" style={{ 
+              position: 'absolute', 
+              bottom: '23px', 
+              right: '8px', 
+              width: '5px', 
+              height: '5px', 
+              background: 'radial-gradient(circle, #fef3c7 0%, #fcd34d 100%)', 
+              borderRadius: '50%',
+              border: '1px solid #b45309',
+              boxShadow: '0 0 6px rgba(252, 211, 77, 0.6)'
+            }}></div>
+            
+            {/* Tail lights */}
+            <div className="animate-light-blink animation-delay-500" style={{ 
+              position: 'absolute', 
+              bottom: '12px', 
+              left: '5px', 
+              width: '8px', 
+              height: '5px', 
+              background: 'radial-gradient(circle, #f87171 50%, #ef4444 100%)', 
+              borderRadius: '2px',
+              border: '1px solid #7f1d1d',
+              boxShadow: '0 0 6px rgba(239, 68, 68, 0.6)'
+            }}></div>
+            
+            {/* License plate */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '3px', 
+              left: '50%', 
+              transform: 'translateX(-50%)',
+              width: '25px', 
+              height: '8px', 
+              backgroundColor: 'white', 
+              borderRadius: '2px',
+              border: '1px solid #d97706',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)'
+            }}>
+              <div style={{ fontSize: '4px', fontWeight: 'bold', color: '#1f2937' }}>NC-3214</div>
+            </div>
+            
+            {/* Minibus company logo */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '20px', 
+              right: '40px', 
+              width: '18px', 
+              height: '10px',
+              backgroundColor: 'rgba(255, 255, 255, 0.9)', 
+              borderRadius: '5px',
+              border: '1px solid #b45309',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)'
+            }}>
+              <div style={{ 
+                fontSize: '3px', 
+                fontWeight: 'bold', 
+                color: '#b45309',
+                fontFamily: "'Noto Sans Sinhala', 'Iskoola Pota', sans-serif",
+              }}>
+                බස් සේවා
+              </div>
+            </div>
+            
+            {/* Roof luggage rack */}
+            <div style={{ 
+              position: 'absolute', 
+              top: '0', 
+              left: '20px', 
+              right: '35px', 
+              height: '5px', 
+              background: 'linear-gradient(to bottom, #64748b 0%, #475569 100%)', 
+              borderRadius: '2px',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
+            }}>
+              {/* Luggage items */}
+              <div style={{ 
+                position: 'absolute', 
+                top: '-3px', 
+                left: '5px', 
+                width: '10px', 
+                height: '5px', 
+                background: 'linear-gradient(to bottom, #78716c 0%, #57534e 100%)', 
+                borderRadius: '1px',
+                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.4)'
+              }}></div>
+              <div style={{ 
+                position: 'absolute', 
+                top: '-4px', 
+                right: '10px', 
+                width: '15px', 
+                height: '6px', 
+                background: 'linear-gradient(to bottom, #a1a1aa 0%, #71717a 100%)', 
+                borderRadius: '1px',
+                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.4)'
+              }}></div>
+            </div>
+            
+            {/* Exhaust pipe */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '3px', 
+              left: '5px', 
+              width: '6px', 
+              height: '3px', 
+              background: 'linear-gradient(to right, #9ca3af 0%, #6b7280 100%)', 
+              borderRadius: '2px 0 0 2px',
+              boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.4)'
+            }}></div>
+            
+            {/* Exhaust smoke */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '3px', 
+              left: '-8px', 
+              width: '8px', 
+              height: '8px', 
+              background: 'radial-gradient(circle, rgba(209, 213, 219, 0.8) 0%, rgba(209, 213, 219, 0) 70%)', 
+              borderRadius: '50%',
+              opacity: 0.6,
+              animation: 'steam 1.2s ease-out infinite'
+            }}></div>
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '6px', 
+              left: '-15px', 
+              width: '10px', 
+              height: '10px', 
+              background: 'radial-gradient(circle, rgba(209, 213, 219, 0.6) 0%, rgba(209, 213, 219, 0) 70%)', 
+              borderRadius: '50%',
+              opacity: 0.5,
+              animation: 'steam 1.5s ease-out infinite'
+            }}></div>
           </div>
         </div>
 
@@ -939,7 +2273,8 @@ export default function LandingPage() {
               height: '22px', 
               background: 'linear-gradient(to bottom, #0ea5e9 0%, #0284c7 100%)', 
               borderRadius: '10px 10px 0 0',
-              border: '1px solid #0369a1'
+              border: '1px solid #0369a1',
+              boxShadow: 'inset 0 1px 5px rgba(255, 255, 255, 0.3), 0 2px 5px rgba(0, 0, 0, 0.2)'
             }}></div>
             
             {/* Tuk-tuk body */}
@@ -951,8 +2286,92 @@ export default function LandingPage() {
               height: '20px', 
               background: 'linear-gradient(to bottom, #0369a1 0%, #075985 100%)', 
               borderRadius: '5px 15px 5px 5px',
-              border: '1px solid #0c4a6e'
+              border: '1px solid #0c4a6e',
+              boxShadow: 'inset 0 -2px 6px rgba(0, 0, 0, 0.2)'
             }}></div>
+            
+            {/* Front section */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '5px', 
+              right: '0', 
+              width: '25px', 
+              height: '15px', 
+              background: 'linear-gradient(to right, #0369a1 0%, #075985 100%)', 
+              borderRadius: '5px 15px 5px 5px',
+              boxShadow: 'inset 1px 1px 3px rgba(255, 255, 255, 0.2)'
+            }}></div>
+            
+            {/* Windshield */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '20px', 
+              right: '5px', 
+              width: '20px', 
+              height: '15px', 
+              background: 'linear-gradient(to bottom right, rgba(219, 234, 254, 0.8) 0%, rgba(147, 197, 253, 0.8) 100%)', 
+              borderRadius: '5px 5px 0 0',
+              border: '1px solid #0369a1',
+              boxShadow: 'inset 0 0 5px rgba(255, 255, 255, 0.6)'
+            }}>
+              {/* Windshield reflection */}
+              <div style={{ 
+                position: 'absolute', 
+                top: '2px', 
+                left: '3px', 
+                width: '12px', 
+                height: '2px', 
+                background: 'linear-gradient(to bottom, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.2) 100%)', 
+                borderRadius: '50%'
+              }}></div>
+            </div>
+            
+            {/* Driver silhouette */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '25px', 
+              right: '12px', 
+              width: '8px', 
+              height: '8px', 
+              backgroundColor: 'rgba(0,0,0,0.8)', 
+              borderRadius: '4px 4px 0 0'
+            }}></div>
+            
+            {/* Passenger compartment open sides */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '20px', 
+              left: '10px', 
+              width: '45px', 
+              height: '15px', 
+              background: 'linear-gradient(to bottom, rgba(219, 234, 254, 0.5) 0%, rgba(147, 197, 253, 0.5) 100%)', 
+              borderRadius: '5px 5px 0 0',
+              border: '1px solid #0369a1',
+              borderBottom: 'none',
+              boxShadow: 'inset 0 0 5px rgba(255, 255, 255, 0.4)'
+            }}>
+              {/* Passenger silhouette */}
+              <div style={{ 
+                position: 'absolute', 
+                bottom: '2px', 
+                left: '15px', 
+                width: '7px', 
+                height: '7px', 
+                backgroundColor: 'rgba(0,0,0,0.7)', 
+                borderRadius: '3px 3px 0 0'
+              }}></div>
+              
+              {/* Passenger silhouette */}
+              <div style={{ 
+                position: 'absolute', 
+                bottom: '2px', 
+                right: '15px', 
+                width: '7px', 
+                height: '7px', 
+                backgroundColor: 'rgba(0,0,0,0.7)', 
+                borderRadius: '3px 3px 0 0'
+              }}></div>
+            </div>
             
             {/* Front wheel */}
             <div style={{ 
@@ -963,13 +2382,17 @@ export default function LandingPage() {
               height: '14px', 
               backgroundColor: '#0f172a', 
               borderRadius: '50%',
-              border: '3px solid #94a3b8'
+              border: '3px solid #94a3b8',
+              boxSizing: 'border-box',
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.5)',
+              overflow: 'hidden'
             }}>
               <div className="animate-wheels" style={{
                 position: 'absolute',
                 inset: '1px',
                 borderRadius: '50%',
-                border: '1px solid #64748b'
+                border: '1px solid #64748b',
+                background: 'radial-gradient(circle at center, #e2e8f0 15%, transparent 15%), conic-gradient(#cbd5e1 0deg, #cbd5e1 30deg, transparent 30deg, transparent 60deg, #cbd5e1 60deg, #cbd5e1 90deg, transparent 90deg, transparent 120deg, #cbd5e1 120deg, #cbd5e1 150deg, transparent 150deg, transparent 180deg, #cbd5e1 180deg, #cbd5e1 210deg, transparent 210deg, transparent 240deg, #cbd5e1 240deg, #cbd5e1 270deg, transparent 270deg, transparent 300deg, #cbd5e1 300deg, #cbd5e1 330deg, transparent 330deg, transparent 360deg)'
               }}></div>
             </div>
             
@@ -982,13 +2405,17 @@ export default function LandingPage() {
               height: '14px', 
               backgroundColor: '#0f172a', 
               borderRadius: '50%',
-              border: '3px solid #94a3b8'
+              border: '3px solid #94a3b8',
+              boxSizing: 'border-box',
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.5)',
+              overflow: 'hidden'
             }}>
               <div className="animate-wheels" style={{
                 position: 'absolute',
                 inset: '1px',
                 borderRadius: '50%',
-                border: '1px solid #64748b'
+                border: '1px solid #64748b',
+                background: 'radial-gradient(circle at center, #e2e8f0 15%, transparent 15%), conic-gradient(#cbd5e1 0deg, #cbd5e1 30deg, transparent 30deg, transparent 60deg, #cbd5e1 60deg, #cbd5e1 90deg, transparent 90deg, transparent 120deg, #cbd5e1 120deg, #cbd5e1 150deg, transparent 150deg, transparent 180deg, #cbd5e1 180deg, #cbd5e1 210deg, transparent 210deg, transparent 240deg, #cbd5e1 240deg, #cbd5e1 270deg, transparent 270deg, transparent 300deg, #cbd5e1 300deg, #cbd5e1 330deg, transparent 330deg, transparent 360deg)'
               }}></div>
             </div>
             
@@ -1000,15 +2427,179 @@ export default function LandingPage() {
               height: '14px', 
               backgroundColor: '#0f172a', 
               borderRadius: '50%',
-              border: '3px solid #94a3b8'
+              border: '3px solid #94a3b8',
+              boxSizing: 'border-box',
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.5)',
+              overflow: 'hidden'
             }}>
               <div className="animate-wheels" style={{
                 position: 'absolute',
                 inset: '1px',
                 borderRadius: '50%',
-                border: '1px solid #64748b'
+                border: '1px solid #64748b',
+                background: 'radial-gradient(circle at center, #e2e8f0 15%, transparent 15%), conic-gradient(#cbd5e1 0deg, #cbd5e1 30deg, transparent 30deg, transparent 60deg, #cbd5e1 60deg, #cbd5e1 90deg, transparent 90deg, transparent 120deg, #cbd5e1 120deg, #cbd5e1 150deg, transparent 150deg, transparent 180deg, #cbd5e1 180deg, #cbd5e1 210deg, transparent 210deg, transparent 240deg, #cbd5e1 240deg, #cbd5e1 270deg, transparent 270deg, transparent 300deg, #cbd5e1 300deg, #cbd5e1 330deg, transparent 330deg, transparent 360deg)'
               }}></div>
             </div>
+            
+            {/* Handle bars */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '26px', 
+              right: '15px', 
+              width: '8px', 
+              height: '3px', 
+              backgroundColor: '#94a3b8', 
+              borderRadius: '1px',
+              transform: 'rotate(-10deg)'
+            }}></div>
+            
+            {/* Front headlight */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '10px', 
+              right: '3px', 
+              width: '6px', 
+              height: '5px', 
+              background: 'linear-gradient(to left, #fef3c7 0%, #fcd34d 100%)', 
+              borderRadius: '50%',
+              border: '1px solid #b45309',
+              boxShadow: '0 0 8px rgba(252, 211, 77, 0.6)'
+            }}>
+              <div style={{ 
+                position: 'absolute', 
+                top: '1px', 
+                right: '1px', 
+                width: '2px', 
+                height: '2px', 
+                backgroundColor: 'rgba(255, 255, 255, 0.8)', 
+                borderRadius: '50%' 
+              }}></div>
+            </div>
+            
+            {/* Front light beam effect */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '8px', 
+              right: '-12px', 
+              width: '15px', 
+              height: '8px', 
+              background: 'linear-gradient(to right, rgba(252, 211, 77, 0.2) 0%, rgba(252, 211, 77, 0) 100%)', 
+              borderRadius: '50%',
+              transform: 'scaleX(2)'
+            }}></div>
+            
+            {/* Tuk-tuk meter */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '14px', 
+              right: '15px', 
+              width: '6px', 
+              height: '4px', 
+              background: 'linear-gradient(to bottom, #334155 0%, #1e293b 100%)', 
+              borderRadius: '1px',
+              border: '1px solid #0c4a6e',
+              boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3)'
+            }}>
+              <div className="animate-light-blink animation-delay-1000" style={{ 
+                position: 'absolute', 
+                top: '1px', 
+                right: '1px', 
+                width: '1px', 
+                height: '1px', 
+                backgroundColor: '#f87171', 
+                borderRadius: '50%'
+              }}></div>
+            </div>
+            
+            {/* Rear light */}
+            <div className="animate-light-blink animation-delay-800" style={{ 
+              position: 'absolute', 
+              bottom: '8px', 
+              left: '3px', 
+              width: '5px', 
+              height: '3px', 
+              background: 'radial-gradient(circle, #f87171 50%, #ef4444 100%)', 
+              borderRadius: '2px',
+              border: '1px solid #7f1d1d',
+              boxShadow: '0 0 5px rgba(239, 68, 68, 0.6)'
+            }}></div>
+            
+            {/* License plate */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '4px', 
+              left: '15px', 
+              width: '20px', 
+              height: '5px', 
+              backgroundColor: 'white', 
+              borderRadius: '1px',
+              border: '1px solid #0369a1',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2)'
+            }}>
+              <div style={{ fontSize: '3px', fontWeight: 'bold', color: '#1f2937' }}>TK-123</div>
+            </div>
+            
+            {/* Tuk-tuk decorative trim */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '17px', 
+              left: '5px', 
+              right: '30px', 
+              height: '2px', 
+              background: 'linear-gradient(to right, #fcd34d 0%, #fbbf24 100%)', 
+              borderRadius: '1px'
+            }}></div>
+            
+            {/* Frame connecting driver to passenger compartment */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '20px', 
+              right: '25px', 
+              width: '5px', 
+              height: '18px', 
+              background: 'linear-gradient(to bottom, #0c4a6e 0%, #0369a1 100%)', 
+              transform: 'rotate(45deg)',
+              transformOrigin: 'bottom center'
+            }}></div>
+            
+            {/* Exhaust pipe */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '3px', 
+              left: '45px', 
+              width: '5px', 
+              height: '3px', 
+              background: 'linear-gradient(to bottom, #9ca3af 0%, #6b7280 100%)', 
+              borderRadius: '0 1px 1px 0',
+              boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.4)'
+            }}></div>
+            
+            {/* Exhaust smoke */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '3px', 
+              left: '48px', 
+              width: '5px', 
+              height: '5px', 
+              background: 'radial-gradient(circle, rgba(209, 213, 219, 0.8) 0%, rgba(209, 213, 219, 0) 70%)', 
+              borderRadius: '50%',
+              opacity: 0.6,
+              animation: 'steam 0.8s ease-out infinite'
+            }}></div>
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '5px', 
+              left: '52px', 
+              width: '6px', 
+              height: '6px', 
+              background: 'radial-gradient(circle, rgba(209, 213, 219, 0.6) 0%, rgba(209, 213, 219, 0) 70%)', 
+              borderRadius: '50%',
+              opacity: 0.5,
+              animation: 'steam 1s ease-out infinite'
+            }}></div>
           </div>
         </div>
 
@@ -1033,7 +2624,8 @@ export default function LandingPage() {
               height: '4px', 
               background: 'linear-gradient(to bottom, #4b5563 0%, #374151 100%)', 
               borderRadius: '2px',
-              transform: 'rotate(5deg)'
+              transform: 'rotate(5deg)',
+              boxShadow: '0 2px 3px rgba(0, 0, 0, 0.3)'
             }}></div>
             
             {/* Fuel tank */}
@@ -1045,10 +2637,122 @@ export default function LandingPage() {
               height: '10px', 
               background: 'linear-gradient(to bottom, #dc2626 0%, #b91c1c 100%)', 
               borderRadius: '5px 8px 5px 5px',
+              boxShadow: 'inset 2px 2px 5px rgba(255, 255, 255, 0.3)',
               transform: 'rotate(5deg)'
+            }}>
+              <div style={{ 
+                position: 'absolute', 
+                top: '2px', 
+                left: '5px', 
+                width: '8px', 
+                height: '2px', 
+                background: 'linear-gradient(to right, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0) 100%)', 
+                borderRadius: '2px',
+                transform: 'rotate(-5deg)'
+              }}></div>
+            </div>
+            
+            {/* Seat */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '14px', 
+              left: '18px', 
+              width: '18px', 
+              height: '6px', 
+              background: 'linear-gradient(to bottom, #111827 0%, #1f2937 100%)', 
+              borderRadius: '2px 5px 2px 2px',
+              boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.1)'
             }}></div>
             
-            {/* Front wheel */}
+            {/* Rear fender */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '10px', 
+              left: '10px', 
+              width: '10px', 
+              height: '8px', 
+              background: 'linear-gradient(to bottom, #4b5563 0%, #374151 100%)', 
+              borderRadius: '5px 2px 2px 2px',
+              transform: 'rotate(-15deg)'
+            }}></div>
+            
+            {/* Front forks */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '12px', 
+              right: '25px', 
+              width: '3px', 
+              height: '16px', 
+              background: 'linear-gradient(to bottom, #9ca3af 0%, #6b7280 100%)', 
+              borderRadius: '2px',
+              transform: 'rotate(20deg)',
+              transformOrigin: 'bottom center',
+              boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3)'
+            }}></div>
+            
+            {/* Handlebar */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '27px', 
+              right: '22px', 
+              width: '12px', 
+              height: '3px', 
+              background: 'linear-gradient(to bottom, #9ca3af 0%, #6b7280 100%)', 
+              borderRadius: '2px',
+              transform: 'rotate(15deg)',
+              boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3)'
+            }}></div>
+            
+            {/* Engine block */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '3px', 
+              left: '25px', 
+              width: '16px', 
+              height: '10px', 
+              background: 'linear-gradient(to bottom, #1f2937 0%, #111827 100%)', 
+              borderRadius: '3px',
+              boxShadow: 'inset 1px 1px 2px rgba(255, 255, 255, 0.1), 0 1px 2px rgba(0, 0, 0, 0.3)'
+            }}></div>
+            
+            {/* Exhaust pipe */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '4px', 
+              left: '15px', 
+              width: '12px', 
+              height: '3px', 
+              background: 'linear-gradient(to right, #6b7280 0%, #4b5563 100%)', 
+              borderRadius: '1px',
+              transform: 'rotate(5deg)',
+              boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3)'
+            }}></div>
+            
+            {/* Exhaust smoke */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '4px', 
+              left: '10px', 
+              width: '5px', 
+              height: '5px', 
+              background: 'radial-gradient(circle, rgba(209, 213, 219, 0.8) 0%, rgba(209, 213, 219, 0) 70%)', 
+              borderRadius: '50%',
+              opacity: 0.6,
+              animation: 'steam 0.7s ease-out infinite'
+            }}></div>
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '6px', 
+              left: '5px', 
+              width: '6px', 
+              height: '6px', 
+              background: 'radial-gradient(circle, rgba(209, 213, 219, 0.6) 0%, rgba(209, 213, 219, 0) 70%)', 
+              borderRadius: '50%',
+              opacity: 0.5,
+              animation: 'steam 0.9s ease-out infinite'
+            }}></div>
+            
+            {/* Front wheel with detailed rim */}
             <div style={{ 
               position: 'absolute', 
               bottom: '-7px', 
@@ -1057,17 +2761,21 @@ export default function LandingPage() {
               height: '20px', 
               backgroundColor: '#0f172a', 
               borderRadius: '50%',
-              border: '3px solid #94a3b8'
+              border: '3px solid #94a3b8',
+              boxSizing: 'border-box',
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.5)',
+              overflow: 'hidden'
             }}>
               <div className="animate-wheels" style={{
                 position: 'absolute',
                 inset: '1px',
                 borderRadius: '50%',
-                border: '1px solid #64748b'
+                border: '1px solid #64748b',
+                background: 'radial-gradient(circle at center, #e2e8f0 10%, transparent 10%), conic-gradient(#cbd5e1 0deg, #cbd5e1 22.5deg, transparent 22.5deg, transparent 45deg, #cbd5e1 45deg, #cbd5e1 67.5deg, transparent 67.5deg, transparent 90deg, #cbd5e1 90deg, #cbd5e1 112.5deg, transparent 112.5deg, transparent 135deg, #cbd5e1 135deg, #cbd5e1 157.5deg, transparent 157.5deg, transparent 180deg, #cbd5e1 180deg, #cbd5e1 202.5deg, transparent 202.5deg, transparent 225deg, #cbd5e1 225deg, #cbd5e1 247.5deg, transparent 247.5deg, transparent 270deg, #cbd5e1 270deg, #cbd5e1 292.5deg, transparent 292.5deg, transparent 315deg, #cbd5e1 315deg, #cbd5e1 337.5deg, transparent 337.5deg, transparent 360deg)'
               }}></div>
             </div>
             
-            {/* Rear wheel */}
+            {/* Rear wheel with detailed rim */}
             <div style={{ 
               position: 'absolute', 
               bottom: '0', 
@@ -1076,15 +2784,69 @@ export default function LandingPage() {
               height: '20px', 
               backgroundColor: '#0f172a', 
               borderRadius: '50%',
-              border: '3px solid #94a3b8'
+              border: '3px solid #94a3b8',
+              boxSizing: 'border-box',
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.5)',
+              overflow: 'hidden'
             }}>
               <div className="animate-wheels" style={{
                 position: 'absolute',
                 inset: '1px',
                 borderRadius: '50%',
-                border: '1px solid #64748b'
+                border: '1px solid #64748b',
+                background: 'radial-gradient(circle at center, #e2e8f0 10%, transparent 10%), conic-gradient(#cbd5e1 0deg, #cbd5e1 22.5deg, transparent 22.5deg, transparent 45deg, #cbd5e1 45deg, #cbd5e1 67.5deg, transparent 67.5deg, transparent 90deg, #cbd5e1 90deg, #cbd5e1 112.5deg, transparent 112.5deg, transparent 135deg, #cbd5e1 135deg, #cbd5e1 157.5deg, transparent 157.5deg, transparent 180deg, #cbd5e1 180deg, #cbd5e1 202.5deg, transparent 202.5deg, transparent 225deg, #cbd5e1 225deg, #cbd5e1 247.5deg, transparent 247.5deg, transparent 270deg, #cbd5e1 270deg, #cbd5e1 292.5deg, transparent 292.5deg, transparent 315deg, #cbd5e1 315deg, #cbd5e1 337.5deg, transparent 337.5deg, transparent 360deg)'
               }}></div>
             </div>
+            
+            {/* Headlight */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '25px', 
+              right: '15px', 
+              width: '8px', 
+              height: '6px', 
+              background: 'linear-gradient(to left, #fef3c7 0%, #fcd34d 100%)', 
+              borderRadius: '50%',
+              border: '1px solid #b45309',
+              boxShadow: '0 0 8px rgba(252, 211, 77, 0.6)',
+              transform: 'rotate(10deg)'
+            }}>
+              <div style={{ 
+                position: 'absolute', 
+                top: '1px', 
+                right: '1px', 
+                width: '3px', 
+                height: '1px', 
+                backgroundColor: 'rgba(255, 255, 255, 0.8)', 
+                borderRadius: '50%' 
+              }}></div>
+            </div>
+            
+            {/* Light beam effect */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '25px', 
+              right: '-20px', 
+              width: '30px', 
+              height: '10px', 
+              background: 'linear-gradient(to right, rgba(252, 211, 77, 0.2) 0%, rgba(252, 211, 77, 0) 100%)', 
+              borderRadius: '50%',
+              transform: 'rotate(10deg) scaleX(2)'
+            }}></div>
+            
+            {/* Tail light */}
+            <div className="animate-light-blink animation-delay-100" style={{ 
+              position: 'absolute', 
+              bottom: '14px', 
+              left: '8px', 
+              width: '5px', 
+              height: '3px', 
+              background: 'radial-gradient(circle, #f87171 50%, #ef4444 100%)', 
+              borderRadius: '40% 60% 60% 40% / 50% 50% 50% 50%',
+              border: '1px solid #7f1d1d',
+              boxShadow: '0 0 6px rgba(239, 68, 68, 0.6)',
+              transform: 'rotate(-15deg)'
+            }}></div>
             
             {/* Rider */}
             <div style={{ 
@@ -1096,10 +2858,63 @@ export default function LandingPage() {
               backgroundColor: '#374151', 
               borderRadius: '5px 5px 0 0',
               transform: 'rotate(5deg)'
-            }}></div>
+            }}>
+              {/* Helmet */}
+              <div style={{ 
+                position: 'absolute', 
+                top: '-8px', 
+                left: '0', 
+                width: '10px', 
+                height: '10px', 
+                background: 'linear-gradient(to bottom, #334155 0%, #1e293b 100%)', 
+                borderRadius: '50% 50% 25% 25%',
+                boxShadow: 'inset 1px 1px 2px rgba(255, 255, 255, 0.1)'
+              }}>
+                {/* Visor */}
+                <div style={{ 
+                  position: 'absolute', 
+                  top: '3px', 
+                  left: '2px', 
+                  width: '6px', 
+                  height: '3px', 
+                  background: 'linear-gradient(to bottom, #38bdf8 0%, #0ea5e9 100%)', 
+                  borderRadius: '2px',
+                  boxShadow: 'inset 1px 1px 2px rgba(255, 255, 255, 0.3)'
+                }}></div>
+              </div>
+              
+              {/* Arm */}
+              <div style={{ 
+                position: 'absolute', 
+                top: '2px', 
+                right: '-5px', 
+                width: '8px', 
+                height: '3px', 
+                backgroundColor: '#374151', 
+                borderRadius: '2px',
+                transform: 'rotate(-20deg)'
+              }}></div>
+            </div>
+            
+            {/* License plate */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '3px', 
+              left: '17px', 
+              width: '10px', 
+              height: '4px', 
+              backgroundColor: 'white', 
+              borderRadius: '1px',
+              border: '1px solid #4b5563',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2)'
+            }}>
+              <div style={{ fontSize: '2px', fontWeight: 'bold', color: '#1f2937' }}>MC</div>
+            </div>
           </div>
         </div>
-        {/* END: All Vehicle Components */}
 
         {/* Vertical Roads */}
         <div style={{
@@ -1735,7 +3550,8 @@ export default function LandingPage() {
                   marginBottom: '1.5rem',
                   lineHeight: '1.6'
                 }}>
-                  "{testimonial.comment}"
+                  {/* FIX: Replaced " with HTML entities */}
+                  &ldquo;{testimonial.comment}&rdquo;
                 </p>
                 <div>
                   <div style={{
