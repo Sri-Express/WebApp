@@ -3684,7 +3684,7 @@ export default function LandingPage() {
             </div>
           </div>
           
-          <div style={{
+        <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
             gap: '2rem',
@@ -3693,23 +3693,24 @@ export default function LandingPage() {
             <div>
               <h4 style={{ marginBottom: '1rem', color: '#F59E0B' }}>Services</h4>
               <ul style={{ listStyle: 'none', padding: 0 }}>
-                <li style={{ marginBottom: '0.5rem' }}><a href="#" style={{ color: '#D1D5DB', textDecoration: 'none' }}>Public Transport</a></li>
-                <li style={{ marginBottom: '0.5rem' }}><a href="#" style={{ color: '#D1D5DB', textDecoration: 'none' }}>Fleet Management</a></li>
-                <li style={{ marginBottom: '0.5rem' }}><a href="#" style={{ color: '#D1D5DB', textDecoration: 'none' }}>Route Planning</a></li>
+                <li style={{ marginBottom: '0.5rem' }}><Link href="/services" style={{ color: '#D1D5DB', textDecoration: 'none' }}>Public Transport</Link></li>
+                <li style={{ marginBottom: '0.5rem' }}><Link href="/services" style={{ color: '#D1D5DB', textDecoration: 'none' }}>Fleet Management</Link></li>
+                <li style={{ marginBottom: '0.5rem' }}><Link href="/services" style={{ color: '#D1D5DB', textDecoration: 'none' }}>Route Planning</Link></li>
               </ul>
             </div>
             <div>
               <h4 style={{ marginBottom: '1rem', color: '#F59E0B' }}>Support</h4>
               <ul style={{ listStyle: 'none', padding: 0 }}>
-                <li style={{ marginBottom: '0.5rem' }}><a href="#" style={{ color: '#D1D5DB', textDecoration: 'none' }}>Help Center</a></li>
-                <li style={{ marginBottom: '0.5rem' }}><a href="#" style={{ color: '#D1D5DB', textDecoration: 'none' }}>Contact Us</a></li>
-                <li style={{ marginBottom: '0.5rem' }}><a href="#" style={{ color: '#D1D5DB', textDecoration: 'none' }}>Privacy Policy</a></li>
+                <li style={{ marginBottom: '0.5rem' }}><Link href="/help" style={{ color: '#D1D5DB', textDecoration: 'none' }}>Help Center</Link></li>
+                <li style={{ marginBottom: '0.5rem' }}><Link href="/contact" style={{ color: '#D1D5DB', textDecoration: 'none' }}>Contact Us</Link></li>
+                <li style={{ marginBottom: '0.5rem' }}><Link href="/privacy" style={{ color: '#D1D5DB', textDecoration: 'none' }}>Privacy Policy</Link></li>
+                <li style={{ marginBottom: '0.5rem' }}><Link href="/terms" style={{ color: '#D1D5DB', textDecoration: 'none' }}>Terms of Service</Link></li>
               </ul>
             </div>
             <div>
               <h4 style={{ marginBottom: '1rem', color: '#F59E0B' }}>Company</h4>
               <ul style={{ listStyle: 'none', padding: 0 }}>
-                <li style={{ marginBottom: '0.5rem' }}><a href="#" style={{ color: '#D1D5DB', textDecoration: 'none' }}>About Us</a></li>
+                <li style={{ marginBottom: '0.5rem' }}><Link href="/about" style={{ color: '#D1D5DB', textDecoration: 'none' }}>About Us</Link></li>
                 <li style={{ marginBottom: '0.5rem' }}><a href="#" style={{ color: '#D1D5DB', textDecoration: 'none' }}>Careers</a></li>
                 <li style={{ marginBottom: '0.5rem' }}><a href="#" style={{ color: '#D1D5DB', textDecoration: 'none' }}>News</a></li>
               </ul>
