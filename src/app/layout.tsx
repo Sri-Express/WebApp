@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import "./globals.css";
+import "./landing_styles.css";
 
 export const metadata: Metadata = {
   title: "RideBookSL - Transportation Management",
