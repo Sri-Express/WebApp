@@ -447,7 +447,7 @@ export default function HelpPage() {
             Still need help?
           </h2>
           <p className={styles.contactSupportText}>
-            Can't find what you're looking for? Contact our support team.
+            Can&apos;t find what you&apos;re looking for? Contact our support team.
           </p>
           <div className={styles.contactSupportButtons}>
             <Link href="/contact" className={`${styles.contactButton} ${styles.buttonHover}`}>

@@ -373,7 +373,7 @@ export default function ContactPage() {
             Contact Us
           </h1>
           <p className={`${styles.headerSubtitle} ${styles.animateFadeInUp}`}>
-            We're here to help you with any questions, concerns, or feedback you may have.
+            We&apos;re here to help you with any questions, concerns, or feedback you may have.
           </p>
         </section>
 
@@ -404,7 +404,7 @@ export default function ContactPage() {
 
               {showSuccess && (
                 <div className={styles.successMessage}>
-                  ✅ Thank you for your message! We'll get back to you within 2 hours.
+                  ✅ Thank you for your message! We&apos;ll get back to you within 2 hours.
                 </div>
               )}
 

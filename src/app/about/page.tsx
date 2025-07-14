@@ -3,17 +3,6 @@
 
 import Link from 'next/link';
 import { 
-  MapIcon, 
-  ClockIcon, 
-  CreditCardIcon, 
-  ChatBubbleLeftIcon,
-  UserGroupIcon,
-  TruckIcon,
-  PhoneIcon,
-  EnvelopeIcon,
-  MapPinIcon,
-  StarIcon,
-  CheckCircleIcon,
   ArrowRightIcon,
   HeartIcon,
   LightBulbIcon,
@@ -800,7 +789,7 @@ export default function AboutPage() {
             paddingTop: '1.5rem',
             color: '#9CA3AF'
           }}>
-            <p>&copy; 2025 Sri Express. All rights reserved. | Transforming transportation in Sri Lanka</p>
+            <p>© 2025 Sri Express. All rights reserved. | Transforming transportation in Sri Lanka</p>
           </div>
         </div>
       </footer>

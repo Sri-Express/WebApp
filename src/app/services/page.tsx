@@ -4,20 +4,13 @@
 import Link from 'next/link';
 import { 
   MapIcon, 
-  ClockIcon, 
-  CreditCardIcon, 
-  ChatBubbleLeftIcon,
   UserGroupIcon,
   TruckIcon,
   PhoneIcon,
-  EnvelopeIcon,
-  MapPinIcon,
-  StarIcon,
   CheckCircleIcon,
   ArrowRightIcon,
   AcademicCapIcon,
   BuildingOfficeIcon,
-  GlobeAltIcon,
   ShieldCheckIcon,
   WifiIcon,
   DevicePhoneMobileIcon,
@@ -413,7 +406,7 @@ export default function ServicesPage() {
               maxWidth: '600px',
               margin: '0 auto'
             }}>
-              From public transport to private fleet management, we've got you covered
+              From public transport to private fleet management, we&apos;ve got you covered
             </p>
           </div>
           
@@ -930,7 +923,7 @@ export default function ServicesPage() {
             paddingTop: '1.5rem',
             color: '#9CA3AF'
           }}>
-            <p>&copy; 2025 Sri Express. All rights reserved. | Transforming transportation in Sri Lanka</p>
+            <p>© 2025 Sri Express. All rights reserved. | Transforming transportation in Sri Lanka</p>
           </div>
         </div>
       </footer>

@@ -170,7 +170,7 @@ export default function PrivacyPage() {
 
           <section style={{ marginBottom: '2rem' }}>
             <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1rem', color: '#1F2937' }}>
-              8. Children's Privacy
+              8. Children&apos;s Privacy
             </h2>
             <p style={{ color: '#4B5563' }}>
               Our services are not intended for children under 13. We do not knowingly collect 
@@ -184,7 +184,7 @@ export default function PrivacyPage() {
             </h2>
             <p style={{ color: '#4B5563' }}>
               We may update this privacy policy from time to time. We will notify you of any changes 
-              by posting the new policy on this page and updating the "Last updated" date.
+              by posting the new policy on this page and updating the &quot;Last updated&quot; date.
             </p>
           </section>
 
