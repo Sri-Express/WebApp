@@ -3,6 +3,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import styles from './help.module.css';
 
 export default function HelpPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -64,197 +65,400 @@ export default function HelpPage() {
   });
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb' }}>
-      {/* Navigation */}
-      <nav style={{
-        backgroundColor: 'white',
-        borderBottom: '1px solid #e5e7eb',
-        padding: '1rem 0'
-      }}>
-        <div style={{
-          maxWidth: '1200px',
-          margin: '0 auto',
-          padding: '0 1.5rem',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}>
-          <Link href="/" style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            textDecoration: 'none',
-            fontSize: '1.5rem',
-            fontWeight: 'bold'
-          }}>
-            <span style={{ color: '#F59E0B' }}>ශ්‍රී</span>
-            <span style={{ color: '#1F2937' }}>Express</span>
-          </Link>
-          
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            <Link href="/" style={{ color: '#6B7280', textDecoration: 'none' }}>Home</Link>
-            <Link href="/contact" style={{ color: '#6B7280', textDecoration: 'none' }}>Contact</Link>
-            <Link href="/login" style={{
-              backgroundColor: '#F59E0B',
-              color: 'white',
-              padding: '0.5rem 1rem',
-              borderRadius: '0.5rem',
-              textDecoration: 'none'
-            }}>Login</Link>
+    <div className={styles.helpPageContainer}>
+      {/* Animated Background Scene */}
+      <div className={styles.backgroundScene}>
+        {/* Main Road */}
+        <div className={styles.mainRoad}></div>
+        <div className={styles.mainRoadMarkingContainer}>
+          <div className={styles.mainRoadMarking}></div>
+        </div>
+        
+        {/* Secondary Road */}
+        <div className={styles.secondaryRoad}></div>
+        <div className={styles.secondaryRoadMarkingContainer}>
+          <div className={styles.secondaryRoadMarking}></div>
+        </div>
+        
+        {/* Enhanced Railway */}
+        <div className={styles.railwayBase}></div>
+        <div className={styles.railwayTracksContainer}>
+          <div className={styles.railTop}></div>
+          <div className={styles.railBottom}></div>
+          <div className={styles.railTiesContainer}>
+            {Array(30).fill(0).map((_, i) => (
+              <div key={i} className={styles.railTie} style={{ marginLeft: `${i * 30}px` }}></div>
+            ))}
+          </div>
+          <div className={styles.railGravel}></div>
+        </div>
+
+        {/* FIX: Added styles.animateTrainMove to make the train move */}
+        <div className={`${styles.train} ${styles.animateSlightBounce} ${styles.animateTrainMove}`}>
+          <div className={styles.trainCarriageContainer}>
+            {/* Locomotive */}
+            <div className={styles.locomotive}>
+              <div className={styles.locomotiveBody}></div>
+              <div className={styles.locomotiveCabin}></div>
+              <div className={styles.locomotiveRoof}></div>
+              <div className={styles.locomotiveCatcher}></div>
+              <div className={styles.locomotiveBuffer}></div>
+              <div className={styles.locomotiveSign}>දුම්රිය සේවය</div>
+              <div className={styles.chimney}>
+                <div className={styles.chimneyTop}></div>
+                <div className={`${styles.animateSteam} ${styles.steam}`}></div>
+                <div className={`${styles.animateSteam} ${styles.animationDelay200} ${styles.steam}`}></div>
+                <div className={`${styles.animateSteam} ${styles.animationDelay400} ${styles.steam}`}></div>
+                <div className={`${styles.animateSteam} ${styles.animationDelay600} ${styles.steam}`}></div>
+                <div className={`${styles.animateSteam} ${styles.animationDelay800} ${styles.steam}`}></div>
+              </div>
+              <div className={styles.locomotiveDome}></div>
+              <div className={styles.locomotiveWhistle}></div>
+              <div className={`${styles.animateWheels} ${styles.locomotiveWheel} ${styles.wheelLarge1}`}>
+                <div className={styles.wheelInnerBorder}></div>
+                <div className={styles.wheelSpokeHorizontal}></div>
+                <div className={styles.wheelSpokeVertical}></div>
+                <div className={styles.wheelSpokesDiagonal}></div>
+                <div className={styles.wheelHub}></div>
+              </div>
+              <div className={`${styles.animateWheels} ${styles.locomotiveWheel} ${styles.wheelLarge2}`}>
+                <div className={styles.wheelInnerBorder}></div>
+                <div className={styles.wheelSpokeHorizontal}></div>
+                <div className={styles.wheelSpokeVertical}></div>
+                <div className={styles.wheelSpokesDiagonal}></div>
+                <div className={styles.wheelHub}></div>
+              </div>
+              <div className={`${styles.animateWheels} ${styles.locomotiveWheel} ${styles.wheelLarge3}`}>
+                <div className={styles.wheelInnerBorder}></div>
+                <div className={styles.wheelSpokeHorizontal}></div>
+                <div className={styles.wheelSpokeVertical}></div>
+                <div className={styles.wheelSpokesDiagonal}></div>
+                <div className={styles.wheelHub}></div>
+              </div>
+              <div className={styles.pistonHousing}>
+                <div className={`${styles.animatePiston} ${styles.piston}`}></div>
+              </div>
+              <div className={`${styles.locomotiveWindow} ${styles.window1}`}></div>
+              <div className={`${styles.locomotiveWindow} ${styles.window2}`}></div>
+              <div className={`${styles.animateLightBlink} ${styles.locomotiveHeadlight}`}></div>
+            </div>
+            
+            {/* Red Carriage */}
+            <div className={styles.carriage}>
+              <div className={`${styles.carriageBody} ${styles.redCarriage}`}>
+                <div className={styles.carriageStripe}></div>
+              </div>
+              <div className={`${styles.carriageRoof} ${styles.redCarriageRoof}`}></div>
+              <div className={`${styles.carriageWindow} ${styles.carriageWindow1}`}></div>
+              <div className={`${styles.carriageWindow} ${styles.carriageWindow2}`}></div>
+              <div className={`${styles.carriageWindow} ${styles.carriageWindow3}`}></div>
+              <div className={`${styles.animateWheels} ${styles.carriageWheel} ${styles.carriageWheel1}`}>
+                <div className={styles.wheelInnerBorder}></div>
+                <div className={styles.wheelSpokeHorizontal}></div>
+                <div className={styles.wheelSpokeVertical}></div>
+                <div className={styles.wheelHubSmall}></div>
+              </div>
+              <div className={`${styles.animateWheels} ${styles.carriageWheel} ${styles.carriageWheel2}`}>
+                <div className={styles.wheelInnerBorder}></div>
+                <div className={styles.wheelSpokeHorizontal}></div>
+                <div className={styles.wheelSpokeVertical}></div>
+                <div className={styles.wheelHubSmall}></div>
+              </div>
+            </div>
+            
+            {/* Purple Carriage */}
+            <div className={styles.carriage}>
+              <div className={`${styles.carriageBody} ${styles.purpleCarriage}`}>
+                <div className={styles.carriageStripe}></div>
+              </div>
+              <div className={`${styles.carriageRoof} ${styles.purpleCarriageRoof}`}></div>
+              <div className={`${styles.carriageWindow} ${styles.carriageWindow1}`}></div>
+              <div className={`${styles.carriageWindow} ${styles.carriageWindow2}`}></div>
+              <div className={`${styles.carriageWindow} ${styles.carriageWindow3}`}></div>
+              <div className={`${styles.animateLightBlink} ${styles.animationDelay500} ${styles.carriageTaillight}`}></div>
+              <div className={`${styles.animateWheels} ${styles.carriageWheel} ${styles.carriageWheel1}`}>
+                <div className={styles.wheelInnerBorder}></div>
+                <div className={styles.wheelSpokeHorizontal}></div>
+                <div className={styles.wheelSpokeVertical}></div>
+                <div className={styles.wheelHubSmall}></div>
+              </div>
+              <div className={`${styles.animateWheels} ${styles.carriageWheel} ${styles.carriageWheel2}`}>
+                <div className={styles.wheelInnerBorder}></div>
+                <div className={styles.wheelSpokeHorizontal}></div>
+                <div className={styles.wheelSpokeVertical}></div>
+                <div className={styles.wheelHubSmall}></div>
+              </div>
+              <div className={styles.carriageConnector}></div>
+            </div>
           </div>
         </div>
-      </nav>
 
-      {/* Header */}
-      <section style={{
-        backgroundColor: 'white',
-        padding: '4rem 1.5rem 2rem',
-        textAlign: 'center'
-      }}>
-        <h1 style={{
-          fontSize: '2.5rem',
-          fontWeight: 'bold',
-          color: '#1F2937',
-          marginBottom: '1rem'
-        }}>
-          Help Center
-        </h1>
-        <p style={{ color: '#6B7280', fontSize: '1.1rem' }}>
-          Find answers to your questions and get help with Sri Express services
-        </p>
-      </section>
+        {/* Enhanced Yellow Public Bus - Main Road */}
+        <div className={`${styles.bus} ${styles.animateCarRight} ${styles.animationDelay1000}`}>
+          <div className={styles.vehicleRelativeContainer}>
+            <div className={styles.busBodyBase}></div>
+            <div className={styles.busFrontHood}></div>
+            <div className={styles.busEntry}>
+              <div className={styles.busEntryDoor}>
+                <div className={styles.busDoorHandle}></div>
+                <div className={styles.busDoorDivider1}></div>
+                <div className={styles.busDoorDivider2}></div>
+              </div>
+            </div>
+            <div className={styles.busWindowsSection}>
+              <div className={styles.busWindowGrid}>
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className={styles.busWindow}>
+                    {i % 2 === 0 && <div className={styles.passengerSilhouette}></div>}
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className={styles.busRoof}></div>
+            <div className={styles.busDestinationBoard}><div className={styles.busDestinationText}>කොළඹ</div></div>
+            <div className={styles.busFrontLights}>
+              <div className={styles.busFrontLightInner}></div>
+            </div>
+            <div className={styles.busFrontLightBeam}></div>
+            <div className={`${styles.busTurnSignal} ${styles.animateLightBlink} ${styles.animationDelay300}`}></div>
+            <div className={`${styles.busRearLights} ${styles.animateLightBlink} ${styles.animationDelay700}`}></div>
+            <div className={styles.busLogo}>
+              <div className={styles.busLogoText}>
+                <div>ශ්‍රී</div>
+                <div style={{ marginTop: '1px' }}>EXPRESS</div>
+              </div>
+            </div>
+            <div className={`${styles.busWheel} ${styles.busWheelFront}`}><div className={`${styles.animateWheels} ${styles.busWheelRim}`}></div></div>
+            <div className={`${styles.busWheel} ${styles.busWheelMiddle}`}><div className={`${styles.animateWheels} ${styles.busWheelRim}`}></div></div>
+            <div className={`${styles.busWheel} ${styles.busWheelRear}`}><div className={`${styles.animateWheels} ${styles.busWheelRim}`}></div></div>
+            <div className={`${styles.busWheelArch} ${styles.busWheelArchFront}`}></div>
+            <div className={`${styles.busWheelArch} ${styles.busWheelArchMiddle}`}></div>
+            <div className={`${styles.busWheelArch} ${styles.busWheelArchRear}`}></div>
+            <div className={styles.busNumberPlate}><div className={styles.busNumberPlateText}>NA-5432</div></div>
+            <div className={styles.busRoofRack}>
+              <div className={`${styles.luggageItem} ${styles.luggage1}`}></div>
+              <div className={`${styles.luggageItem} ${styles.luggage2}`}></div>
+              <div className={`${styles.luggageItem} ${styles.luggage3}`}></div>
+            </div>
+            <div className={styles.busWiper}></div>
+            <div className={styles.driverSilhouette}>
+              <div className={styles.driverEye}></div>
+              <div className={`${styles.driverEye} ${styles.driverEyeRight}`}></div>
+            </div>
+            <div className={styles.exhaustPipe}></div>
+            <div className={`${styles.exhaustSmoke} ${styles.smoke1}`}></div>
+            <div className={`${styles.exhaustSmoke} ${styles.smoke2}`}></div>
+            <div className={`${styles.exhaustSmoke} ${styles.smoke3}`}></div>
+          </div>
+        </div>
 
-      {/* Search and Categories */}
-      <section style={{
-        maxWidth: '800px',
-        margin: '0 auto',
-        padding: '2rem 1.5rem'
-      }}>
-        {/* Search */}
-        <div style={{ marginBottom: '2rem' }}>
+        {/* Enhanced Yellow Minibus - Secondary Road */}
+        <div className={`${styles.minibus} ${styles.animateCarLeft} ${styles.animationDelay2000}`}>
+          <div className={styles.vehicleRelativeContainer}>
+            <div className={styles.minibusBodyBase}></div>
+            <div className={styles.minibusHood}></div>
+            <div className={styles.minibusCabinWindows}>
+              <div className={styles.minibusWindowGrid}>
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className={styles.minibusWindow}>
+                    {(i === 0 || i === 2) && <div className={styles.minibusPassengerSilhouette}></div>}
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className={styles.minibusWindshield}>
+              <div className={styles.minibusWindshieldReflection}></div>
+            </div>
+            <div className={styles.minibusDriverSilhouette}>
+              <div className={styles.minibusDriverEye}></div>
+              <div className={`${styles.minibusDriverEye} ${styles.minibusDriverEyeRight}`}></div>
+            </div>
+            <div className={styles.minibusEntryDoor}>
+              <div className={styles.minibusDoorHandle}></div>
+              <div className={styles.minibusDoorStep1}></div>
+              <div className={styles.minibusDoorStep2}></div>
+            </div>
+            <div className={styles.minibusRouteNumber}><div className={styles.minibusRouteNumberText}>154</div></div>
+            <div className={`${styles.minibusWheel} ${styles.minibusWheelFront}`}><div className={`${styles.animateWheels} ${styles.minibusWheelRim}`}></div></div>
+            <div className={`${styles.minibusWheel} ${styles.minibusWheelRear}`}><div className={`${styles.animateWheels} ${styles.minibusWheelRim}`}></div></div>
+            <div className={`${styles.minibusWheelArch} ${styles.minibusWheelArchFront}`}></div>
+            <div className={`${styles.minibusWheelArch} ${styles.minibusWheelArchRear}`}></div>
+            <div className={styles.minibusHeadlight}>
+              <div className={styles.minibusHeadlightInner}></div>
+            </div>
+            <div className={styles.minibusLightBeam}></div>
+            <div className={`${styles.minibusTurnSignal} ${styles.animateLightBlink} ${styles.animationDelay400}`}></div>
+            <div className={`${styles.minibusTailLight} ${styles.animateLightBlink} ${styles.animationDelay500}`}></div>
+            <div className={styles.minibusLicensePlate}><div className={styles.minibusLicensePlateText}>NC-3214</div></div>
+            <div className={styles.minibusCompanyLogo}><div className={styles.minibusCompanyLogoText}>බස් සේවා</div></div>
+            <div className={styles.minibusRoofRack}>
+              <div className={`${styles.minibusLuggage} ${styles.minibusLuggage1}`}></div>
+              <div className={`${styles.minibusLuggage} ${styles.minibusLuggage2}`}></div>
+            </div>
+            <div className={styles.minibusExhaustPipe}></div>
+            <div className={`${styles.minibusExhaustSmoke} ${styles.minibusSmoke1}`}></div>
+            <div className={`${styles.minibusExhaustSmoke} ${styles.minibusSmoke2}`}></div>
+          </div>
+        </div>
+
+        {/* Enhanced 3-Wheeler Tuk-Tuk - Secondary Road */}
+        <div className={`${styles.tukTuk} ${styles.animateCarRight} ${styles.animationDelay1500}`}>
+          <div className={styles.vehicleRelativeContainer}>
+            <div className={styles.tukTukCanopy}></div>
+            <div className={styles.tukTukBody}></div>
+            <div className={styles.tukTukFrontSection}></div>
+            <div className={styles.tukTukWindshield}>
+              <div className={styles.tukTukWindshieldReflection}></div>
+            </div>
+            <div className={styles.tukTukDriverSilhouette}></div>
+            <div className={styles.tukTukPassengerCompartment}>
+              <div className={`${styles.tukTukPassenger} ${styles.tukTukPassenger1}`}></div>
+              <div className={`${styles.tukTukPassenger} ${styles.tukTukPassenger2}`}></div>
+            </div>
+            <div className={`${styles.tukTukWheel} ${styles.tukTukWheelFront}`}><div className={`${styles.animateWheels} ${styles.tukTukWheelRim}`}></div></div>
+            <div className={`${styles.tukTukWheel} ${styles.tukTukWheelRear1}`}><div className={`${styles.animateWheels} ${styles.tukTukWheelRim}`}></div></div>
+            <div className={`${styles.tukTukWheel} ${styles.tukTukWheelRear2}`}><div className={`${styles.animateWheels} ${styles.tukTukWheelRim}`}></div></div>
+            <div className={styles.tukTukHandlebars}></div>
+            <div className={styles.tukTukHeadlight}>
+              <div className={styles.tukTukHeadlightInner}></div>
+            </div>
+            <div className={styles.tukTukLightBeam}></div>
+            <div className={styles.tukTukMeter}>
+              <div className={`${styles.animateLightBlink} ${styles.animationDelay1000} ${styles.tukTukMeterLight}`}></div>
+            </div>
+            <div className={`${styles.tukTukTaillight} ${styles.animateLightBlink} ${styles.animationDelay800}`}></div>
+            <div className={styles.tukTukLicensePlate}><div className={styles.tukTukLicensePlateText}>TK-123</div></div>
+            <div className={styles.tukTukTrim}></div>
+            <div className={styles.tukTukFrameConnector}></div>
+            <div className={styles.tukTukExhaustPipe}></div>
+            <div className={`${styles.tukTukExhaustSmoke} ${styles.tukTukSmoke1}`}></div>
+            <div className={`${styles.tukTukExhaustSmoke} ${styles.tukTukSmoke2}`}></div>
+          </div>
+        </div>
+
+        {/* Enhanced Motorcycle - Main Road */}
+        <div className={`${styles.motorcycle} ${styles.animateCarLeft} ${styles.animationDelay1200}`}>
+          <div className={styles.vehicleRelativeContainer}>
+            <div className={styles.motorcycleFrame}></div>
+            <div className={styles.motorcycleFuelTank}>
+              <div className={styles.motorcycleFuelTankReflection}></div>
+            </div>
+            <div className={styles.motorcycleSeat}></div>
+            <div className={styles.motorcycleRearFender}></div>
+            <div className={styles.motorcycleFrontForks}></div>
+            <div className={styles.motorcycleHandlebar}></div>
+            <div className={styles.motorcycleEngine}></div>
+            <div className={styles.motorcycleExhaustPipe}></div>
+            <div className={`${styles.motorcycleExhaustSmoke} ${styles.motorcycleSmoke1}`}></div>
+            <div className={`${styles.motorcycleExhaustSmoke} ${styles.motorcycleSmoke2}`}></div>
+            <div className={`${styles.motorcycleWheel} ${styles.motorcycleWheelFront}`}><div className={`${styles.animateWheels} ${styles.motorcycleWheelRim}`}></div></div>
+            <div className={`${styles.motorcycleWheel} ${styles.motorcycleWheelRear}`}><div className={`${styles.animateWheels} ${styles.motorcycleWheelRim}`}></div></div>
+            <div className={styles.motorcycleHeadlight}>
+              <div className={styles.motorcycleHeadlightInner}></div>
+            </div>
+            <div className={styles.motorcycleLightBeam}></div>
+            <div className={`${styles.motorcycleTaillight} ${styles.animateLightBlink} ${styles.animationDelay100}`}></div>
+            <div className={styles.motorcycleRider}>
+              <div className={styles.motorcycleHelmet}>
+                <div className={styles.motorcycleVisor}></div>
+              </div>
+              <div className={styles.motorcycleArm}></div>
+            </div>
+            <div className={styles.motorcycleLicensePlate}><div className={styles.motorcycleLicensePlateText}>MC</div></div>
+          </div>
+        </div>
+      </div>
+
+      {/* Page Content Wrapper */}
+      <div className={styles.contentWrapper}>
+        {/* Navigation */}
+        <nav className={styles.nav}>
+          <div className={styles.navContainer}>
+            <Link href="/" className={styles.navBrand}>
+              <span className={styles.navBrandSri}>ශ්‍රී</span>
+              <span className={styles.navBrandExpress}>Express</span>
+            </Link>
+            <div className={styles.navLinks}>
+              <Link href="/" className={styles.navLink}>Home</Link>
+              <Link href="/contact" className={styles.navLink}>Contact</Link>
+              <Link href="/login" className={styles.navLoginButton}>Login</Link>
+            </div>
+          </div>
+        </nav>
+
+        {/* Header */}
+        <section className={styles.headerSection}>
+          <h1 className={`${styles.headerTitle} ${styles.animateFadeInDown}`}>
+            Help Center
+          </h1>
+          <p className={`${styles.headerSubtitle} ${styles.animateFadeInUp}`}>
+            Find answers to your questions and get help with Sri Express services
+          </p>
+        </section>
+
+        {/* Main Content: Search, Categories, FAQ */}
+        <main className={styles.mainContent}>
+          {/* Search */}
           <input
             type="text"
             placeholder="Search for help..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '1rem',
-              border: '1px solid #d1d5db',
-              borderRadius: '0.5rem',
-              fontSize: '1rem',
-              boxSizing: 'border-box'
-            }}
+            className={`${styles.searchInput} ${styles.inputFocus}`}
           />
-        </div>
 
-        {/* Categories */}
-        <div style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: '0.5rem',
-          marginBottom: '2rem'
-        }}>
-          {categories.map(category => (
-            <button
-              key={category.id}
-              onClick={() => setSelectedCategory(category.id)}
-              style={{
-                padding: '0.5rem 1rem',
-                borderRadius: '1rem',
-                border: 'none',
-                backgroundColor: selectedCategory === category.id ? '#F59E0B' : '#f3f4f6',
-                color: selectedCategory === category.id ? 'white' : '#374151',
-                cursor: 'pointer',
-                fontSize: '0.9rem'
-              }}
-            >
-              {category.name}
-            </button>
-          ))}
-        </div>
-
-        {/* FAQ Items */}
-        <div style={{ space: '1rem' }}>
-          {filteredFAQs.map(item => (
-            <details
-              key={item.id}
-              style={{
-                backgroundColor: 'white',
-                border: '1px solid #e5e7eb',
-                borderRadius: '0.5rem',
-                marginBottom: '1rem',
-                padding: '1rem'
-              }}
-            >
-              <summary style={{
-                cursor: 'pointer',
-                fontWeight: '600',
-                color: '#1F2937',
-                fontSize: '1.1rem'
-              }}>
-                {item.question}
-              </summary>
-              <div style={{
-                marginTop: '1rem',
-                paddingTop: '1rem',
-                borderTop: '1px solid #f3f4f6',
-                color: '#4B5563',
-                lineHeight: '1.6'
-              }}>
-                {item.answer}
-              </div>
-            </details>
-          ))}
-        </div>
-
-        {filteredFAQs.length === 0 && (
-          <div style={{
-            textAlign: 'center',
-            padding: '2rem',
-            color: '#6B7280'
-          }}>
-            No help articles found. Try a different search term or category.
+          {/* Categories */}
+          <div className={styles.categoriesContainer}>
+            {categories.map(category => (
+              <button
+                key={category.id}
+                onClick={() => setSelectedCategory(category.id)}
+                className={`${styles.categoryButton} ${selectedCategory === category.id ? styles.active : ''}`}
+              >
+                {category.name}
+              </button>
+            ))}
           </div>
-        )}
-      </section>
 
-      {/* Contact Support */}
-      <section style={{
-        backgroundColor: 'white',
-        padding: '3rem 1.5rem',
-        textAlign: 'center',
-        marginTop: '2rem'
-      }}>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>
-          Still need help?
-        </h2>
-        <p style={{ color: '#6B7280', marginBottom: '2rem' }}>
-          Can't find what you're looking for? Contact our support team.
-        </p>
-        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-          <Link href="/contact" style={{
-            backgroundColor: '#F59E0B',
-            color: 'white',
-            padding: '0.75rem 1.5rem',
-            borderRadius: '0.5rem',
-            textDecoration: 'none',
-            fontWeight: '600'
-          }}>
-            Contact Support
-          </Link>
-          <a href="tel:+94112345678" style={{
-            backgroundColor: '#10B981',
-            color: 'white',
-            padding: '0.75rem 1.5rem',
-            borderRadius: '0.5rem',
-            textDecoration: 'none',
-            fontWeight: '600'
-          }}>
-            Call: +94 11 234 5678
-          </a>
-        </div>
-      </section>
+          {/* FAQ Items */}
+          <div>
+            {filteredFAQs.map(item => (
+              <details key={item.id} className={styles.faqItem}>
+                <summary className={styles.faqQuestion}>
+                  {item.question}
+                </summary>
+                <div className={styles.faqAnswer}>
+                  {item.answer}
+                </div>
+              </details>
+            ))}
+          </div>
+
+          {filteredFAQs.length === 0 && (
+            <div className={styles.noResults}>
+              No help articles found. Try a different search term or category.
+            </div>
+          )}
+        </main>
+
+        {/* Contact Support Section */}
+        <section className={styles.contactSupportSection}>
+          <h2 className={styles.contactSupportTitle}>
+            Still need help?
+          </h2>
+          <p className={styles.contactSupportText}>
+            Can't find what you're looking for? Contact our support team.
+          </p>
+          <div className={styles.contactSupportButtons}>
+            <Link href="/contact" className={`${styles.contactButton} ${styles.buttonHover}`}>
+              Contact Support
+            </Link>
+            <a href="tel:+94112345678" className={`${styles.callButton} ${styles.buttonHover}`}>
+              Call: +94 11 234 5678
+            </a>
+          </div>
+        </section>
+      </div>
     </div>
   );
 }

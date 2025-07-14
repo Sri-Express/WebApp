@@ -1,0 +1,1953 @@
+/* Main Page Container */
+.helpPageContainer {
+  background-color: #fffbeb;
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Keyframe Animations */
+@keyframes road-marking {
+  0% { transform: translateX(-200%); }
+  100% { transform: translateX(500%); }
+}
+@keyframes car-right {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100vw); }
+}
+@keyframes car-left {
+  0% { transform: translateX(100vw) scaleX(-1); }
+  100% { transform: translateX(-100%) scaleX(-1); }
+}
+@keyframes light-blink {
+  0%, 100% { opacity: 1; box-shadow: 0 0 15px #fcd34d; }
+  50% { opacity: 0.6; box-shadow: 0 0 5px #fcd34d; }
+}
+@keyframes fade-in-down {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes trainMove {
+  from { left: 100%; }
+  to { left: -300px; }
+}
+@keyframes slight-bounce {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-1px); }
+}
+@keyframes steam {
+  0% { opacity: 0.8; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-20px) scale(2.5); }
+}
+@keyframes wheels {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(-360deg); }
+}
+@keyframes connecting-rod {
+  0% { transform: translateX(-1px) rotate(0deg); }
+  50% { transform: translateX(1px) rotate(180deg); }
+  100% { transform: translateX(-1px) rotate(360deg); }
+}
+@keyframes piston-move {
+  0% { transform: translateX(-2px); }
+  50% { transform: translateX(2px); }
+  100% { transform: translateX(-2px); }
+}
+@keyframes button-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+
+/* Animation Utility Classes */
+.animateRoadMarking { animation: road-marking 10s linear infinite; }
+.animateCarRight { animation: car-right 15s linear infinite; }
+.animateCarLeft { animation: car-left 16s linear infinite; }
+.animateLightBlink { animation: light-blink 1s infinite; }
+.animateFadeInDown { animation: fade-in-down 0.8s ease-out forwards; }
+.animateFadeInUp { animation: fade-in-up 0.8s ease-out forwards; }
+.animateTrainMove { animation: trainMove 15s linear infinite; }
+.animateSlightBounce { animation: slight-bounce 2s ease-in-out infinite; }
+.animateSteam { animation: steam 2s ease-out infinite; }
+.animateWheels { animation: wheels 2s linear infinite; }
+.animateConnectingRod { animation: connecting-rod 2s linear infinite; }
+.animatePiston { animation: piston-move 2s linear infinite; }
+
+/* Animation Delay Utilities */
+.animationDelay100 { animation-delay: 0.1s; }
+.animationDelay200 { animation-delay: 0.2s; }
+.animationDelay300 { animation-delay: 0.3s; }
+.animationDelay400 { animation-delay: 0.4s; }
+.animationDelay500 { animation-delay: 0.5s; }
+.animationDelay600 { animation-delay: 0.6s; }
+.animationDelay700 { animation-delay: 0.7s; }
+.animationDelay800 { animation-delay: 0.8s; }
+.animationDelay1000 { animation-delay: 1s; }
+.animationDelay1200 { animation-delay: 1.2s; }
+.animationDelay1500 { animation-delay: 1.5s; }
+.animationDelay2000 { animation-delay: 2s; }
+.animationDelay2500 { animation-delay: 2.5s; }
+.animationDelay3000 { animation-delay: 3s; }
+
+/* Interactive Element Styles */
+.buttonHover:hover {
+  animation: button-pulse 1s infinite;
+  background-color: #E9A200 !important; 
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4) !important;
+}
+.inputFocus:focus {
+  border-color: #F59E0B !important;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2) !important;
+  outline: none;
+}
+
+/* Background Scene and Elements */
+.backgroundScene {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom right, #fffbeb, #fef3c7, #fde68a);
+}
+.mainRoad {
+  position: absolute;
+  top: 15%;
+  left: 0;
+  right: 0;
+  height: 100px;
+  background-color: #1f2937;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+  z-index: 2;
+}
+.mainRoadMarkingContainer {
+  position: absolute;
+  top: 15%;
+  left: 0;
+  right: 0;
+  height: 100px;
+  z-index: 3;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.mainRoadMarking {
+  width: 100%;
+  height: 5px;
+  background: repeating-linear-gradient(to right, #fcd34d, #fcd34d 30px, transparent 30px, transparent 60px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+.secondaryRoad {
+  position: absolute;
+  top: 60%;
+  left: 0;
+  right: 0;
+  height: 80px;
+  background-color: #1f2937;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+  z-index: 2;
+}
+.secondaryRoadMarkingContainer {
+  position: absolute;
+  top: 60%;
+  left: 0;
+  right: 0;
+  height: 80px;
+  z-index: 3;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.secondaryRoadMarking {
+  width: 100%;
+  height: 4px;
+  background: repeating-linear-gradient(to right, #fcd34d, #fcd34d 20px, transparent 20px, transparent 40px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+.railwayBase {
+  position: absolute;
+  top: 85%;
+  left: 0;
+  right: 0;
+  height: 50px;
+  background: linear-gradient(to bottom, #4b5563 0%, #374151 100%);
+  box-shadow: 0 5px 10px -3px rgba(0, 0, 0, 0.3);
+  z-index: 2;
+}
+.railwayTracksContainer {
+  position: absolute;
+  top: 85%;
+  left: 0;
+  right: 0;
+  height: 50px;
+  overflow: visible;
+  z-index: 3;
+}
+.railTop, .railBottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: linear-gradient(to bottom, #94a3b8 0%, #64748b 100%);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  z-index: 4;
+}
+.railTop { top: 35%; }
+.railBottom { top: 65%; }
+.railTiesContainer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  display: flex;
+  gap: 15px;
+  z-index: 3;
+}
+.railTie {
+  width: 20px;
+  height: 100%;
+  background: linear-gradient(to bottom, #92400e 0%, #7c2d12 70%, #713f12 100%);
+  box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.5);
+  border: 1px solid #78350f;
+}
+.railGravel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  background-image: radial-gradient(circle, #6b7280 2px, transparent 2px), radial-gradient(circle, #9ca3af 1px, transparent 1px);
+  background-size: 8px 8px, 6px 6px;
+  opacity: 0.5;
+  z-index: 2;
+}
+
+/* Train Styles */
+.train {
+  position: absolute;
+  top: 85%;
+  margin-top: -15px;
+  left: 100%; 
+  height: 70px;
+  width: 300px;
+  z-index: 6;
+  pointer-events: none;
+  display: flex;
+  filter: drop-shadow(0 4px 3px rgba(0, 0, 0, 0.2));
+}
+.trainCarriageContainer {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+.locomotive {
+  position: relative;
+  width: 110px;
+  height: 60px;
+  margin-right: 5px;
+}
+.locomotiveBody {
+  position: absolute; 
+  bottom: 12px; 
+  left: 8px;
+  width: 85%; 
+  height: 30px; 
+  background: linear-gradient(to bottom, #b91c1c 0%, #9f1239 60%, #7f1d1d 100%); 
+  border-radius: 8px 5px 5px 5px; 
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  border: 1px solid #7f1d1d;
+}
+.locomotiveCabin {
+  position: absolute; 
+  bottom: 42px; 
+  right: 10px;
+  width: 60px; 
+  height: 30px; 
+  background: linear-gradient(to bottom, #7f1d1d 0%, #681e1e 100%); 
+  border-radius: 6px 6px 0 0;
+  border: 1px solid #601414;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.1);
+}
+.locomotiveRoof {
+  position: absolute; 
+  bottom: 72px; 
+  right: 8px;
+  width: 65px; 
+  height: 5px; 
+  background: #4c1d95;
+  border-radius: 2px;
+  box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.3);
+}
+.locomotiveCatcher {
+  position: absolute; 
+  bottom: 5px; 
+  left: 0; 
+  width: 15px; 
+  height: 18px;
+  background: linear-gradient(135deg, #9f1239 0%, #7f1d1d 100%);
+  clip-path: polygon(0 0, 100% 0, 100% 35%, 50% 100%, 0 35%);
+  border-radius: 2px;
+}
+.locomotiveBuffer {
+  position: absolute; 
+  bottom: 15px; 
+  left: 3px; 
+  width: 10px; 
+  height: 4px; 
+  background-color: #64748b;
+  border-radius: 1px;
+  border: 1px solid #475569;
+}
+.locomotiveSign {
+  position: absolute; 
+  top: 3px; 
+  left: 40px; 
+  padding: 3px 5px;
+  background-color: #fef3c7; 
+  border-radius: 3px;
+  border: 1px solid #7f1d1d;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  font-size: 9px;
+  font-weight: bold;
+  color: #7f1d1d;
+  white-space: nowrap;
+  font-family: 'Noto Sans Sinhala', 'Iskoola Pota', sans-serif;
+  z-index: 10;
+  transform: rotate(-2deg);
+}
+.chimney {
+  position: absolute; 
+  bottom: 42px; 
+  left: 22px; 
+  width: 14px; 
+  height: 18px; 
+  background: linear-gradient(to bottom, #27272a 0%, #18181b 100%); 
+  border-radius: 4px 4px 0 0;
+  border: 1px solid #111;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.1);
+}
+.chimneyTop {
+  position: absolute; 
+  top: -2px;
+  left: -2px;
+  width: 16px; 
+  height: 4px; 
+  background: linear-gradient(to bottom, #cbd5e1 0%, #94a3b8 100%); 
+  border-radius: 4px 4px 0 0;
+  border: 1px solid #64748b;
+}
+.steam {
+  position: absolute;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 30%, rgba(255, 255, 255, 0.6) 80%);
+  border-radius: 50%;
+}
+.steam:nth-of-type(1) { top: -15px; left: -2px; width: 18px; height: 15px; opacity: 0.9; }
+.steam:nth-of-type(2) { top: -12px; left: 4px; width: 16px; height: 14px; opacity: 0.85; }
+.steam:nth-of-type(3) { top: -18px; left: 2px; width: 20px; height: 18px; opacity: 0.9; }
+.steam:nth-of-type(4) { top: -14px; left: -4px; width: 17px; height: 15px; opacity: 0.8; }
+.steam:nth-of-type(5) { top: -22px; left: 1px; width: 22px; height: 20px; opacity: 0.7; }
+.locomotiveDome {
+  position: absolute; 
+  bottom: 42px; 
+  left: 45px; 
+  width: 8px; 
+  height: 10px; 
+  background: linear-gradient(to bottom, #fbbf24 0%, #d97706 100%); 
+  border-radius: 4px 4px 8px 8px;
+  border: 1px solid #b45309;
+}
+.locomotiveWhistle {
+  position: absolute; 
+  bottom: 42px; 
+  left: 60px; 
+  width: 6px; 
+  height: 8px; 
+  background: linear-gradient(to bottom, #94a3b8 0%, #64748b 100%); 
+  border-radius: 3px 3px 0 0;
+  border: 1px solid #475569;
+}
+.locomotiveWheel {
+  position: absolute;
+  bottom: 0;
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(135deg, #64748b 0%, #334155 100%);
+  border-radius: 50%;
+  border: 3px solid #cbd5e1;
+  box-sizing: border-box;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
+}
+.wheelLarge1 { left: 15px; }
+.wheelLarge2 { right: 25px; }
+.wheelLarge3 { right: 60px; }
+.wheelInnerBorder {
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  right: 1px;
+  bottom: 1px;
+  border-radius: 50%;
+  border: 2px solid #94a3b8;
+}
+.wheelSpokeHorizontal {
+  position: absolute;
+  top: calc(50% - 1px);
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #cbd5e1;
+}
+.wheelSpokeVertical {
+  position: absolute;
+  top: 0;
+  left: calc(50% - 1px);
+  width: 2px;
+  height: 100%;
+  background-color: #cbd5e1;
+}
+.wheelSpokesDiagonal {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: conic-gradient(from 0deg, transparent 0deg, transparent 10deg, #cbd5e1 10deg, #cbd5e1 15deg, transparent 15deg, transparent 55deg, #cbd5e1 55deg, #cbd5e1 60deg, transparent 60deg, transparent 100deg, #cbd5e1 100deg, #cbd5e1 105deg, transparent 105deg, transparent 145deg, #cbd5e1 145deg, #cbd5e1 150deg, transparent 150deg, transparent 190deg, #cbd5e1 190deg, #cbd5e1 195deg, transparent 195deg, transparent 235deg, #cbd5e1 235deg, #cbd5e1 240deg, transparent 240deg, transparent 280deg, #cbd5e1 280deg, #cbd5e1 285deg, transparent 285deg, transparent 325deg, #cbd5e1 325deg, #cbd5e1 330deg, transparent 330deg);
+  border-radius: 50%;
+}
+.wheelHub {
+  position: absolute;
+  top: calc(50% - 4px);
+  left: calc(50% - 4px);
+  width: 8px;
+  height: 8px;
+  background: radial-gradient(circle, #f8fafc 0%, #cbd5e1 100%);
+  border-radius: 50%;
+  border: 1px solid #64748b;
+  box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.2);
+}
+.pistonHousing {
+  position: absolute;
+  bottom: 24px;
+  left: 22px;
+  width: 30px;
+  height: 8px;
+  background-color: #64748b;
+  border-radius: 4px;
+  border: 1px solid #475569;
+  z-index: 3;
+}
+.piston {
+  position: absolute;
+  top: 2px;
+  left: 3px;
+  width: 22px;
+  height: 2px;
+  background-color: #94a3b8;
+  border-radius: 1px;
+}
+.locomotiveWindow {
+  position: absolute;
+  bottom: 47px;
+  width: 15px;
+  height: 12px;
+  background: linear-gradient(135deg, #93c5fd 0%, #bfdbfe 50%, #93c5fd 100%);
+  border-radius: 2px;
+  border: 2px solid #7f1d1d;
+  box-shadow: inset 0 0 4px rgba(255, 255, 255, 0.5);
+}
+.window1 { right: 15px; }
+.window2 { right: 40px; }
+.locomotiveHeadlight {
+  position: absolute;
+  bottom: 22px;
+  left: 3px;
+  width: 10px;
+  height: 10px;
+  background: radial-gradient(circle, #fef3c7 0%, #fcd34d 100%);
+  border-radius: 50%;
+  box-shadow: 0 0 15px #fcd34d, 0 0 5px #fef3c7;
+  border: 1px solid #b45309;
+}
+.carriage {
+  position: relative;
+  width: 90px;
+  height: 40px;
+  margin-top: 15px;
+}
+.carriage:not(:first-of-type) {
+  margin-right: 5px;
+}
+.carriageBody {
+  position: absolute;
+  bottom: 5px;
+  width: 100%;
+  height: 28px;
+  border-radius: 4px;
+  box-sizing: border-box;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+.redCarriage {
+  background: linear-gradient(to bottom, #dc2626 0%, #be123c 60%, #9f1239 100%);
+  border: 1px solid #881337;
+}
+.purpleCarriage {
+  background: linear-gradient(to bottom, #c026d3 0%, #a21caf 60%, #86198f 100%);
+  border: 1px solid #701a75;
+}
+.carriageStripe {
+  position: absolute;
+  top: 18px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background-color: #fbbf24;
+  opacity: 0.8;
+}
+.carriageRoof {
+  position: absolute;
+  bottom: 33px;
+  left: 2px;
+  width: 96%;
+  height: 4px;
+  border-radius: 40% 40% 0 0 / 100% 100% 0 0;
+  box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.3);
+}
+.redCarriageRoof { background: linear-gradient(to bottom, #7f1d1d 0%, #881337 100%); }
+.purpleCarriageRoof { background: linear-gradient(to bottom, #701a75 0%, #86198f 100%); }
+.carriageWindow {
+  position: absolute;
+  top: 5px;
+  width: 15px;
+  height: 10px;
+  background: linear-gradient(135deg, #93c5fd 0%, #bfdbfe 50%, #93c5fd 100%);
+  border-radius: 2px;
+  box-shadow: inset 0 0 3px rgba(255, 255, 255, 0.5);
+}
+.redCarriage .carriageWindow { border: 1px solid #881337; }
+.purpleCarriage .carriageWindow { border: 1px solid #701a75; }
+.carriageWindow1 { left: 10px; }
+.carriageWindow2 { left: 35px; }
+.carriageWindow3 { left: 60px; }
+.carriageTaillight {
+  position: absolute;
+  bottom: 15px;
+  right: 3px;
+  width: 6px;
+  height: 6px;
+  background: radial-gradient(circle, #fef3c7 0%, #f87171 100%);
+  border-radius: 50%;
+  box-shadow: 0 0 8px #f87171;
+  border: 1px solid #7f1d1d;
+}
+.carriageWheel {
+  position: absolute;
+  bottom: 0;
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(135deg, #64748b 0%, #334155 100%);
+  border-radius: 50%;
+  border: 3px solid #cbd5e1;
+  box-sizing: border-box;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
+}
+.carriageWheel1 { left: 20px; }
+.carriageWheel2 { right: 20px; }
+.wheelHubSmall {
+  position: absolute;
+  top: calc(50% - 3px);
+  left: calc(50% - 3px);
+  width: 6px;
+  height: 6px;
+  background: radial-gradient(circle, #f8fafc 0%, #cbd5e1 100%);
+  border-radius: 50%;
+  border: 1px solid #64748b;
+  box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.2);
+}
+.carriageConnector {
+  position: absolute;
+  bottom: 15px;
+  left: -8px;
+  width: 10px;
+  height: 4px;
+  background-color: #64748b;
+  border-radius: 1px;
+  z-index: 1;
+}
+
+/* Vehicle Base Styles */
+.vehicleRelativeContainer {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* Bus Styles */
+.bus {
+  position: absolute;
+  top: 15%;
+  margin-top: 10px;
+  left: -180px;
+  width: 180px;
+  height: 80px;
+  z-index: 5;
+  filter: drop-shadow(0 4px 3px rgba(0, 0, 0, 0.3));
+}
+.busBodyBase {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 50px;
+  background: linear-gradient(to bottom, #fbbf24 0%, #f59e0b 70%, #d97706 100%);
+  border-radius: 12px 15px 8px 8px;
+  border: 1px solid #b45309;
+  box-shadow: inset 0 -4px 10px rgba(0, 0, 0, 0.2), inset 2px 0 8px rgba(255, 255, 255, 0.3);
+}
+.busFrontHood {
+  position: absolute;
+  bottom: 6px;
+  left: 0;
+  width: 40px;
+  height: 44px;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  border-radius: 12px 5px 0 8px;
+  box-shadow: inset 1px 1px 5px rgba(255, 255, 255, 0.4);
+}
+.busEntry {
+  position: absolute;
+  bottom: 0;
+  left: 40px;
+  width: 25px;
+  height: 48px;
+  background: linear-gradient(to right, #f59e0b 0%, #fbbf24 100%);
+  border-left: 2px solid #b45309;
+  border-right: 2px solid #b45309;
+  box-shadow: inset 0 -3px 6px rgba(0, 0, 0, 0.15);
+}
+.busEntryDoor {
+  position: absolute;
+  top: 6px;
+  left: 0;
+  right: 0;
+  height: 42px;
+  background: linear-gradient(to right, rgba(219, 234, 254, 0.7) 0%, rgba(147, 197, 253, 0.7) 100%);
+  border-radius: 3px;
+  border: 1px solid #d97706;
+  box-shadow: inset 0 0 5px rgba(255, 255, 255, 0.6);
+  overflow: hidden;
+}
+.busDoorHandle {
+  position: absolute;
+  top: 20px;
+  right: 3px;
+  width: 4px;
+  height: 8px;
+  background: linear-gradient(to bottom, #94a3b8 0%, #64748b 100%);
+  border-radius: 4px;
+  border: 1px solid #475569;
+}
+.busDoorDivider1, .busDoorDivider2 {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: #d97706;
+}
+.busDoorDivider1 { top: 18px; }
+.busDoorDivider2 { top: 28px; }
+.busWindowsSection {
+  position: absolute;
+  top: 8px;
+  left: 70px;
+  right: 10px;
+  height: 32px;
+  background: linear-gradient(to bottom, rgba(219, 234, 254, 0.7) 0%, rgba(147, 197, 253, 0.7) 100%);
+  border-radius: 5px;
+  border: 2px solid #d97706;
+  box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.6);
+  overflow: hidden;
+}
+.busWindowGrid {
+  display: flex;
+  height: 100%;
+  width: 100%;
+}
+.busWindow {
+  flex: 1;
+  height: 100%;
+  border-right: 2px solid #d97706;
+  position: relative;
+}
+.busWindow:last-child {
+  border-right: none;
+}
+.passengerSilhouette {
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 8px;
+  height: 10px;
+  background-color: rgba(0,0,0,0.7);
+  border-radius: 4px 4px 0 0;
+}
+.busRoof {
+  position: absolute;
+  bottom: 50px;
+  left: 5px;
+  right: 5px;
+  height: 8px;
+  background: linear-gradient(to bottom, #f59e0b 0%, #fbbf24 100%);
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+  border: 1px solid #b45309;
+  border-bottom: none;
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+}
+.busDestinationBoard {
+  position: absolute;
+  top: 5px;
+  left: 40px;
+  width: 25px;
+  height: 13px;
+  background-color: rgba(255, 255, 255, 0.9);
+  border: 1px solid #b45309;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+.busDestinationText {
+  font-size: 5px;
+  font-weight: bold;
+  color: #1f2937;
+  font-family: 'Noto Sans Sinhala', 'Iskoola Pota', sans-serif;
+  transform: scaleY(0.9);
+}
+.busFrontLights {
+  position: absolute;
+  bottom: 8px;
+  left: 5px;
+  width: 12px;
+  height: 8px;
+  background: linear-gradient(to right, #fef3c7 0%, #fcd34d 100%);
+  border-radius: 40% 60% 60% 40% / 50% 50% 50% 50%;
+  border: 1px solid #b45309;
+  box-shadow: 0 0 10px rgba(252, 211, 77, 0.7);
+  overflow: hidden;
+}
+.busFrontLightInner {
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  width: 4px;
+  height: 4px;
+  background: radial-gradient(circle, #fef9c3 0%, #fef3c7 100%);
+  border-radius: 50%;
+}
+.busFrontLightBeam {
+  position: absolute;
+  bottom: 8px;
+  left: -20px;
+  width: 30px;
+  height: 12px;
+  background: linear-gradient(to left, rgba(252, 211, 77, 0.2) 0%, rgba(252, 211, 77, 0) 100%);
+  border-radius: 50%;
+  transform: scaleX(2);
+}
+.busTurnSignal {
+  position: absolute;
+  bottom: 18px;
+  left: 5px;
+  width: 6px;
+  height: 6px;
+  background: radial-gradient(circle, #fef3c7 0%, #fcd34d 100%);
+  border-radius: 50%;
+  border: 1px solid #b45309;
+  box-shadow: 0 0 8px rgba(252, 211, 77, 0.6);
+}
+.busRearLights {
+  position: absolute;
+  bottom: 18px;
+  right: 5px;
+  width: 10px;
+  height: 6px;
+  background: radial-gradient(circle, #f87171 50%, #ef4444 100%);
+  border-radius: 2px;
+  border: 1px solid #7f1d1d;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+}
+.busLogo {
+  position: absolute;
+  bottom: 30px;
+  right: 20px;
+  width: 25px;
+  height: 15px;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+  border: 1px solid #b45309;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+.busLogoText {
+  font-size: 4px;
+  font-weight: bold;
+  color: #b45309;
+  line-height: 1;
+  text-align: center;
+}
+.busWheel {
+  position: absolute;
+  bottom: -9px;
+  width: 22px;
+  height: 22px;
+  background-color: #0f172a;
+  border-radius: 50%;
+  border: 4px solid #94a3b8;
+  box-sizing: border-box;
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+.busWheelFront { left: 20px; }
+.busWheelMiddle { left: 90px; }
+.busWheelRear { right: 20px; }
+.busWheelRim {
+  position: absolute;
+  inset: 1px;
+  border-radius: 50%;
+  border: 2px solid #64748b;
+  background: radial-gradient(circle at center, #e2e8f0 15%, transparent 15%), conic-gradient(#cbd5e1 0deg, #cbd5e1 30deg, transparent 30deg, transparent 60deg, #cbd5e1 60deg, #cbd5e1 90deg, transparent 90deg, transparent 120deg, #cbd5e1 120deg, #cbd5e1 150deg, transparent 150deg, transparent 180deg, #cbd5e1 180deg, #cbd5e1 210deg, transparent 210deg, transparent 240deg, #cbd5e1 240deg, #cbd5e1 270deg, transparent 270deg, transparent 300deg, #cbd5e1 300deg, #cbd5e1 330deg, transparent 330deg, transparent 360deg);
+}
+.busWheelArch {
+  position: absolute;
+  bottom: 22px;
+  width: 26px;
+  height: 12px;
+  border-top: 2px solid #b45309;
+  border-left: 2px solid #b45309;
+  border-right: 2px solid #b45309;
+  border-radius: 50% 50% 0 0;
+  border-bottom: none;
+}
+.busWheelArchFront { left: 20px; }
+.busWheelArchMiddle { left: 90px; }
+.busWheelArchRear { right: 20px; }
+.busNumberPlate {
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 35px;
+  height: 12px;
+  background-color: white;
+  border-radius: 2px;
+  border: 1px solid #d97706;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+.busNumberPlateText {
+  font-size: 6px;
+  font-weight: bold;
+  color: #1f2937;
+}
+.busRoofRack {
+  position: absolute;
+  bottom: 58px;
+  left: 40px;
+  right: 20px;
+  height: 8px;
+  background: linear-gradient(to bottom, #64748b 0%, #475569 100%);
+  border-radius: 3px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+.luggageItem {
+  position: absolute;
+  border-radius: 2px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+.luggage1 { top: -4px; left: 10px; width: 15px; height: 8px; background: linear-gradient(to bottom, #78716c 0%, #57534e 100%); }
+.luggage2 { top: -6px; left: 35px; width: 20px; height: 10px; background: linear-gradient(to bottom, #a1a1aa 0%, #71717a 100%); }
+.luggage3 { top: -3px; right: 15px; width: 12px; height: 7px; background: linear-gradient(to bottom, #4b5563 0%, #374151 100%); }
+.busWiper {
+  position: absolute;
+  bottom: 35px;
+  left: 15px;
+  width: 15px;
+  height: 2px;
+  background-color: #334155;
+  border-radius: 1px;
+  transform-origin: left center;
+  transform: rotate(-10deg);
+}
+.driverSilhouette {
+  position: absolute;
+  bottom: 30px;
+  left: 25px;
+  width: 12px;
+  height: 12px;
+  background-color: rgba(0,0,0,0.8);
+  border-radius: 6px 6px 0 0;
+}
+.driverEye {
+  position: absolute;
+  top: 3px;
+  left: 2px;
+  width: 3px;
+  height: 2px;
+  background-color: #f8fafc;
+  border-radius: 50%;
+}
+.driverEyeRight {
+  right: 2px;
+  left: auto;
+}
+.exhaustPipe {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  width: 8px;
+  height: 4px;
+  background: linear-gradient(to bottom, #9ca3af 0%, #6b7280 100%);
+  border-radius: 0 2px 2px 0;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+.exhaustSmoke {
+  position: absolute;
+  background: radial-gradient(circle, rgba(209, 213, 219, 0.8) 0%, rgba(209, 213, 219, 0) 70%);
+  border-radius: 50%;
+}
+.smoke1 { bottom: 5px; right: -8px; width: 10px; height: 10px; opacity: 0.6; animation: steam 1.2s ease-out infinite; }
+.smoke2 { bottom: 8px; right: -15px; width: 12px; height: 12px; opacity: 0.5; animation: steam 1.5s ease-out infinite; }
+.smoke3 { bottom: 12px; right: -22px; width: 15px; height: 15px; opacity: 0.4; animation: steam 1.8s ease-out infinite; }
+
+/* Minibus Styles */
+.minibus {
+  position: absolute;
+  top: 60%;
+  margin-top: 5px;
+  right: -120px;
+  width: 120px;
+  height: 55px;
+  z-index: 5;
+  filter: drop-shadow(0 4px 3px rgba(0, 0, 0, 0.3));
+}
+.minibusBodyBase {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 35px;
+  background: linear-gradient(to bottom, #fbbf24 0%, #f59e0b 70%, #d97706 100%);
+  border-radius: 15px 10px 8px 8px;
+  border: 1px solid #b45309;
+  box-shadow: inset 0 -4px 10px rgba(0, 0, 0, 0.2), inset -2px 0 8px rgba(255, 255, 255, 0.3);
+}
+.minibusHood {
+  position: absolute;
+  bottom: 8px;
+  right: 0;
+  width: 30px;
+  height: 27px;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  border-radius: 5px 10px 8px 0;
+  box-shadow: inset 1px 1px 5px rgba(255, 255, 255, 0.4);
+}
+.minibusCabinWindows {
+  position: absolute;
+  top: 8px;
+  left: 10px;
+  right: 35px;
+  height: 20px;
+  background: linear-gradient(to bottom, rgba(219, 234, 254, 0.7) 0%, rgba(147, 197, 253, 0.7) 100%);
+  border-radius: 5px 0 0 0;
+  border: 2px solid #d97706;
+  box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.6);
+  overflow: hidden;
+}
+.minibusWindowGrid {
+  display: flex;
+  height: 100%;
+  width: 100%;
+}
+.minibusWindow {
+  flex: 1;
+  height: 100%;
+  border-right: 2px solid #d97706;
+  position: relative;
+}
+.minibusWindow:last-child {
+  border-right: none;
+}
+.minibusPassengerSilhouette {
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 7px;
+  background-color: rgba(0,0,0,0.7);
+  border-radius: 3px 3px 0 0;
+}
+.minibusWindshield {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  width: 25px;
+  height: 20px;
+  background: linear-gradient(to bottom right, rgba(219, 234, 254, 0.8) 0%, rgba(147, 197, 253, 0.8) 100%);
+  border-radius: 0 5px 0 0;
+  border: 2px solid #d97706;
+  box-shadow: inset 0 0 5px rgba(255, 255, 255, 0.6);
+}
+.minibusWindshieldReflection {
+  position: absolute;
+  top: 3px;
+  left: 5px;
+  width: 15px;
+  height: 2px;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.2) 100%);
+  border-radius: 50%;
+  transform: rotate(10deg);
+}
+.minibusDriverSilhouette {
+  position: absolute;
+  top: 15px;
+  right: 22px;
+  width: 8px;
+  height: 8px;
+  background-color: rgba(0,0,0,0.8);
+  border-radius: 4px 4px 0 0;
+}
+.minibusDriverEye {
+  position: absolute;
+  top: 2px;
+  left: 1px;
+  width: 2px;
+  height: 1px;
+  background-color: #f8fafc;
+  border-radius: 50%;
+}
+.minibusDriverEyeRight {
+  right: 1px;
+  left: auto;
+}
+.minibusEntryDoor {
+  position: absolute;
+  bottom: 0px;
+  left: 25px;
+  width: 20px;
+  height: 28px;
+  background-color: rgba(219, 234, 254, 0.7);
+  border-radius: 3px 3px 0 0;
+  border: 2px solid #d97706;
+  border-bottom: none;
+  box-shadow: inset 0 0 5px rgba(255, 255, 255, 0.6);
+}
+.minibusDoorHandle {
+  position: absolute;
+  top: 14px;
+  right: 2px;
+  width: 3px;
+  height: 6px;
+  background: linear-gradient(to bottom, #94a3b8 0%, #64748b 100%);
+  border-radius: 3px;
+  border: 1px solid #475569;
+}
+.minibusDoorStep1, .minibusDoorStep2 {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: #d97706;
+}
+.minibusDoorStep1 { top: 18px; }
+.minibusDoorStep2 { top: 23px; }
+.minibusRouteNumber {
+  position: absolute;
+  top: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 18px;
+  height: 10px;
+  background-color: rgba(255, 255, 255, 0.9);
+  border: 1px solid #b45309;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+.minibusRouteNumberText {
+  font-size: 5px;
+  font-weight: bold;
+  color: #1f2937;
+}
+.minibusWheel {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  background-color: #0f172a;
+  border-radius: 50%;
+  border: 3px solid #94a3b8;
+  box-sizing: border-box;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+.minibusWheelFront { bottom: -7px; right: 20px; }
+.minibusWheelRear { bottom: 0; left: 20px; }
+.minibusWheelRim {
+  position: absolute;
+  inset: 1px;
+  border-radius: 50%;
+  border: 1px solid #64748b;
+  background: radial-gradient(circle at center, #e2e8f0 15%, transparent 15%), conic-gradient(#cbd5e1 0deg, #cbd5e1 30deg, transparent 30deg, transparent 60deg, #cbd5e1 60deg, #cbd5e1 90deg, transparent 90deg, transparent 120deg, #cbd5e1 120deg, #cbd5e1 150deg, transparent 150deg, transparent 180deg, #cbd5e1 180deg, #cbd5e1 210deg, transparent 210deg, transparent 240deg, #cbd5e1 240deg, #cbd5e1 270deg, transparent 270deg, transparent 300deg, #cbd5e1 300deg, #cbd5e1 330deg, transparent 330deg, transparent 360deg);
+}
+.minibusWheelArch {
+  position: absolute;
+  bottom: 18px;
+  width: 22px;
+  height: 10px;
+  border-top: 2px solid #b45309;
+  border-left: 2px solid #b45309;
+  border-right: 2px solid #b45309;
+  border-radius: 50% 50% 0 0;
+  border-bottom: none;
+}
+.minibusWheelArchFront { right: 20px; }
+.minibusWheelArchRear { left: 20px; }
+.minibusHeadlight {
+  position: absolute;
+  bottom: 12px;
+  right: 5px;
+  width: 10px;
+  height: 6px;
+  background: linear-gradient(to left, #fef3c7 0%, #fcd34d 100%);
+  border-radius: 60% 40% 40% 60% / 50% 50% 50% 50%;
+  border: 1px solid #b45309;
+  box-shadow: 0 0 8px rgba(252, 211, 77, 0.6);
+  transform: rotate(5deg);
+}
+.minibusHeadlightInner {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  width: 3px;
+  height: 2px;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+}
+.minibusLightBeam {
+  position: absolute;
+  bottom: 10px;
+  right: -20px;
+  width: 30px;
+  height: 12px;
+  background: linear-gradient(to right, rgba(252, 211, 77, 0.2) 0%, rgba(252, 211, 77, 0) 100%);
+  border-radius: 50%;
+  transform: rotate(5deg) scaleX(2);
+}
+.minibusTurnSignal {
+  position: absolute;
+  bottom: 23px;
+  right: 8px;
+  width: 5px;
+  height: 5px;
+  background: radial-gradient(circle, #fef3c7 0%, #fcd34d 100%);
+  border-radius: 50%;
+  border: 1px solid #b45309;
+  box-shadow: 0 0 6px rgba(252, 211, 77, 0.6);
+}
+.minibusTailLight {
+  position: absolute;
+  bottom: 12px;
+  left: 5px;
+  width: 8px;
+  height: 5px;
+  background: radial-gradient(circle, #f87171 50%, #ef4444 100%);
+  border-radius: 2px;
+  border: 1px solid #7f1d1d;
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
+}
+.minibusLicensePlate {
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 25px;
+  height: 8px;
+  background-color: white;
+  border-radius: 2px;
+  border: 1px solid #d97706;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+.minibusLicensePlateText {
+  font-size: 4px;
+  font-weight: bold;
+  color: #1f2937;
+}
+.minibusCompanyLogo {
+  position: absolute;
+  bottom: 20px;
+  right: 40px;
+  width: 18px;
+  height: 10px;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 5px;
+  border: 1px solid #b45309;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+.minibusCompanyLogoText {
+  font-size: 3px;
+  font-weight: bold;
+  color: #b45309;
+  font-family: 'Noto Sans Sinhala', 'Iskoola Pota', sans-serif;
+}
+.minibusRoofRack {
+  position: absolute;
+  top: 0;
+  left: 20px;
+  right: 35px;
+  height: 5px;
+  background: linear-gradient(to bottom, #64748b 0%, #475569 100%);
+  border-radius: 2px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+.minibusLuggage {
+  position: absolute;
+  border-radius: 1px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+.minibusLuggage1 { top: -3px; left: 5px; width: 10px; height: 5px; background: linear-gradient(to bottom, #78716c 0%, #57534e 100%); }
+.minibusLuggage2 { top: -4px; right: 10px; width: 15px; height: 6px; background: linear-gradient(to bottom, #a1a1aa 0%, #71717a 100%); }
+.minibusExhaustPipe {
+  position: absolute;
+  bottom: 3px;
+  left: 5px;
+  width: 6px;
+  height: 3px;
+  background: linear-gradient(to right, #9ca3af 0%, #6b7280 100%);
+  border-radius: 2px 0 0 2px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+.minibusExhaustSmoke {
+  position: absolute;
+  background: radial-gradient(circle, rgba(209, 213, 219, 0.8) 0%, rgba(209, 213, 219, 0) 70%);
+  border-radius: 50%;
+}
+.minibusSmoke1 { bottom: 3px; left: -8px; width: 8px; height: 8px; opacity: 0.6; animation: steam 1.2s ease-out infinite; }
+.minibusSmoke2 { bottom: 6px; left: -15px; width: 10px; height: 10px; opacity: 0.5; animation: steam 1.5s ease-out infinite; }
+
+/* Tuk-Tuk Styles */
+.tukTuk {
+  position: absolute;
+  top: 60%;
+  margin-top: 30px;
+  left: -70px;
+  width: 70px;
+  height: 45px;
+  z-index: 5;
+  filter: drop-shadow(0 4px 3px rgba(0, 0, 0, 0.3));
+}
+.tukTukCanopy {
+  position: absolute;
+  bottom: 20px;
+  left: 10px;
+  width: 50px;
+  height: 22px;
+  background: linear-gradient(to bottom, #0ea5e9 0%, #0284c7 100%);
+  border-radius: 10px 10px 0 0;
+  border: 1px solid #0369a1;
+  box-shadow: inset 0 1px 5px rgba(255, 255, 255, 0.3), 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+.tukTukBody {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 20px;
+  background: linear-gradient(to bottom, #0369a1 0%, #075985 100%);
+  border-radius: 5px 15px 5px 5px;
+  border: 1px solid #0c4a6e;
+  box-shadow: inset 0 -2px 6px rgba(0, 0, 0, 0.2);
+}
+.tukTukFrontSection {
+  position: absolute;
+  bottom: 5px;
+  right: 0;
+  width: 25px;
+  height: 15px;
+  background: linear-gradient(to right, #0369a1 0%, #075985 100%);
+  border-radius: 5px 15px 5px 5px;
+  box-shadow: inset 1px 1px 3px rgba(255, 255, 255, 0.2);
+}
+.tukTukWindshield {
+  position: absolute;
+  bottom: 20px;
+  right: 5px;
+  width: 20px;
+  height: 15px;
+  background: linear-gradient(to bottom right, rgba(219, 234, 254, 0.8) 0%, rgba(147, 197, 253, 0.8) 100%);
+  border-radius: 5px 5px 0 0;
+  border: 1px solid #0369a1;
+  box-shadow: inset 0 0 5px rgba(255, 255, 255, 0.6);
+}
+.tukTukWindshieldReflection {
+  position: absolute;
+  top: 2px;
+  left: 3px;
+  width: 12px;
+  height: 2px;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.2) 100%);
+  border-radius: 50%;
+}
+.tukTukDriverSilhouette {
+  position: absolute;
+  bottom: 25px;
+  right: 12px;
+  width: 8px;
+  height: 8px;
+  background-color: rgba(0,0,0,0.8);
+  border-radius: 4px 4px 0 0;
+}
+.tukTukPassengerCompartment {
+  position: absolute;
+  bottom: 20px;
+  left: 10px;
+  width: 45px;
+  height: 15px;
+  background: linear-gradient(to bottom, rgba(219, 234, 254, 0.5) 0%, rgba(147, 197, 253, 0.5) 100%);
+  border-radius: 5px 5px 0 0;
+  border: 1px solid #0369a1;
+  border-bottom: none;
+  box-shadow: inset 0 0 5px rgba(255, 255, 255, 0.4);
+}
+.tukTukPassenger {
+  position: absolute;
+  bottom: 2px;
+  width: 7px;
+  height: 7px;
+  background-color: rgba(0,0,0,0.7);
+  border-radius: 3px 3px 0 0;
+}
+.tukTukPassenger1 { left: 15px; }
+.tukTukPassenger2 { right: 15px; }
+.tukTukWheel {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background-color: #0f172a;
+  border-radius: 50%;
+  border: 3px solid #94a3b8;
+  box-sizing: border-box;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+.tukTukWheelFront { bottom: 0; right: 10px; }
+.tukTukWheelRear1 { bottom: 0; left: 8px; }
+.tukTukWheelRear2 { bottom: 0; left: 28px; }
+.tukTukWheelRim {
+  position: absolute;
+  inset: 1px;
+  border-radius: 50%;
+  border: 1px solid #64748b;
+  background: radial-gradient(circle at center, #e2e8f0 15%, transparent 15%), conic-gradient(#cbd5e1 0deg, #cbd5e1 30deg, transparent 30deg, transparent 60deg, #cbd5e1 60deg, #cbd5e1 90deg, transparent 90deg, transparent 120deg, #cbd5e1 120deg, #cbd5e1 150deg, transparent 150deg, transparent 180deg, #cbd5e1 180deg, #cbd5e1 210deg, transparent 210deg, transparent 240deg, #cbd5e1 240deg, #cbd5e1 270deg, transparent 270deg, transparent 300deg, #cbd5e1 300deg, #cbd5e1 330deg, transparent 330deg, transparent 360deg);
+}
+.tukTukHandlebars {
+  position: absolute;
+  bottom: 26px;
+  right: 15px;
+  width: 8px;
+  height: 3px;
+  background-color: #94a3b8;
+  border-radius: 1px;
+  transform: rotate(-10deg);
+}
+.tukTukHeadlight {
+  position: absolute;
+  bottom: 10px;
+  right: 3px;
+  width: 6px;
+  height: 5px;
+  background: linear-gradient(to left, #fef3c7 0%, #fcd34d 100%);
+  border-radius: 50%;
+  border: 1px solid #b45309;
+  box-shadow: 0 0 8px rgba(252, 211, 77, 0.6);
+}
+.tukTukHeadlightInner {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  width: 2px;
+  height: 2px;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+}
+.tukTukLightBeam {
+  position: absolute;
+  bottom: 8px;
+  right: -12px;
+  width: 15px;
+  height: 8px;
+  background: linear-gradient(to right, rgba(252, 211, 77, 0.2) 0%, rgba(252, 211, 77, 0) 100%);
+  border-radius: 50%;
+  transform: scaleX(2);
+}
+.tukTukMeter {
+  position: absolute;
+  bottom: 14px;
+  right: 15px;
+  width: 6px;
+  height: 4px;
+  background: linear-gradient(to bottom, #334155 0%, #1e293b 100%);
+  border-radius: 1px;
+  border: 1px solid #0c4a6e;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+.tukTukMeterLight {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  width: 1px;
+  height: 1px;
+  background-color: #f87171;
+  border-radius: 50%;
+}
+.tukTukTaillight {
+  position: absolute;
+  bottom: 8px;
+  left: 3px;
+  width: 5px;
+  height: 3px;
+  background: radial-gradient(circle, #f87171 50%, #ef4444 100%);
+  border-radius: 2px;
+  border: 1px solid #7f1d1d;
+  box-shadow: 0 0 5px rgba(239, 68, 68, 0.6);
+}
+.tukTukLicensePlate {
+  position: absolute;
+  bottom: 4px;
+  left: 15px;
+  width: 20px;
+  height: 5px;
+  background-color: white;
+  border-radius: 1px;
+  border: 1px solid #0369a1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+.tukTukLicensePlateText {
+  font-size: 3px;
+  font-weight: bold;
+  color: #1f2937;
+}
+.tukTukTrim {
+  position: absolute;
+  bottom: 17px;
+  left: 5px;
+  right: 30px;
+  height: 2px;
+  background: linear-gradient(to right, #fcd34d 0%, #fbbf24 100%);
+  border-radius: 1px;
+}
+.tukTukFrameConnector {
+  position: absolute;
+  bottom: 20px;
+  right: 25px;
+  width: 5px;
+  height: 18px;
+  background: linear-gradient(to bottom, #0c4a6e 0%, #0369a1 100%);
+  transform: rotate(45deg);
+  transform-origin: bottom center;
+}
+.tukTukExhaustPipe {
+  position: absolute;
+  bottom: 3px;
+  left: 45px;
+  width: 5px;
+  height: 3px;
+  background: linear-gradient(to bottom, #9ca3af 0%, #6b7280 100%);
+  border-radius: 0 1px 1px 0;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+.tukTukExhaustSmoke {
+  position: absolute;
+  background: radial-gradient(circle, rgba(209, 213, 219, 0.8) 0%, rgba(209, 213, 219, 0) 70%);
+  border-radius: 50%;
+}
+.tukTukSmoke1 { bottom: 3px; left: 48px; width: 5px; height: 5px; opacity: 0.6; animation: steam 0.8s ease-out infinite; }
+.tukTukSmoke2 { bottom: 5px; left: 52px; width: 6px; height: 6px; opacity: 0.5; animation: steam 1s ease-out infinite; }
+
+/* Motorcycle Styles */
+.motorcycle {
+  position: absolute;
+  top: 15%;
+  margin-top: 40px;
+  right: -80px;
+  width: 80px;
+  height: 45px;
+  z-index: 5;
+  filter: drop-shadow(0 4px 3px rgba(0, 0, 0, 0.3));
+}
+.motorcycleFrame {
+  position: absolute;
+  bottom: 10px;
+  left: 20px;
+  width: 40px;
+  height: 4px;
+  background: linear-gradient(to bottom, #4b5563 0%, #374151 100%);
+  border-radius: 2px;
+  transform: rotate(5deg);
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.3);
+}
+.motorcycleFuelTank {
+  position: absolute;
+  bottom: 14px;
+  left: 35px;
+  width: 20px;
+  height: 10px;
+  background: linear-gradient(to bottom, #dc2626 0%, #b91c1c 100%);
+  border-radius: 5px 8px 5px 5px;
+  box-shadow: inset 2px 2px 5px rgba(255, 255, 255, 0.3);
+  transform: rotate(5deg);
+}
+.motorcycleFuelTankReflection {
+  position: absolute;
+  top: 2px;
+  left: 5px;
+  width: 8px;
+  height: 2px;
+  background: linear-gradient(to right, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0) 100%);
+  border-radius: 2px;
+  transform: rotate(-5deg);
+}
+.motorcycleSeat {
+  position: absolute;
+  bottom: 14px;
+  left: 18px;
+  width: 18px;
+  height: 6px;
+  background: linear-gradient(to bottom, #111827 0%, #1f2937 100%);
+  border-radius: 2px 5px 2px 2px;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.1);
+}
+.motorcycleRearFender {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  width: 10px;
+  height: 8px;
+  background: linear-gradient(to bottom, #4b5563 0%, #374151 100%);
+  border-radius: 5px 2px 2px 2px;
+  transform: rotate(-15deg);
+}
+.motorcycleFrontForks {
+  position: absolute;
+  bottom: 12px;
+  right: 25px;
+  width: 3px;
+  height: 16px;
+  background: linear-gradient(to bottom, #9ca3af 0%, #6b7280 100%);
+  border-radius: 2px;
+  transform: rotate(20deg);
+  transform-origin: bottom center;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+.motorcycleHandlebar {
+  position: absolute;
+  bottom: 27px;
+  right: 22px;
+  width: 12px;
+  height: 3px;
+  background: linear-gradient(to bottom, #9ca3af 0%, #6b7280 100%);
+  border-radius: 2px;
+  transform: rotate(15deg);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+.motorcycleEngine {
+  position: absolute;
+  bottom: 3px;
+  left: 25px;
+  width: 16px;
+  height: 10px;
+  background: linear-gradient(to bottom, #1f2937 0%, #111827 100%);
+  border-radius: 3px;
+  box-shadow: inset 1px 1px 2px rgba(255, 255, 255, 0.1), 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+.motorcycleExhaustPipe {
+  position: absolute;
+  bottom: 4px;
+  left: 15px;
+  width: 12px;
+  height: 3px;
+  background: linear-gradient(to right, #6b7280 0%, #4b5563 100%);
+  border-radius: 1px;
+  transform: rotate(5deg);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+.motorcycleExhaustSmoke {
+  position: absolute;
+  background: radial-gradient(circle, rgba(209, 213, 219, 0.8) 0%, rgba(209, 213, 219, 0) 70%);
+  border-radius: 50%;
+}
+.motorcycleSmoke1 { bottom: 4px; left: 10px; width: 5px; height: 5px; opacity: 0.6; animation: steam 0.7s ease-out infinite; }
+.motorcycleSmoke2 { bottom: 6px; left: 5px; width: 6px; height: 6px; opacity: 0.5; animation: steam 0.9s ease-out infinite; }
+.motorcycleWheel {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background-color: #0f172a;
+  border-radius: 50%;
+  border: 3px solid #94a3b8;
+  box-sizing: border-box;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+.motorcycleWheelFront { bottom: -7px; right: 15px; }
+.motorcycleWheelRear { bottom: 0; left: 15px; }
+.motorcycleWheelRim {
+  position: absolute;
+  inset: 1px;
+  border-radius: 50%;
+  border: 1px solid #64748b;
+  background: radial-gradient(circle at center, #e2e8f0 10%, transparent 10%), conic-gradient(#cbd5e1 0deg, #cbd5e1 22.5deg, transparent 22.5deg, transparent 45deg, #cbd5e1 45deg, #cbd5e1 67.5deg, transparent 67.5deg, transparent 90deg, #cbd5e1 90deg, #cbd5e1 112.5deg, transparent 112.5deg, transparent 135deg, #cbd5e1 135deg, #cbd5e1 157.5deg, transparent 157.5deg, transparent 180deg, #cbd5e1 180deg, #cbd5e1 202.5deg, transparent 202.5deg, transparent 225deg, #cbd5e1 225deg, #cbd5e1 247.5deg, transparent 247.5deg, transparent 270deg, #cbd5e1 270deg, #cbd5e1 292.5deg, transparent 292.5deg, transparent 315deg, #cbd5e1 315deg, #cbd5e1 337.5deg, transparent 337.5deg, transparent 360deg);
+}
+.motorcycleHeadlight {
+  position: absolute;
+  bottom: 25px;
+  right: 15px;
+  width: 8px;
+  height: 6px;
+  background: linear-gradient(to left, #fef3c7 0%, #fcd34d 100%);
+  border-radius: 50%;
+  border: 1px solid #b45309;
+  box-shadow: 0 0 8px rgba(252, 211, 77, 0.6);
+  transform: rotate(10deg);
+}
+.motorcycleHeadlightInner {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  width: 3px;
+  height: 1px;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+}
+.motorcycleLightBeam {
+  position: absolute;
+  bottom: 25px;
+  right: -20px;
+  width: 30px;
+  height: 10px;
+  background: linear-gradient(to right, rgba(252, 211, 77, 0.2) 0%, rgba(252, 211, 77, 0) 100%);
+  border-radius: 50%;
+  transform: rotate(10deg) scaleX(2);
+}
+.motorcycleTaillight {
+  position: absolute;
+  bottom: 14px;
+  left: 8px;
+  width: 5px;
+  height: 3px;
+  background: radial-gradient(circle, #f87171 50%, #ef4444 100%);
+  border-radius: 40% 60% 60% 40% / 50% 50% 50% 50%;
+  border: 1px solid #7f1d1d;
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
+  transform: rotate(-15deg);
+}
+.motorcycleRider {
+  position: absolute;
+  bottom: 18px;
+  left: 25px;
+  width: 10px;
+  height: 14px;
+  background-color: #374151;
+  border-radius: 5px 5px 0 0;
+  transform: rotate(5deg);
+}
+.motorcycleHelmet {
+  position: absolute;
+  top: -8px;
+  left: 0;
+  width: 10px;
+  height: 10px;
+  background: linear-gradient(to bottom, #334155 0%, #1e293b 100%);
+  border-radius: 50% 50% 25% 25%;
+  box-shadow: inset 1px 1px 2px rgba(255, 255, 255, 0.1);
+}
+.motorcycleVisor {
+  position: absolute;
+  top: 3px;
+  left: 2px;
+  width: 6px;
+  height: 3px;
+  background: linear-gradient(to bottom, #38bdf8 0%, #0ea5e9 100%);
+  border-radius: 2px;
+  box-shadow: inset 1px 1px 2px rgba(255, 255, 255, 0.3);
+}
+.motorcycleArm {
+  position: absolute;
+  top: 2px;
+  right: -5px;
+  width: 8px;
+  height: 3px;
+  background-color: #374151;
+  border-radius: 2px;
+  transform: rotate(-20deg);
+}
+.motorcycleLicensePlate {
+  position: absolute;
+  bottom: 3px;
+  left: 17px;
+  width: 10px;
+  height: 4px;
+  background-color: white;
+  border-radius: 1px;
+  border: 1px solid #4b5563;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+.motorcycleLicensePlateText {
+  font-size: 2px;
+  font-weight: bold;
+  color: #1f2937;
+}
+
+/* Page Content Styles */
+.contentWrapper {
+  position: relative;
+  z-index: 10;
+}
+.nav {
+  background-color: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(251, 191, 36, 0.3);
+  padding: 1rem 0;
+  position: sticky;
+  top: 0;
+}
+.navContainer {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.navBrand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+.navBrandSri { color: #F59E0B; }
+.navBrandExpress { color: #1F2937; }
+.navLinks {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+.navLink {
+  color: #374151;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+.navLink:hover {
+  color: #F59E0B;
+}
+.navLoginButton {
+  background-color: #F59E0B;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  text-decoration: none;
+  box-shadow: 0 4px 6px rgba(245, 158, 11, 0.2);
+  transition: transform 0.2s, background-color 0.2s;
+}
+.navLoginButton:hover {
+  transform: translateY(-2px);
+  background-color: #E9A200;
+}
+
+/* UPDATED: Header Section Styles */
+.headerSection {
+    padding: 0.1rem 1.5rem 4rem;/* Increased padding to push content down */
+  text-align: center;
+  /* REMOVED background-color, backdrop-filter, and border-bottom */
+}
+
+.headerTitle {
+  font-size: 3.5rem;
+  font-weight: bold;
+  color: #4B5563F; /* CHANGED: Text color to white for better contrast */
+  margin-bottom: 1rem;
+  text-shadow: 0 3px 6px rgba(0, 0, 0, 0.5); /* ADDED: Strong text shadow for readability */
+}
+.headerSubtitle {
+  color: #4B5563; /* CHANGED: Text color to off-white */
+  font-size: 1.2rem;
+  max-width: 600px;
+  margin: 0 auto;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5); /* ADDED: Text shadow for readability */
+}
+
+.mainContent {
+  max-width: 800px;
+  /* CHANGED: Adjusted margin-top to push the card back down to its original position */
+  margin: 1.9rem auto 0;
+  padding: 2rem 1.5rem;
+  background-color: rgba(249, 250, 251, 0.9);
+  border-radius: 1rem;
+  backdrop-filter: blur(5px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+.searchInput {
+  width: 100%;
+  padding: 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  box-sizing: border-box;
+  margin-bottom: 2rem;
+  background-color: rgba(255,255,255,0.9);
+  transition: all 0.2s ease;
+}
+.categoriesContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 2.5rem;
+  justify-content: center;
+}
+.categoryButton {
+  padding: 0.5rem 1.25rem;
+  border-radius: 9999px;
+  border: 1px solid #d1d5db;
+  background-color: rgba(255, 255, 255, 0.8);
+  color: #374151;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+.categoryButton:hover {
+  background-color: #fef3c7;
+  border-color: #fcd34d;
+}
+.categoryButton.active {
+  background-color: #F59E0B;
+  color: white;
+  border-color: #F59E0B;
+  box-shadow: 0 4px 6px rgba(245, 158, 11, 0.2);
+}
+.faqItem {
+  background-color: rgba(255, 255, 255, 0.95);
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 1.25rem;
+  transition: box-shadow 0.3s;
+}
+.faqItem[open] {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+.faqQuestion {
+  cursor: pointer;
+  font-weight: 600;
+  color: #1F2937;
+  font-size: 1.1rem;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.faqQuestion::-webkit-details-marker {
+  display: none;
+}
+.faqQuestion::after {
+  content: '+';
+  font-size: 1.5rem;
+  color: #F59E0B;
+  transition: transform 0.2s;
+}
+.faqItem[open] .faqQuestion::after {
+  content: '−';
+  transform: rotate(180deg);
+}
+.faqAnswer {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #f3f4f6;
+  color: #4B5563;
+  line-height: 1.6;
+}
+.noResults {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #6B7280;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 0.75rem;
+}
+.contactSupportSection {
+  background-color: rgba(255, 250, 240, 0.9);
+  padding: 3rem 1.5rem;
+  text-align: center;
+  margin-top: 3rem;
+  border-top: 1px solid rgba(251, 191, 36, 0.3);
+}
+.contactSupportTitle {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  color: #1F2937;
+}
+.contactSupportText {
+  color: #6B7280;
+  margin-bottom: 2rem;
+}
+.contactSupportButtons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.contactButton {
+  background-color: #F59E0B;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+.callButton {
+  background-color: #10B981;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+.callButton:hover {
+  background-color: #059669 !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4) !important;
+}
