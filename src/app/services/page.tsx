@@ -510,14 +510,6 @@ export default function ServicesPage() {
                       gap: '0.5rem',
                       transition: 'all 0.3s'
                     }}
-                    onMouseOver={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-2px)';
-                      e.currentTarget.style.boxShadow = `0 8px 15px ${service.color}40`;
-                    }}
-                    onMouseOut={(e) => {
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = 'none';
-                    }}
                   >
                     Get Started
                     <ArrowRightIcon width={16} height={16} />
@@ -749,23 +741,9 @@ export default function ServicesPage() {
                     borderRadius: '0.75rem',
                     textDecoration: 'none',
                     fontWeight: '600',
-                    textAlign: 'center',
+                    textAlign: 'center' as const,
                     transition: 'all 0.3s',
-                    boxSizing: 'border-box'
-                  }}
-                  onMouseOver={(e) => {
-                    if (!plan.popular) {
-                      e.currentTarget.style.backgroundColor = plan.color;
-                      e.currentTarget.style.color = 'white';
-                    }
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                  }}
-                  onMouseOut={(e) => {
-                    if (!plan.popular) {
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                      e.currentTarget.style.color = plan.color;
-                    }
-                    e.currentTarget.style.transform = 'translateY(0)';
+                    boxSizing: 'border-box' as const
                   }}
                 >
                   {plan.name === 'Enterprise' ? 'Contact Sales' : 'Get Started'}
@@ -836,14 +814,6 @@ export default function ServicesPage() {
                   gap: '0.5rem',
                   transition: 'all 0.3s'
                 }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 8px 15px rgba(245, 158, 11, 0.4)';
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 4px 6px rgba(245, 158, 11, 0.5)';
-                }}
               >
                 Start Your Journey
                 <ArrowRightIcon width={20} height={20} />
@@ -863,16 +833,6 @@ export default function ServicesPage() {
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '0.5rem'
-                }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.backgroundColor = '#F59E0B';
-                  e.currentTarget.style.color = 'white';
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
-                  e.currentTarget.style.color = '#1F2937';
-                  e.currentTarget.style.transform = 'translateY(0)';
                 }}
               >
                 Contact Sales

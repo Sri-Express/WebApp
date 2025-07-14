@@ -84,10 +84,7 @@ export default function NotFound() {
               borderRadius: '0.5rem',
               textDecoration: 'none',
               fontWeight: '600',
-              transition: 'background-color 0.3s'
             }}
-            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#D97706'}
-            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#F59E0B'}
           >
             Go Home
           </Link>
@@ -102,15 +99,6 @@ export default function NotFound() {
               textDecoration: 'none',
               fontWeight: '600',
               border: '2px solid #F59E0B',
-              transition: 'all 0.3s'
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.backgroundColor = '#F59E0B';
-              e.currentTarget.style.color = 'white';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.backgroundColor = 'white';
-              e.currentTarget.style.color = '#F59E0B';
             }}
           >
             Get Help
@@ -145,10 +133,7 @@ export default function NotFound() {
                 textDecoration: 'none',
                 padding: '0.5rem',
                 borderRadius: '0.25rem',
-                transition: 'color 0.3s'
               }}
-              onMouseOver={(e) => e.currentTarget.style.color = '#F59E0B'}
-              onMouseOut={(e) => e.currentTarget.style.color = '#6B7280'}
             >
               Services
             </Link>
@@ -160,10 +145,7 @@ export default function NotFound() {
                 textDecoration: 'none',
                 padding: '0.5rem',
                 borderRadius: '0.25rem',
-                transition: 'color 0.3s'
               }}
-              onMouseOver={(e) => e.currentTarget.style.color = '#F59E0B'}
-              onMouseOut={(e) => e.currentTarget.style.color = '#6B7280'}
             >
               About Us
             </Link>
@@ -175,10 +157,7 @@ export default function NotFound() {
                 textDecoration: 'none',
                 padding: '0.5rem',
                 borderRadius: '0.25rem',
-                transition: 'color 0.3s'
               }}
-              onMouseOver={(e) => e.currentTarget.style.color = '#F59E0B'}
-              onMouseOut={(e) => e.currentTarget.style.color = '#6B7280'}
             >
               Contact
             </Link>
@@ -190,10 +169,7 @@ export default function NotFound() {
                 textDecoration: 'none',
                 padding: '0.5rem',
                 borderRadius: '0.25rem',
-                transition: 'color 0.3s'
               }}
-              onMouseOver={(e) => e.currentTarget.style.color = '#F59E0B'}
-              onMouseOut={(e) => e.currentTarget.style.color = '#6B7280'}
             >
               Login
             </Link>

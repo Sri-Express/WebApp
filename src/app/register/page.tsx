@@ -68,9 +68,8 @@ export default function RegisterPage() {
     }
   };
 
-  // Basic styles for a clean, modern look
-  const styles = {
-    container: {
+  return (
+    <div style={{
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -78,127 +77,70 @@ export default function RegisterPage() {
       backgroundColor: '#f3f4f6',
       fontFamily: 'sans-serif',
       padding: '1rem',
-    },
-    formWrapper: {
-      width: '100%',
-      maxWidth: '420px', // Slightly wider for the extra field
-      backgroundColor: 'white',
-      padding: '2.5rem',
-      borderRadius: '0.75rem',
-      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-    },
-    header: {
-      textAlign: 'center',
-      marginBottom: '2rem',
-    },
-    title: {
-      fontSize: '2.25rem',
-      fontWeight: 'bold',
-      color: '#111827',
-    },
-    subtitle: {
-      marginTop: '0.5rem',
-      color: '#4b5563',
-    },
-    errorBox: {
-      padding: '1rem',
-      backgroundColor: '#fee2e2',
-      color: '#b91c1c',
-      borderRadius: '0.5rem',
-      marginBottom: '1rem',
-      border: '1px solid #fecaca',
-      fontSize: '0.9rem',
-      textAlign: 'center',
-    },
-    inputGroup: {
-      marginBottom: '1.25rem', // Slightly reduced margin
-    },
-    label: {
-      display: 'block',
-      fontSize: '0.875rem',
-      fontWeight: '600',
-      color: '#374151',
-      marginBottom: '0.5rem',
-    },
-    inputContainer: {
-      position: 'relative',
-    },
-    input: {
-      width: '100%',
-      padding: '0.75rem 2.5rem',
-      borderRadius: '0.5rem',
-      border: '1px solid #d1d5db',
-      backgroundColor: '#ffffff',
-      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-      fontSize: '1rem',
-      boxSizing: 'border-box',
-    },
-    icon: {
-      position: 'absolute',
-      left: '0.75rem',
-      top: '50%',
-      transform: 'translateY(-50%)',
-      color: '#9ca3af',
-    },
-    passwordToggle: {
-      position: 'absolute',
-      right: '0.75rem',
-      top: '50%',
-      transform: 'translateY(-50%)',
-      background: 'none',
-      border: 'none',
-      cursor: 'pointer',
-      color: '#9ca3af',
-    },
-    submitButton: {
-      width: '100%',
-      backgroundColor: '#F59E0B',
-      color: 'white',
-      fontWeight: '700',
-      padding: '0.75rem',
-      borderRadius: '0.5rem',
-      border: 'none',
-      cursor: 'pointer',
-      fontSize: '1rem',
-      opacity: loading ? 0.7 : 1,
-      marginTop: '1.5rem',
-    },
-    footerText: {
-      textAlign: 'center',
-      marginTop: '1.5rem',
-      color: '#4b5563',
-      fontSize: '0.9rem',
-    },
-    link: {
-      color: '#D97706',
-      textDecoration: 'none',
-      fontWeight: '600',
-    },
-  };
-
-  return (
-    <div style={styles.container}>
-      <div style={styles.formWrapper}>
+    }}>
+      <div style={{
+        width: '100%',
+        maxWidth: '420px',
+        backgroundColor: 'white',
+        padding: '2.5rem',
+        borderRadius: '0.75rem',
+        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+      }}>
         
-        <div style={styles.header}>
-          <h1 style={styles.title}>
+        <div style={{
+          textAlign: 'center' as const,
+          marginBottom: '2rem',
+        }}>
+          <h1 style={{
+            fontSize: '2.25rem',
+            fontWeight: 'bold' as const,
+            color: '#111827',
+          }}>
             <span>ශ්‍රී</span> E<span style={{ color: '#DC2626' }}>x</span>press
           </h1>
-          <p style={styles.subtitle}>Create a new account</p>
+          <p style={{
+            marginTop: '0.5rem',
+            color: '#4b5563',
+          }}>Create a new account</p>
         </div>
         
         {error && (
-          <div style={styles.errorBox}>
+          <div style={{
+            padding: '1rem',
+            backgroundColor: '#fee2e2',
+            color: '#b91c1c',
+            borderRadius: '0.5rem',
+            marginBottom: '1rem',
+            border: '1px solid #fecaca',
+            fontSize: '0.9rem',
+            textAlign: 'center' as const,
+          }}>
             {error}
           </div>
         )}
         
         <form onSubmit={handleSubmit}>
           
-          <div style={styles.inputGroup}>
-            <label htmlFor="name" style={styles.label}>Full Name</label>
-            <div style={styles.inputContainer}>
-              <span style={styles.icon}><UserIcon width={20} height={20} /></span>
+          <div style={{
+            marginBottom: '1.25rem',
+          }}>
+            <label htmlFor="name" style={{
+              display: 'block' as const,
+              fontSize: '0.875rem',
+              fontWeight: '600' as const,
+              color: '#374151',
+              marginBottom: '0.5rem',
+            }}>Full Name</label>
+            <div style={{
+              position: 'relative' as const,
+            }}>
+              <span style={{
+                position: 'absolute' as const,
+                left: '0.75rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: '#9ca3af',
+              }}><UserIcon width={20} height={20} /></span>
               <input
                 id="name"
                 name="name"
@@ -207,15 +149,40 @@ export default function RegisterPage() {
                 value={formData.name}
                 onChange={handleChange}
                 placeholder="Enter your full name"
-                style={styles.input}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 2.5rem',
+                  borderRadius: '0.5rem',
+                  border: '1px solid #d1d5db',
+                  backgroundColor: '#ffffff',
+                  boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                  fontSize: '1rem',
+                  boxSizing: 'border-box' as const,
+                }}
               />
             </div>
           </div>
 
-          <div style={styles.inputGroup}>
-            <label htmlFor="email" style={styles.label}>Email</label>
-            <div style={styles.inputContainer}>
-              <span style={styles.icon}><EnvelopeIcon width={20} height={20} /></span>
+          <div style={{
+            marginBottom: '1.25rem',
+          }}>
+            <label htmlFor="email" style={{
+              display: 'block' as const,
+              fontSize: '0.875rem',
+              fontWeight: '600' as const,
+              color: '#374151',
+              marginBottom: '0.5rem',
+            }}>Email</label>
+            <div style={{
+              position: 'relative' as const,
+            }}>
+              <span style={{
+                position: 'absolute' as const,
+                left: '0.75rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: '#9ca3af',
+              }}><EnvelopeIcon width={20} height={20} /></span>
               <input
                 id="email"
                 name="email"
@@ -224,15 +191,40 @@ export default function RegisterPage() {
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="your@email.com"
-                style={styles.input}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 2.5rem',
+                  borderRadius: '0.5rem',
+                  border: '1px solid #d1d5db',
+                  backgroundColor: '#ffffff',
+                  boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                  fontSize: '1rem',
+                  boxSizing: 'border-box' as const,
+                }}
               />
             </div>
           </div>
 
-          <div style={styles.inputGroup}>
-            <label htmlFor="password" style={styles.label}>Password</label>
-            <div style={styles.inputContainer}>
-              <span style={styles.icon}><KeyIcon width={20} height={20} /></span>
+          <div style={{
+            marginBottom: '1.25rem',
+          }}>
+            <label htmlFor="password" style={{
+              display: 'block' as const,
+              fontSize: '0.875rem',
+              fontWeight: '600' as const,
+              color: '#374151',
+              marginBottom: '0.5rem',
+            }}>Password</label>
+            <div style={{
+              position: 'relative' as const,
+            }}>
+              <span style={{
+                position: 'absolute' as const,
+                left: '0.75rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: '#9ca3af',
+              }}><KeyIcon width={20} height={20} /></span>
               <input
                 id="password"
                 name="password"
@@ -242,18 +234,52 @@ export default function RegisterPage() {
                 value={formData.password}
                 onChange={handleChange}
                 placeholder="••••••••"
-                style={styles.input}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 2.5rem',
+                  borderRadius: '0.5rem',
+                  border: '1px solid #d1d5db',
+                  backgroundColor: '#ffffff',
+                  boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                  fontSize: '1rem',
+                  boxSizing: 'border-box' as const,
+                }}
               />
-              <button type="button" onClick={() => setShowPassword(!showPassword)} style={styles.passwordToggle}>
+              <button type="button" onClick={() => setShowPassword(!showPassword)} style={{
+                position: 'absolute' as const,
+                right: '0.75rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer' as const,
+                color: '#9ca3af',
+              }}>
                 {showPassword ? <EyeSlashIcon width={20} height={20} /> : <EyeIcon width={20} height={20} />}
               </button>
             </div>
           </div>
 
-          <div style={styles.inputGroup}>
-            <label htmlFor="confirmPassword" style={styles.label}>Confirm Password</label>
-            <div style={styles.inputContainer}>
-              <span style={styles.icon}><KeyIcon width={20} height={20} /></span>
+          <div style={{
+            marginBottom: '1.25rem',
+          }}>
+            <label htmlFor="confirmPassword" style={{
+              display: 'block' as const,
+              fontSize: '0.875rem',
+              fontWeight: '600' as const,
+              color: '#374151',
+              marginBottom: '0.5rem',
+            }}>Confirm Password</label>
+            <div style={{
+              position: 'relative' as const,
+            }}>
+              <span style={{
+                position: 'absolute' as const,
+                left: '0.75rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: '#9ca3af',
+              }}><KeyIcon width={20} height={20} /></span>
               <input
                 id="confirmPassword"
                 name="confirmPassword"
@@ -263,23 +289,62 @@ export default function RegisterPage() {
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 placeholder="••••••••"
-                style={styles.input}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 2.5rem',
+                  borderRadius: '0.5rem',
+                  border: '1px solid #d1d5db',
+                  backgroundColor: '#ffffff',
+                  boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                  fontSize: '1rem',
+                  boxSizing: 'border-box' as const,
+                }}
               />
-              <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} style={styles.passwordToggle}>
+              <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} style={{
+                position: 'absolute' as const,
+                right: '0.75rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer' as const,
+                color: '#9ca3af',
+              }}>
                 {showConfirmPassword ? <EyeSlashIcon width={20} height={20} /> : <EyeIcon width={20} height={20} />}
               </button>
             </div>
           </div>
 
-          <button type="submit" disabled={loading} style={styles.submitButton}>
+          <button type="submit" disabled={loading} style={{
+            width: '100%',
+            backgroundColor: '#F59E0B',
+            color: 'white',
+            fontWeight: '700' as const,
+            padding: '0.75rem',
+            borderRadius: '0.5rem',
+            border: 'none',
+            cursor: 'pointer' as const,
+            fontSize: '1rem',
+            opacity: loading ? 0.7 : 1,
+            marginTop: '1.5rem',
+          }}>
             {loading ? 'Creating Account...' : 'Create Account'}
           </button>
         </form>
         
-        <div style={styles.footerText}>
+        <div style={{
+          textAlign: 'center' as const,
+          marginTop: '1.5rem',
+          color: '#4b5563',
+          fontSize: '0.9rem',
+        }}>
           <p>
             Already have an account?{' '}
-            <Link href="/login" style={styles.link}>
+            <Link href="/login" style={{
+              color: '#D97706',
+              textDecoration: 'none' as const,
+              fontWeight: '600' as const,
+            }}>
               Sign in here
             </Link>
           </p>

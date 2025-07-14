@@ -4,7 +4,6 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { EnvelopeIcon, KeyIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
-import { CSSProperties } from 'react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -56,166 +55,78 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
-
-  // Properly typed styles
-  const containerStyle: CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: '100vh',
-    backgroundColor: '#f3f4f6',
-    fontFamily: 'sans-serif',
-    padding: '1rem',
-  };
-
-  const formWrapperStyle: CSSProperties = {
-    width: '100%',
-    maxWidth: '400px',
-    backgroundColor: 'white',
-    padding: '2.5rem',
-    borderRadius: '0.75rem',
-    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-  };
-
-  const headerStyle: CSSProperties = {
-    textAlign: 'center',
-    marginBottom: '2rem',
-  };
-
-  const titleStyle: CSSProperties = {
-    fontSize: '2.25rem',
-    fontWeight: 'bold',
-    color: '#111827',
-  };
-
-  const subtitleStyle: CSSProperties = {
-    marginTop: '0.5rem',
-    color: '#4b5563',
-  };
-
-  const errorBoxStyle: CSSProperties = {
-    padding: '1rem',
-    backgroundColor: '#fee2e2',
-    color: '#b91c1c',
-    borderRadius: '0.5rem',
-    marginBottom: '1rem',
-    border: '1px solid #fecaca',
-  };
-
-  const inputGroupStyle: CSSProperties = {
-    marginBottom: '1.5rem',
-  };
-
-  const labelStyle: CSSProperties = {
-    display: 'block',
-    fontSize: '0.875rem',
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: '0.5rem',
-  };
-
-  const inputContainerStyle: CSSProperties = {
-    position: 'relative',
-  };
-
-  const inputStyle: CSSProperties = {
-    width: '100%',
-    padding: '0.75rem 2.5rem',
-    borderRadius: '0.5rem',
-    border: '1px solid #d1d5db',
-    backgroundColor: '#ffffff',
-    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-    fontSize: '1rem',
-    boxSizing: 'border-box',
-  };
-
-  const iconStyle: CSSProperties = {
-    position: 'absolute',
-    left: '0.75rem',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    color: '#9ca3af',
-  };
-
-  const passwordToggleStyle: CSSProperties = {
-    position: 'absolute',
-    right: '0.75rem',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    color: '#9ca3af',
-  };
-
-  const optionsRowStyle: CSSProperties = {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '1.5rem',
-    fontSize: '0.875rem',
-  };
-
-  const checkboxLabelStyle: CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    color: '#4b5563',
-    cursor: 'pointer',
-  };
-
-  const checkboxStyle: CSSProperties = {
-    marginRight: '0.5rem',
-    accentColor: '#F59E0B',
-  };
-
-  const linkStyle: CSSProperties = {
-    color: '#D97706',
-    textDecoration: 'none',
-    fontWeight: '600',
-  };
-
-  const submitButtonStyle: CSSProperties = {
-    width: '100%',
-    backgroundColor: '#F59E0B',
-    color: 'white',
-    fontWeight: '700',
-    padding: '0.75rem',
-    borderRadius: '0.5rem',
-    border: 'none',
-    cursor: 'pointer',
-    fontSize: '1rem',
-    opacity: loading ? 0.7 : 1,
-  };
-
-  const footerTextStyle: CSSProperties = {
-    textAlign: 'center',
-    marginTop: '1.5rem',
-    color: '#4b5563',
-  };
   
   return (
-    <div style={containerStyle}>
-      <div style={formWrapperStyle}>
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: '100vh',
+      backgroundColor: '#f3f4f6',
+      fontFamily: 'sans-serif',
+      padding: '1rem',
+    }}>
+      <div style={{
+        width: '100%',
+        maxWidth: '400px',
+        backgroundColor: 'white',
+        padding: '2.5rem',
+        borderRadius: '0.75rem',
+        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+      }}>
         
-        <div style={headerStyle}>
-          <h1 style={titleStyle}>
+        <div style={{
+          textAlign: 'center' as const,
+          marginBottom: '2rem',
+        }}>
+          <h1 style={{
+            fontSize: '2.25rem',
+            fontWeight: 'bold' as const,
+            color: '#111827',
+          }}>
             <span>ශ්‍රී</span> E<span style={{ color: '#DC2626' }}>x</span>press
           </h1>
-          <p style={subtitleStyle}>Sign in to your account</p>
+          <p style={{
+            marginTop: '0.5rem',
+            color: '#4b5563',
+          }}>Sign in to your account</p>
         </div>
         
         {error && (
-          <div style={errorBoxStyle}>
+          <div style={{
+            padding: '1rem',
+            backgroundColor: '#fee2e2',
+            color: '#b91c1c',
+            borderRadius: '0.5rem',
+            marginBottom: '1rem',
+            border: '1px solid #fecaca',
+          }}>
             {error}
           </div>
         )}
         
         <form onSubmit={handleSubmit}>
           
-          <div style={inputGroupStyle}>
-            <label htmlFor="email" style={labelStyle}>Email</label>
-            <div style={inputContainerStyle}>
-              <span style={iconStyle}><EnvelopeIcon width={20} height={20} /></span>
+          <div style={{
+            marginBottom: '1.5rem',
+          }}>
+            <label htmlFor="email" style={{
+              display: 'block' as const,
+              fontSize: '0.875rem',
+              fontWeight: '600' as const,
+              color: '#374151',
+              marginBottom: '0.5rem',
+            }}>Email</label>
+            <div style={{
+              position: 'relative' as const,
+            }}>
+              <span style={{
+                position: 'absolute' as const,
+                left: '0.75rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: '#9ca3af',
+              }}><EnvelopeIcon width={20} height={20} /></span>
               <input
                 id="email"
                 name="email"
@@ -224,15 +135,40 @@ export default function LoginPage() {
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="your@email.com"
-                style={inputStyle}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 2.5rem',
+                  borderRadius: '0.5rem',
+                  border: '1px solid #d1d5db',
+                  backgroundColor: '#ffffff',
+                  boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                  fontSize: '1rem',
+                  boxSizing: 'border-box' as const,
+                }}
               />
             </div>
           </div>
 
-          <div style={inputGroupStyle}>
-            <label htmlFor="password" style={labelStyle}>Password</label>
-            <div style={inputContainerStyle}>
-              <span style={iconStyle}><KeyIcon width={20} height={20} /></span>
+          <div style={{
+            marginBottom: '1.5rem',
+          }}>
+            <label htmlFor="password" style={{
+              display: 'block' as const,
+              fontSize: '0.875rem',
+              fontWeight: '600' as const,
+              color: '#374151',
+              marginBottom: '0.5rem',
+            }}>Password</label>
+            <div style={{
+              position: 'relative' as const,
+            }}>
+              <span style={{
+                position: 'absolute' as const,
+                left: '0.75rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: '#9ca3af',
+              }}><KeyIcon width={20} height={20} /></span>
               <input
                 id="password"
                 name="password"
@@ -241,40 +177,95 @@ export default function LoginPage() {
                 value={formData.password}
                 onChange={handleChange}
                 placeholder="••••••••"
-                style={inputStyle}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 2.5rem',
+                  borderRadius: '0.5rem',
+                  border: '1px solid #d1d5db',
+                  backgroundColor: '#ffffff',
+                  boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                  fontSize: '1rem',
+                  boxSizing: 'border-box' as const,
+                }}
               />
-              <button type="button" onClick={() => setShowPassword(!showPassword)} style={passwordToggleStyle}>
+              <button type="button" onClick={() => setShowPassword(!showPassword)} style={{
+                position: 'absolute' as const,
+                right: '0.75rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer' as const,
+                color: '#9ca3af',
+              }}>
                 {showPassword ? <EyeSlashIcon width={20} height={20} /> : <EyeIcon width={20} height={20} />}
               </button>
             </div>
           </div>
 
-          <div style={optionsRowStyle}>
-            <label htmlFor="remember-me" style={checkboxLabelStyle}>
+          <div style={{
+            display: 'flex' as const,
+            justifyContent: 'space-between' as const,
+            alignItems: 'center' as const,
+            marginBottom: '1.5rem',
+            fontSize: '0.875rem',
+          }}>
+            <label htmlFor="remember-me" style={{
+              display: 'flex' as const,
+              alignItems: 'center' as const,
+              color: '#4b5563',
+              cursor: 'pointer' as const,
+            }}>
               <input
                 id="remember-me"
                 name="remember-me"
                 type="checkbox"
                 checked={rememberMe}
                 onChange={() => setRememberMe(!rememberMe)}
-                style={checkboxStyle}
+                style={{
+                  marginRight: '0.5rem',
+                  accentColor: '#F59E0B',
+                }}
               />
               Remember me
             </label>
-            <Link href="/forgot-password" style={linkStyle}>
+            <Link href="/forgot-password" style={{
+              color: '#D97706',
+              textDecoration: 'none' as const,
+              fontWeight: '600' as const,
+            }}>
               Forgot password?
             </Link>
           </div>
 
-          <button type="submit" disabled={loading} style={submitButtonStyle}>
+          <button type="submit" disabled={loading} style={{
+            width: '100%',
+            backgroundColor: '#F59E0B',
+            color: 'white',
+            fontWeight: '700' as const,
+            padding: '0.75rem',
+            borderRadius: '0.5rem',
+            border: 'none',
+            cursor: 'pointer' as const,
+            fontSize: '1rem',
+            opacity: loading ? 0.7 : 1,
+          }}>
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
         
-        <div style={footerTextStyle}>
+        <div style={{
+          textAlign: 'center' as const,
+          marginTop: '1.5rem',
+          color: '#4b5563',
+        }}>
           <p>
             Don&apos;t have an account?{' '}
-            <Link href="/register" style={linkStyle}>
+            <Link href="/register" style={{
+              color: '#D97706',
+              textDecoration: 'none' as const,
+              fontWeight: '600' as const,
+            }}>
               Register here
             </Link>
           </p>
