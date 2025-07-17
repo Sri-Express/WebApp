@@ -27,51 +27,26 @@ interface SystemStats {
   pendingApprovals: number;
 }
 
+interface User {
+  name: string;
+  email: string;
+  role: string;
+  _id?: string;
+}
+
+interface Alert {
+  id: number;
+  type: 'error' | 'warning' | 'info';
+  message: string;
+  timestamp: string;
+}
+
 export default function SystemAdminDashboard() {
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [stats, setStats] = useState<SystemStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [alerts, setAlerts] = useState<any[]>([]);
-
-  // Get auth token
-  const getToken = () => {
-    return localStorage.getItem('token');
-  };
-
-  // API call helper
-  const apiCall = async (endpoint: string, options: RequestInit = {}) => {
-    const token = getToken();
-    if (!token) {
-      router.push('/sysadmin/login');
-      return null;
-    }
-
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${endpoint}`, {
-        ...options,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-          ...options.headers,
-        },
-      });
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          localStorage.removeItem('token');
-          router.push('/sysadmin/login');
-          return null;
-        }
-        throw new Error(`API Error: ${response.status}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('API call error:', error);
-      return null;
-    }
-  };
+  const [alerts, setAlerts] = useState<Alert[]>([]);
 
   // Load dashboard data
   useEffect(() => {
@@ -104,7 +79,7 @@ export default function SystemAdminDashboard() {
         setStats(mockStats);
 
         // Load alerts (mock data)
-        const mockAlerts = [
+        const mockAlerts: Alert[] = [
           {
             id: 1,
             type: 'warning',

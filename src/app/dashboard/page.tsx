@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -47,8 +47,8 @@ export default function DashboardPage() {
     return localStorage.getItem('token');
   };
 
-  // API call helper
-  const apiCall = async (endpoint: string, options: RequestInit = {}) => {
+  // API call helper - wrapped in useCallback to fix dependency warning
+  const apiCall = useCallback(async (endpoint: string, options: RequestInit = {}) => {
     const token = getToken();
     if (!token) {
       router.push('/login');
@@ -79,7 +79,7 @@ export default function DashboardPage() {
       console.error('API call error:', error);
       return null;
     }
-  };
+  }, [router]);
 
   // Load dashboard data
   useEffect(() => {
@@ -118,7 +118,7 @@ export default function DashboardPage() {
     };
 
     loadDashboardData();
-  }, [router]);
+  }, [apiCall]);
 
   // Create demo data for testing
   const createDemoData = async () => {

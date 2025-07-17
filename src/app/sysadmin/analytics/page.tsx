@@ -3,23 +3,16 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { 
   ChartBarIcon,
   UsersIcon,
   DevicePhoneMobileIcon,
   TruckIcon,
-  CalendarIcon,
-  ClockIcon,
   ArrowUpIcon,
   ArrowDownIcon,
-  EyeIcon,
   ArrowPathIcon,
   DocumentArrowDownIcon,
-  Cog6ToothIcon,
-  FunnelIcon,
-  InformationCircleIcon,
-  ExclamationTriangleIcon
+  InformationCircleIcon
 } from '@heroicons/react/24/outline';
 
 interface AnalyticsData {
@@ -57,51 +50,11 @@ type TimePeriod = '24h' | '7d' | '30d' | '90d';
 type MetricType = 'users' | 'devices' | 'trips' | 'revenue' | 'performance';
 
 export default function SystemAnalyticsPage() {
-  const router = useRouter();
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>('7d');
   const [selectedMetric, setSelectedMetric] = useState<MetricType>('users');
   const [autoRefresh, setAutoRefresh] = useState(false);
-
-  // Get auth token
-  const getToken = () => {
-    return localStorage.getItem('token');
-  };
-
-  // API call helper
-  const apiCall = async (endpoint: string, options: RequestInit = {}) => {
-    const token = getToken();
-    if (!token) {
-      router.push('/sysadmin/login');
-      return null;
-    }
-
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${endpoint}`, {
-        ...options,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-          ...options.headers,
-        },
-      });
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          localStorage.removeItem('token');
-          router.push('/sysadmin/login');
-          return null;
-        }
-        throw new Error(`API Error: ${response.status}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('API call error:', error);
-      return null;
-    }
-  };
 
   // Load analytics data
   const loadAnalyticsData = async () => {
