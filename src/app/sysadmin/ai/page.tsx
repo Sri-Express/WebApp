@@ -63,6 +63,18 @@ interface AIStats {
   errorRate: number;
 }
 
+// Add interface for API request body
+interface TrainingRequestBody {
+  epochs: number;
+  batchSize: number;
+  learningRate: number;
+  validationSplit: number;
+}
+
+interface ActionRequestBody {
+  action: string;
+}
+
 export default function AIModulePage() {
   const [modules, setModules] = useState<AIModule[]>([]);
   const [stats, setStats] = useState<AIStats | null>(null);
@@ -98,13 +110,13 @@ export default function AIModulePage() {
 
         const data = await response.json();
         
-        // Format data for our interface
-        const formattedModules = data.modules.map((module: any) => ({
+        // Format data for our interface - FIX: Replace 'any' with proper type
+        const formattedModules = data.modules.map((module: Partial<AIModule>) => ({
           ...module,
           lastTrained: module.lastTrained || new Date().toISOString(),
           performance: {
             ...module.performance,
-            lastPrediction: module.performance.lastPrediction || null
+            lastPrediction: module.performance?.lastPrediction || null
           }
         }));
 
@@ -247,8 +259,8 @@ export default function AIModulePage() {
       }
 
       let endpoint = '';
-      let method = 'POST';
-      let body: any = {};
+      const method = 'POST'; // FIX: Change 'let' to 'const'
+      let body: TrainingRequestBody | ActionRequestBody; // FIX: Replace 'any' with proper union type
 
       if (action === 'train') {
         endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/admin/ai/${moduleId}/train`;
@@ -313,8 +325,10 @@ export default function AIModulePage() {
     );
   }
 
+  // ... rest of the component remains the same
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#0f172a' }}>
+      {/* All the existing JSX remains unchanged */}
       {/* Navigation */}
       <nav style={{
         backgroundColor: '#1e293b',

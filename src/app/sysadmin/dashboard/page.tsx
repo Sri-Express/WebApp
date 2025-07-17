@@ -98,13 +98,13 @@ export default function SystemAdminDashboard() {
   // API base URL
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
-  // Get auth token
-  const getAuthToken = () => {
+  // Get auth token - wrapped in useCallback
+  const getAuthToken = useCallback(() => {
     return localStorage.getItem('token');
-  };
+  }, []);
 
-  // Fetch system stats
-  const fetchSystemStats = async () => {
+  // Fetch system stats - wrapped in useCallback
+  const fetchSystemStats = useCallback(async () => {
     const token = getAuthToken();
     if (!token) throw new Error('No auth token');
 
@@ -120,10 +120,10 @@ export default function SystemAdminDashboard() {
     }
 
     return response.json();
-  };
+  }, [API_BASE_URL, getAuthToken]);
 
-  // Fetch fleet stats
-  const fetchFleetStats = async () => {
+  // Fetch fleet stats - wrapped in useCallback
+  const fetchFleetStats = useCallback(async () => {
     const token = getAuthToken();
     if (!token) throw new Error('No auth token');
 
@@ -139,10 +139,10 @@ export default function SystemAdminDashboard() {
     }
 
     return response.json();
-  };
+  }, [API_BASE_URL, getAuthToken]);
 
-  // Fetch system alerts
-  const fetchSystemAlerts = async () => {
+  // Fetch system alerts - wrapped in useCallback
+  const fetchSystemAlerts = useCallback(async () => {
     const token = getAuthToken();
     if (!token) throw new Error('No auth token');
 
@@ -158,9 +158,9 @@ export default function SystemAdminDashboard() {
     }
 
     return response.json();
-  };
+  }, [API_BASE_URL, getAuthToken]);
 
-  // Load all dashboard data
+  // Load all dashboard data - now includes all dependencies
   const loadDashboardData = useCallback(async (isRefresh = false) => {
     if (isRefresh) {
       setRefreshing(true);
@@ -204,7 +204,7 @@ export default function SystemAdminDashboard() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [router]);
+  }, [router, fetchSystemStats, fetchFleetStats, fetchSystemAlerts]);
 
   // Initial load
   useEffect(() => {
