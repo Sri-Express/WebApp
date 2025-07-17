@@ -1,7 +1,7 @@
 // src/app/sysadmin/devices/[id]/edit/page.tsx
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 import { 
@@ -10,7 +10,6 @@ import {
   MapPinIcon,
   CpuChipIcon,
   UserIcon,
-  CalendarIcon,
   InformationCircleIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon
@@ -65,8 +64,8 @@ export default function EditDevicePage() {
     return localStorage.getItem('token');
   };
 
-  // API call helper
-  const apiCall = async (endpoint: string, options: RequestInit = {}) => {
+  // API call helper - wrapped in useCallback to fix dependency warning
+  const apiCall = useCallback(async (endpoint: string, options: RequestInit = {}) => {
     const token = getToken();
     if (!token) {
       router.push('/sysadmin/login');
@@ -97,7 +96,7 @@ export default function EditDevicePage() {
       console.error('API call error:', error);
       return null;
     }
-  };
+  }, [router]);
 
   // Load device data and users
   useEffect(() => {
@@ -142,7 +141,7 @@ export default function EditDevicePage() {
     if (deviceId) {
       loadData();
     }
-  }, [deviceId]);
+  }, [deviceId, apiCall]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     if (!formData) return;
@@ -154,7 +153,7 @@ export default function EditDevicePage() {
       setFormData(prev => prev ? ({
         ...prev,
         [parent]: {
-          ...prev[parent as keyof EditDeviceForm] as any,
+          ...prev[parent as keyof EditDeviceForm] as Record<string, string | number>,
           [child]: type === 'number' ? parseFloat(value) : value
         }
       }) : null);
