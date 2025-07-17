@@ -1,19 +1,15 @@
 // src/app/sysadmin/devices/add/page.tsx
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
   DevicePhoneMobileIcon,
   TruckIcon,
   MapPinIcon,
-  SignalIcon,
-  BatteryIcon,
-  CalendarIcon,
   CpuChipIcon,
   UserIcon,
-  BuildingOfficeIcon,
   InformationCircleIcon
 } from '@heroicons/react/24/outline';
 
@@ -80,8 +76,8 @@ export default function AddDevicePage() {
     return localStorage.getItem('token');
   };
 
-  // API call helper
-  const apiCall = async (endpoint: string, options: RequestInit = {}) => {
+  // API call helper - wrapped in useCallback to fix dependency warning
+  const apiCall = useCallback(async (endpoint: string, options: RequestInit = {}) => {
     const token = getToken();
     if (!token) {
       router.push('/sysadmin/login');
@@ -112,7 +108,7 @@ export default function AddDevicePage() {
       console.error('API call error:', error);
       return null;
     }
-  };
+  }, [router]);
 
   // Load available users for assignment
   useEffect(() => {
@@ -131,7 +127,7 @@ export default function AddDevicePage() {
     };
 
     loadUsers();
-  }, []);
+  }, [apiCall]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -141,7 +137,7 @@ export default function AddDevicePage() {
       setFormData(prev => ({
         ...prev,
         [parent]: {
-          ...prev[parent as keyof CreateDeviceForm] as any,
+          ...prev[parent as keyof CreateDeviceForm] as Record<string, string | number>,
           [child]: value
         }
       }));
@@ -259,10 +255,6 @@ export default function AddDevicePage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const getVehicleIcon = (type: string) => {
-    return type === 'train' ? '🚊' : '🚌';
   };
 
   const filteredUsers = availableUsers.filter(user => 
