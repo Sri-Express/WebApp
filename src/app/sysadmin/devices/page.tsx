@@ -20,7 +20,9 @@ import {
   EyeIcon,
   PencilIcon,
   TrashIcon,
-  ArrowPathIcon
+  ArrowPathIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon
 } from '@heroicons/react/24/outline';
 
 interface Device {
@@ -34,36 +36,62 @@ interface Device {
     latitude: number;
     longitude: number;
     address: string;
+    lastUpdated: string;
   };
   batteryLevel: number;
   signalStrength: number;
   assignedTo: {
     type: 'route_admin' | 'company_admin' | 'system';
+    userId?: string;
     name: string;
-    id: string;
   };
   route?: {
-    id: string;
+    routeId: string;
     name: string;
   };
   firmwareVersion: string;
   installDate: string;
   lastMaintenance?: string;
-  alerts: number;
+  alerts: {
+    count: number;
+    messages: string[];
+  };
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface DeviceStats {
   totalDevices: number;
-  onlineDevices: number;
+  activeDevices: number;
   offlineDevices: number;
   maintenanceDevices: number;
-  alertsCount: number;
+  totalAlerts: number;
+}
+
+interface ApiResponse {
+  devices: Device[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalDevices: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+  stats: DeviceStats;
 }
 
 export default function SystemAdminDevicesPage() {
   const router = useRouter();
   const [devices, setDevices] = useState<Device[]>([]);
   const [stats, setStats] = useState<DeviceStats | null>(null);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalDevices: 0,
+    hasNext: false,
+    hasPrev: false
+  });
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -71,6 +99,9 @@ export default function SystemAdminDevicesPage() {
   const [selectedDevices, setSelectedDevices] = useState<string[]>([]);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deviceToDelete, setDeviceToDelete] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [deleting, setDeleting] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Get auth token
   const getToken = () => {
@@ -111,114 +142,182 @@ export default function SystemAdminDevicesPage() {
     }
   };
 
-  // Load devices data
-  useEffect(() => {
-    const loadDevices = async () => {
-      setLoading(true);
+  // Load devices data from real API
+  const loadDevices = async (page = 1, search = '', status = 'all', type = 'all') => {
+    setLoading(true);
+    
+    try {
+      // Build query parameters
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: '10',
+        sortBy: 'lastSeen',
+        sortOrder: 'desc'
+      });
+
+      if (search) params.append('search', search);
+      if (status !== 'all') params.append('status', status);
+      if (type !== 'all') params.append('vehicleType', type);
+
+      // Get devices with pagination and filtering
+      const devicesResponse = await apiCall(`/admin/devices?${params.toString()}`);
       
-      try {
-        // Mock data for now
-        const mockDevices: Device[] = [
-          {
-            _id: '1',
-            deviceId: 'DEV001',
-            vehicleNumber: 'LK-1234',
-            vehicleType: 'bus',
-            status: 'online',
-            lastSeen: new Date(Date.now() - 300000).toISOString(),
-            location: {
-              latitude: 6.9271,
-              longitude: 79.8612,
-              address: 'Galle Road, Colombo 03'
-            },
-            batteryLevel: 85,
-            signalStrength: 4,
-            assignedTo: {
-              type: 'route_admin',
-              name: 'Kasun Fernando',
-              id: '3'
-            },
-            route: {
-              id: 'R001',
-              name: 'Colombo - Kandy'
-            },
-            firmwareVersion: '2.1.4',
-            installDate: '2024-12-01T10:00:00Z',
-            lastMaintenance: '2025-01-01T14:30:00Z',
-            alerts: 0
-          },
-          {
-            _id: '2',
-            deviceId: 'DEV002',
-            vehicleNumber: 'LK-5678',
-            vehicleType: 'bus',
-            status: 'offline',
-            lastSeen: new Date(Date.now() - 3600000).toISOString(),
-            location: {
-              latitude: 6.0535,
-              longitude: 80.2210,
-              address: 'Galle Fort Area'
-            },
-            batteryLevel: 15,
-            signalStrength: 0,
-            assignedTo: {
-              type: 'company_admin',
-              name: 'Priyantha Transport',
-              id: '4'
-            },
-            firmwareVersion: '2.0.8',
-            installDate: '2024-11-15T09:00:00Z',
-            alerts: 2
-          },
-          {
-            _id: '3',
-            deviceId: 'DEV003',
-            vehicleNumber: 'LK-9012',
-            vehicleType: 'train',
-            status: 'maintenance',
-            lastSeen: new Date(Date.now() - 7200000).toISOString(),
-            location: {
-              latitude: 7.2906,
-              longitude: 80.6337,
-              address: 'Kandy Railway Station'
-            },
-            batteryLevel: 92,
-            signalStrength: 5,
-            assignedTo: {
-              type: 'system',
-              name: 'System Control',
-              id: 'system'
-            },
-            route: {
-              id: 'R002',
-              name: 'Colombo - Kandy Railway'
-            },
-            firmwareVersion: '2.1.4',
-            installDate: '2024-10-20T11:00:00Z',
-            lastMaintenance: '2025-01-10T16:00:00Z',
-            alerts: 1
-          }
-        ];
+      // Get device statistics
+      const statsResponse = await apiCall('/admin/devices/stats');
 
-        const mockStats: DeviceStats = {
-          totalDevices: 89,
-          onlineDevices: 67,
-          offlineDevices: 15,
-          maintenanceDevices: 7,
-          alertsCount: 12
-        };
-
-        setDevices(mockDevices);
-        setStats(mockStats);
-      } catch (error) {
-        console.error('Error loading devices:', error);
-      } finally {
-        setLoading(false);
+      if (devicesResponse && statsResponse) {
+        setDevices(devicesResponse.devices || []);
+        setPagination(devicesResponse.pagination || {
+          currentPage: 1,
+          totalPages: 1,
+          totalDevices: 0,
+          hasNext: false,
+          hasPrev: false
+        });
+        setStats(statsResponse);
       }
-    };
+    } catch (error) {
+      console.error('Error loading devices:', error);
+      // Show error message to user
+      alert('Failed to load devices. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  // Initial load
+  useEffect(() => {
     loadDevices();
   }, []);
+
+  // Handle search and filter changes
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      loadDevices(1, searchTerm, filterStatus, filterType);
+      setCurrentPage(1);
+    }, 500); // Debounce search
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm, filterStatus, filterType]);
+
+  // Handle pagination
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    loadDevices(page, searchTerm, filterStatus, filterType);
+  };
+
+  // Handle device deletion
+  const handleDeleteDevice = async (deviceId: string) => {
+    if (!deviceId) return;
+
+    setDeleting(true);
+    try {
+      const response = await apiCall(`/admin/devices/${deviceId}`, {
+        method: 'DELETE'
+      });
+
+      if (response) {
+        // Reload devices list
+        await loadDevices(currentPage, searchTerm, filterStatus, filterType);
+        setShowDeleteModal(false);
+        setDeviceToDelete(null);
+        // Show success message
+        alert('Device deleted successfully');
+      } else {
+        alert('Failed to delete device');
+      }
+    } catch (error) {
+      console.error('Error deleting device:', error);
+      alert('Failed to delete device');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  // Handle device status update
+  const handleUpdateDeviceStatus = async (deviceId: string, newStatus: string) => {
+    try {
+      const response = await apiCall(`/admin/devices/${deviceId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ status: newStatus })
+      });
+
+      if (response) {
+        // Reload devices list
+        await loadDevices(currentPage, searchTerm, filterStatus, filterType);
+        alert(`Device status updated to ${newStatus}`);
+      } else {
+        alert('Failed to update device status');
+      }
+    } catch (error) {
+      console.error('Error updating device status:', error);
+      alert('Failed to update device status');
+    }
+  };
+
+  // Handle clear device alerts
+  const handleClearAlerts = async (deviceId: string) => {
+    try {
+      const response = await apiCall(`/admin/devices/${deviceId}/alerts`, {
+        method: 'DELETE'
+      });
+
+      if (response) {
+        // Reload devices list
+        await loadDevices(currentPage, searchTerm, filterStatus, filterType);
+        alert('Device alerts cleared successfully');
+      } else {
+        alert('Failed to clear device alerts');
+      }
+    } catch (error) {
+      console.error('Error clearing device alerts:', error);
+      alert('Failed to clear device alerts');
+    }
+  };
+
+  // Handle refresh
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await loadDevices(currentPage, searchTerm, filterStatus, filterType);
+    setRefreshing(false);
+  };
+
+  // Handle bulk actions
+  const handleBulkAction = async (action: string) => {
+    if (selectedDevices.length === 0) {
+      alert('Please select devices first');
+      return;
+    }
+
+    try {
+      if (action === 'delete') {
+        const confirmed = confirm(`Are you sure you want to delete ${selectedDevices.length} devices?`);
+        if (confirmed) {
+          // Delete selected devices one by one
+          for (const deviceId of selectedDevices) {
+            await apiCall(`/admin/devices/${deviceId}`, { method: 'DELETE' });
+          }
+          setSelectedDevices([]);
+          await loadDevices(currentPage, searchTerm, filterStatus, filterType);
+          alert('Devices deleted successfully');
+        }
+      } else if (action === 'maintenance' || action === 'online') {
+        // Update status for selected devices
+        for (const deviceId of selectedDevices) {
+          await apiCall(`/admin/devices/${deviceId}`, { 
+            method: 'PUT',
+            body: JSON.stringify({ status: action })
+          });
+        }
+        setSelectedDevices([]);
+        await loadDevices(currentPage, searchTerm, filterStatus, filterType);
+        alert(`Devices updated to ${action} successfully`);
+      }
+    } catch (error) {
+      console.error('Bulk action error:', error);
+      alert('Failed to perform bulk action');
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -274,30 +373,6 @@ export default function SystemAdminDevicesPage() {
     return '#ef4444';
   };
 
-  const filteredDevices = devices.filter(device => {
-    const matchesSearch = 
-      device.deviceId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      device.vehicleNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      device.assignedTo.name.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = filterStatus === 'all' || device.status === filterStatus;
-    const matchesType = filterType === 'all' || device.vehicleType === filterType;
-    
-    return matchesSearch && matchesStatus && matchesType;
-  });
-
-  const handleDeleteDevice = async (deviceId: string) => {
-    // Implementation for device deletion
-    console.log('Deleting device:', deviceId);
-    setShowDeleteModal(false);
-    setDeviceToDelete(null);
-  };
-
-  const handleBulkAction = async (action: string) => {
-    // Implementation for bulk actions
-    console.log('Bulk action:', action, 'for devices:', selectedDevices);
-  };
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
   };
@@ -317,6 +392,23 @@ export default function SystemAdminDevicesPage() {
     return `${Math.floor(diffInMinutes / 1440)}d ago`;
   };
 
+  // Handle checkbox selection
+  const handleSelectDevice = (deviceId: string) => {
+    setSelectedDevices(prev => 
+      prev.includes(deviceId) 
+        ? prev.filter(id => id !== deviceId)
+        : [...prev, deviceId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedDevices.length === devices.length) {
+      setSelectedDevices([]);
+    } else {
+      setSelectedDevices(devices.map(device => device._id));
+    }
+  };
+
   if (loading) {
     return (
       <div style={{ 
@@ -327,7 +419,14 @@ export default function SystemAdminDevicesPage() {
         backgroundColor: '#0f172a',
         color: '#f1f5f9'
       }}>
-        <div>Loading devices...</div>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem'
+        }}>
+          <ArrowPathIcon width={24} height={24} className="animate-spin" />
+          Loading devices...
+        </div>
       </div>
     );
   }
@@ -422,80 +521,82 @@ export default function SystemAdminDevicesPage() {
         padding: '2rem 1.5rem'
       }}>
         {/* Stats Cards */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-          gap: '1.5rem',
-          marginBottom: '2rem'
-        }}>
+        {stats && (
           <div style={{
-            backgroundColor: '#1e293b',
-            padding: '1.5rem',
-            borderRadius: '0.75rem',
-            border: '1px solid #334155'
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: '1.5rem',
+            marginBottom: '2rem'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <DevicePhoneMobileIcon width={32} height={32} color="#3b82f6" />
-              <div>
-                <h3 style={{ color: '#3b82f6', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>
-                  {stats?.totalDevices}
-                </h3>
-                <p style={{ color: '#94a3b8', margin: '0.5rem 0 0 0' }}>Total Devices</p>
+            <div style={{
+              backgroundColor: '#1e293b',
+              padding: '1.5rem',
+              borderRadius: '0.75rem',
+              border: '1px solid #334155'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <DevicePhoneMobileIcon width={32} height={32} color="#3b82f6" />
+                <div>
+                  <h3 style={{ color: '#3b82f6', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>
+                    {stats.totalDevices}
+                  </h3>
+                  <p style={{ color: '#94a3b8', margin: '0.5rem 0 0 0' }}>Total Devices</p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div style={{
-            backgroundColor: '#1e293b',
-            padding: '1.5rem',
-            borderRadius: '0.75rem',
-            border: '1px solid #334155'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <CheckCircleIcon width={32} height={32} color="#10b981" />
-              <div>
-                <h3 style={{ color: '#10b981', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>
-                  {stats?.onlineDevices}
-                </h3>
-                <p style={{ color: '#94a3b8', margin: '0.5rem 0 0 0' }}>Online</p>
+            <div style={{
+              backgroundColor: '#1e293b',
+              padding: '1.5rem',
+              borderRadius: '0.75rem',
+              border: '1px solid #334155'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <CheckCircleIcon width={32} height={32} color="#10b981" />
+                <div>
+                  <h3 style={{ color: '#10b981', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>
+                    {stats.activeDevices}
+                  </h3>
+                  <p style={{ color: '#94a3b8', margin: '0.5rem 0 0 0' }}>Online</p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div style={{
-            backgroundColor: '#1e293b',
-            padding: '1.5rem',
-            borderRadius: '0.75rem',
-            border: '1px solid #334155'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <XCircleIcon width={32} height={32} color="#ef4444" />
-              <div>
-                <h3 style={{ color: '#ef4444', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>
-                  {stats?.offlineDevices}
-                </h3>
-                <p style={{ color: '#94a3b8', margin: '0.5rem 0 0 0' }}>Offline</p>
+            <div style={{
+              backgroundColor: '#1e293b',
+              padding: '1.5rem',
+              borderRadius: '0.75rem',
+              border: '1px solid #334155'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <XCircleIcon width={32} height={32} color="#ef4444" />
+                <div>
+                  <h3 style={{ color: '#ef4444', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>
+                    {stats.offlineDevices}
+                  </h3>
+                  <p style={{ color: '#94a3b8', margin: '0.5rem 0 0 0' }}>Offline</p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div style={{
-            backgroundColor: '#1e293b',
-            padding: '1.5rem',
-            borderRadius: '0.75rem',
-            border: '1px solid #334155'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <ExclamationTriangleIcon width={32} height={32} color="#f59e0b" />
-              <div>
-                <h3 style={{ color: '#f59e0b', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>
-                  {stats?.alertsCount}
-                </h3>
-                <p style={{ color: '#94a3b8', margin: '0.5rem 0 0 0' }}>Alerts</p>
+            <div style={{
+              backgroundColor: '#1e293b',
+              padding: '1.5rem',
+              borderRadius: '0.75rem',
+              border: '1px solid #334155'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <ExclamationTriangleIcon width={32} height={32} color="#f59e0b" />
+                <div>
+                  <h3 style={{ color: '#f59e0b', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>
+                    {stats.totalAlerts}
+                  </h3>
+                  <p style={{ color: '#94a3b8', margin: '0.5rem 0 0 0' }}>Alerts</p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Filters and Search */}
         <div style={{
@@ -509,7 +610,8 @@ export default function SystemAdminDevicesPage() {
             display: 'flex',
             flexWrap: 'wrap' as const,
             gap: '1rem',
-            alignItems: 'center'
+            alignItems: 'center',
+            marginBottom: '1rem'
           }}>
             {/* Search */}
             <div style={{
@@ -587,23 +689,80 @@ export default function SystemAdminDevicesPage() {
 
             {/* Refresh Button */}
             <button
-              onClick={() => window.location.reload()}
+              onClick={handleRefresh}
+              disabled={refreshing}
               style={{
                 backgroundColor: '#3b82f6',
                 color: 'white',
                 padding: '0.75rem 1rem',
                 borderRadius: '0.5rem',
                 border: 'none',
-                cursor: 'pointer',
+                cursor: refreshing ? 'not-allowed' : 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.5rem'
+                gap: '0.5rem',
+                opacity: refreshing ? 0.7 : 1
               }}
             >
-              <ArrowPathIcon width={20} height={20} />
-              Refresh
+              <ArrowPathIcon width={20} height={20} className={refreshing ? 'animate-spin' : ''} />
+              {refreshing ? 'Refreshing...' : 'Refresh'}
             </button>
           </div>
+
+          {/* Bulk Actions */}
+          {selectedDevices.length > 0 && (
+            <div style={{
+              display: 'flex',
+              gap: '0.5rem',
+              alignItems: 'center'
+            }}>
+              <span style={{ color: '#94a3b8', fontSize: '0.875rem' }}>
+                {selectedDevices.length} selected
+              </span>
+              <button
+                onClick={() => handleBulkAction('online')}
+                style={{
+                  backgroundColor: '#10b981',
+                  color: 'white',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '0.375rem',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem'
+                }}
+              >
+                Set Online
+              </button>
+              <button
+                onClick={() => handleBulkAction('maintenance')}
+                style={{
+                  backgroundColor: '#f59e0b',
+                  color: 'white',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '0.375rem',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem'
+                }}
+              >
+                Set Maintenance
+              </button>
+              <button
+                onClick={() => handleBulkAction('delete')}
+                style={{
+                  backgroundColor: '#ef4444',
+                  color: 'white',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '0.375rem',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem'
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Devices Table */}
@@ -626,6 +785,18 @@ export default function SystemAdminDevicesPage() {
                   backgroundColor: '#334155',
                   borderBottom: '1px solid #475569'
                 }}>
+                  <th style={{
+                    padding: '1rem',
+                    textAlign: 'left' as const,
+                    color: '#f1f5f9',
+                    fontWeight: '600'
+                  }}>
+                    <input 
+                      type="checkbox" 
+                      checked={selectedDevices.length === devices.length && devices.length > 0}
+                      onChange={handleSelectAll}
+                    />
+                  </th>
                   <th style={{
                     padding: '1rem',
                     textAlign: 'left' as const,
@@ -683,11 +854,18 @@ export default function SystemAdminDevicesPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredDevices.map((device, index) => (
+                {devices.map((device, index) => (
                   <tr key={device._id} style={{
-                    borderBottom: index < filteredDevices.length - 1 ? '1px solid #334155' : 'none',
+                    borderBottom: index < devices.length - 1 ? '1px solid #334155' : 'none',
                     backgroundColor: index % 2 === 0 ? '#1e293b' : '#1a2332'
                   }}>
+                    <td style={{ padding: '1rem' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={selectedDevices.includes(device._id)}
+                        onChange={() => handleSelectDevice(device._id)}
+                      />
+                    </td>
                     <td style={{ padding: '1rem' }}>
                       <div>
                         <div style={{
@@ -738,19 +916,31 @@ export default function SystemAdminDevicesPage() {
                           {getStatusIcon(device.status)}
                         </span>
                         <div>
-                          <span style={{
-                            color: getStatusColor(device.status),
-                            fontWeight: '500',
-                            textTransform: 'capitalize'
-                          }}>
+                          <button
+                            onClick={() => handleUpdateDeviceStatus(device._id, 
+                              device.status === 'online' ? 'maintenance' : 'online'
+                            )}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              color: getStatusColor(device.status),
+                              fontWeight: '500',
+                              textTransform: 'capitalize',
+                              cursor: 'pointer',
+                              padding: 0
+                            }}
+                          >
                             {device.status}
-                          </span>
-                          {device.alerts > 0 && (
+                          </button>
+                          {device.alerts.count > 0 && (
                             <div style={{
                               color: '#ef4444',
-                              fontSize: '0.75rem'
-                            }}>
-                              {device.alerts} alerts
+                              fontSize: '0.75rem',
+                              cursor: 'pointer'
+                            }}
+                            onClick={() => handleClearAlerts(device._id)}
+                            >
+                              {device.alerts.count} alerts (click to clear)
                             </div>
                           )}
                         </div>
@@ -886,13 +1076,61 @@ export default function SystemAdminDevicesPage() {
         {/* Pagination */}
         <div style={{
           display: 'flex',
-          justifyContent: 'between',
+          justifyContent: 'space-between',
           alignItems: 'center',
           marginTop: '2rem',
           color: '#94a3b8'
         }}>
           <div>
-            Showing {filteredDevices.length} of {devices.length} devices
+            Showing {devices.length} of {pagination.totalDevices} devices (Page {pagination.currentPage} of {pagination.totalPages})
+          </div>
+          <div style={{
+            display: 'flex',
+            gap: '0.5rem',
+            alignItems: 'center'
+          }}>
+            <button
+              onClick={() => handlePageChange(pagination.currentPage - 1)}
+              disabled={!pagination.hasPrev}
+              style={{
+                backgroundColor: pagination.hasPrev ? '#374151' : '#1f2937',
+                color: pagination.hasPrev ? '#f9fafb' : '#6b7280',
+                padding: '0.5rem',
+                border: 'none',
+                borderRadius: '0.375rem',
+                cursor: pagination.hasPrev ? 'pointer' : 'not-allowed',
+                display: 'flex',
+                alignItems: 'center'
+              }}
+            >
+              <ChevronLeftIcon width={16} height={16} />
+            </button>
+            
+            <span style={{ 
+              padding: '0.5rem 1rem',
+              backgroundColor: '#374151',
+              borderRadius: '0.375rem',
+              color: '#f9fafb'
+            }}>
+              {pagination.currentPage}
+            </span>
+
+            <button
+              onClick={() => handlePageChange(pagination.currentPage + 1)}
+              disabled={!pagination.hasNext}
+              style={{
+                backgroundColor: pagination.hasNext ? '#374151' : '#1f2937',
+                color: pagination.hasNext ? '#f9fafb' : '#6b7280',
+                padding: '0.5rem',
+                border: 'none',
+                borderRadius: '0.375rem',
+                cursor: pagination.hasNext ? 'pointer' : 'not-allowed',
+                display: 'flex',
+                alignItems: 'center'
+              }}
+            >
+              <ChevronRightIcon width={16} height={16} />
+            </button>
           </div>
         </div>
       </div>
@@ -938,29 +1176,37 @@ export default function SystemAdminDevicesPage() {
             }}>
               <button
                 onClick={() => setShowDeleteModal(false)}
+                disabled={deleting}
                 style={{
                   backgroundColor: '#374151',
                   color: '#f9fafb',
                   padding: '0.5rem 1rem',
                   border: 'none',
                   borderRadius: '0.5rem',
-                  cursor: 'pointer'
+                  cursor: deleting ? 'not-allowed' : 'pointer',
+                  opacity: deleting ? 0.7 : 1
                 }}
               >
                 Cancel
               </button>
               <button
                 onClick={() => deviceToDelete && handleDeleteDevice(deviceToDelete)}
+                disabled={deleting}
                 style={{
                   backgroundColor: '#ef4444',
                   color: 'white',
                   padding: '0.5rem 1rem',
                   border: 'none',
                   borderRadius: '0.5rem',
-                  cursor: 'pointer'
+                  cursor: deleting ? 'not-allowed' : 'pointer',
+                  opacity: deleting ? 0.7 : 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
                 }}
               >
-                Delete
+                {deleting && <ArrowPathIcon width={16} height={16} className="animate-spin" />}
+                {deleting ? 'Deleting...' : 'Delete'}
               </button>
             </div>
           </div>

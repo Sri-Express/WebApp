@@ -17,7 +17,10 @@ import {
   TruckIcon,
   PencilIcon,
   TrashIcon,
-  EyeIcon
+  EyeIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ArrowPathIcon
 } from '@heroicons/react/24/outline';
 
 interface User {
@@ -25,6 +28,9 @@ interface User {
   name: string;
   email: string;
   role: 'client' | 'customer_service' | 'route_admin' | 'company_admin' | 'system_admin';
+  phone?: string;
+  department?: string;
+  company?: string;
   isActive: boolean;
   createdAt: string;
   lastLogin?: string;
@@ -34,19 +40,34 @@ interface User {
 interface UserStats {
   totalUsers: number;
   activeUsers: number;
-  byRole: {
-    client: number;
-    customer_service: number;
-    route_admin: number;
-    company_admin: number;
-    system_admin: number;
+  inactiveUsers: number;
+  recentRegistrations: number;
+  byRole: Record<string, number>;
+}
+
+interface ApiResponse {
+  users: User[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalUsers: number;
+    hasNext: boolean;
+    hasPrev: boolean;
   };
+  stats: UserStats;
 }
 
 export default function SystemAdminUsersPage() {
   const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [stats, setStats] = useState<UserStats | null>(null);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalUsers: 0,
+    hasNext: false,
+    hasPrev: false
+  });
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState('all');
@@ -54,6 +75,8 @@ export default function SystemAdminUsersPage() {
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [deleting, setDeleting] = useState(false);
 
   // Get auth token
   const getToken = () => {
@@ -94,84 +117,151 @@ export default function SystemAdminUsersPage() {
     }
   };
 
-  // Load users data
-  useEffect(() => {
-    const loadUsers = async () => {
-      setLoading(true);
+  // Load users data from real API
+  const loadUsers = async (page = 1, search = '', role = 'all', status = 'all') => {
+    setLoading(true);
+    
+    try {
+      // Build query parameters
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: '10',
+        sortBy: 'createdAt',
+        sortOrder: 'desc'
+      });
+
+      if (search) params.append('search', search);
+      if (role !== 'all') params.append('role', role);
+      if (status !== 'all') params.append('status', status);
+
+      // Get users with pagination and filtering
+      const usersResponse = await apiCall(`/admin/users?${params.toString()}`);
       
-      try {
-        // Mock data for now
-        const mockUsers: User[] = [
-          {
-            _id: '1',
-            name: 'Saman Perera',
-            email: 'saman@example.com',
-            role: 'client',
-            isActive: true,
-            createdAt: '2025-01-10T10:30:00Z',
-            lastLogin: '2025-01-14T08:15:00Z'
-          },
-          {
-            _id: '2',
-            name: 'Chamila Silva',
-            email: 'chamila@sriexpress.com',
-            role: 'customer_service',
-            isActive: true,
-            createdAt: '2025-01-05T14:20:00Z',
-            lastLogin: '2025-01-14T09:45:00Z'
-          },
-          {
-            _id: '3',
-            name: 'Kasun Fernando',
-            email: 'kasun@sriexpress.com',
-            role: 'route_admin',
-            isActive: true,
-            createdAt: '2025-01-01T09:00:00Z',
-            lastLogin: '2025-01-14T07:30:00Z'
-          },
-          {
-            _id: '4',
-            name: 'Priyantha Transport',
-            email: 'admin@priyantha.com',
-            role: 'company_admin',
-            isActive: true,
-            createdAt: '2024-12-15T11:45:00Z',
-            lastLogin: '2025-01-13T16:20:00Z'
-          },
-          {
-            _id: '5',
-            name: 'Nimal Rajapaksa',
-            email: 'nimal@example.com',
-            role: 'client',
-            isActive: false,
-            createdAt: '2025-01-08T13:15:00Z',
-            lastLogin: '2025-01-12T12:00:00Z'
-          }
-        ];
+      // Get user statistics
+      const statsResponse = await apiCall('/admin/users/stats');
 
-        const mockStats: UserStats = {
-          totalUsers: 1547,
-          activeUsers: 1432,
-          byRole: {
-            client: 1398,
-            customer_service: 12,
-            route_admin: 45,
-            company_admin: 8,
-            system_admin: 3
-          }
-        };
-
-        setUsers(mockUsers);
-        setStats(mockStats);
-      } catch (error) {
-        console.error('Error loading users:', error);
-      } finally {
-        setLoading(false);
+      if (usersResponse && statsResponse) {
+        setUsers(usersResponse.users || []);
+        setPagination(usersResponse.pagination || {
+          currentPage: 1,
+          totalPages: 1,
+          totalUsers: 0,
+          hasNext: false,
+          hasPrev: false
+        });
+        setStats(statsResponse);
       }
-    };
+    } catch (error) {
+      console.error('Error loading users:', error);
+      // Show error message to user
+      alert('Failed to load users. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  // Initial load
+  useEffect(() => {
     loadUsers();
   }, []);
+
+  // Handle search and filter changes
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      loadUsers(1, searchTerm, filterRole, filterStatus);
+      setCurrentPage(1);
+    }, 500); // Debounce search
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm, filterRole, filterStatus]);
+
+  // Handle pagination
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    loadUsers(page, searchTerm, filterRole, filterStatus);
+  };
+
+  // Handle user deletion
+  const handleDeleteUser = async (userId: string) => {
+    if (!userId) return;
+
+    setDeleting(true);
+    try {
+      const response = await apiCall(`/admin/users/${userId}`, {
+        method: 'DELETE'
+      });
+
+      if (response) {
+        // Reload users list
+        await loadUsers(currentPage, searchTerm, filterRole, filterStatus);
+        setShowDeleteModal(false);
+        setUserToDelete(null);
+        // Show success message
+        alert('User deleted successfully');
+      } else {
+        alert('Failed to delete user');
+      }
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      alert('Failed to delete user');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  // Handle user status toggle
+  const handleToggleUserStatus = async (userId: string) => {
+    try {
+      const response = await apiCall(`/admin/users/${userId}/toggle-status`, {
+        method: 'PATCH'
+      });
+
+      if (response) {
+        // Reload users list
+        await loadUsers(currentPage, searchTerm, filterRole, filterStatus);
+        alert(`User ${response.user.isActive ? 'activated' : 'deactivated'} successfully`);
+      } else {
+        alert('Failed to update user status');
+      }
+    } catch (error) {
+      console.error('Error toggling user status:', error);
+      alert('Failed to update user status');
+    }
+  };
+
+  // Handle bulk actions
+  const handleBulkAction = async (action: string) => {
+    if (selectedUsers.length === 0) {
+      alert('Please select users first');
+      return;
+    }
+
+    try {
+      if (action === 'delete') {
+        const confirmed = confirm(`Are you sure you want to delete ${selectedUsers.length} users?`);
+        if (confirmed) {
+          // Delete selected users one by one
+          for (const userId of selectedUsers) {
+            await apiCall(`/admin/users/${userId}`, { method: 'DELETE' });
+          }
+          setSelectedUsers([]);
+          await loadUsers(currentPage, searchTerm, filterRole, filterStatus);
+          alert('Users deleted successfully');
+        }
+      } else if (action === 'activate' || action === 'deactivate') {
+        // Toggle status for selected users
+        for (const userId of selectedUsers) {
+          await apiCall(`/admin/users/${userId}/toggle-status`, { method: 'PATCH' });
+        }
+        setSelectedUsers([]);
+        await loadUsers(currentPage, searchTerm, filterRole, filterStatus);
+        alert(`Users ${action}d successfully`);
+      }
+    } catch (error) {
+      console.error('Bulk action error:', error);
+      alert('Failed to perform bulk action');
+    }
+  };
 
   const getRoleIcon = (role: string) => {
     switch (role) {
@@ -224,35 +314,29 @@ export default function SystemAdminUsersPage() {
     }
   };
 
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = filterRole === 'all' || user.role === filterRole;
-    const matchesStatus = filterStatus === 'all' || 
-                         (filterStatus === 'active' && user.isActive) ||
-                         (filterStatus === 'inactive' && !user.isActive);
-    
-    return matchesSearch && matchesRole && matchesStatus;
-  });
-
-  const handleDeleteUser = async (userId: string) => {
-    // Implementation for user deletion
-    console.log('Deleting user:', userId);
-    setShowDeleteModal(false);
-    setUserToDelete(null);
-  };
-
-  const handleBulkAction = async (action: string) => {
-    // Implementation for bulk actions
-    console.log('Bulk action:', action, 'for users:', selectedUsers);
-  };
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
   };
 
   const formatDateTime = (dateString: string) => {
     return new Date(dateString).toLocaleString();
+  };
+
+  // Handle checkbox selection
+  const handleSelectUser = (userId: string) => {
+    setSelectedUsers(prev => 
+      prev.includes(userId) 
+        ? prev.filter(id => id !== userId)
+        : [...prev, userId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedUsers.length === users.length) {
+      setSelectedUsers([]);
+    } else {
+      setSelectedUsers(users.map(user => user._id));
+    }
   };
 
   if (loading) {
@@ -265,7 +349,14 @@ export default function SystemAdminUsersPage() {
         backgroundColor: '#0f172a',
         color: '#f1f5f9'
       }}>
-        <div>Loading users...</div>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem'
+        }}>
+          <ArrowPathIcon width={24} height={24} className="animate-spin" />
+          Loading users...
+        </div>
       </div>
     );
   }
@@ -341,60 +432,62 @@ export default function SystemAdminUsersPage() {
         padding: '2rem 1.5rem'
       }}>
         {/* Stats Cards */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '1.5rem',
-          marginBottom: '2rem'
-        }}>
+        {stats && (
           <div style={{
-            backgroundColor: '#1e293b',
-            padding: '1.5rem',
-            borderRadius: '0.75rem',
-            border: '1px solid #334155'
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: '1.5rem',
+            marginBottom: '2rem'
           }}>
-            <h3 style={{ color: '#3b82f6', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>
-              {stats?.totalUsers.toLocaleString()}
-            </h3>
-            <p style={{ color: '#94a3b8', margin: '0.5rem 0 0 0' }}>Total Users</p>
-          </div>
+            <div style={{
+              backgroundColor: '#1e293b',
+              padding: '1.5rem',
+              borderRadius: '0.75rem',
+              border: '1px solid #334155'
+            }}>
+              <h3 style={{ color: '#3b82f6', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>
+                {stats.totalUsers.toLocaleString()}
+              </h3>
+              <p style={{ color: '#94a3b8', margin: '0.5rem 0 0 0' }}>Total Users</p>
+            </div>
 
-          <div style={{
-            backgroundColor: '#1e293b',
-            padding: '1.5rem',
-            borderRadius: '0.75rem',
-            border: '1px solid #334155'
-          }}>
-            <h3 style={{ color: '#10b981', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>
-              {stats?.activeUsers.toLocaleString()}
-            </h3>
-            <p style={{ color: '#94a3b8', margin: '0.5rem 0 0 0' }}>Active Users</p>
-          </div>
+            <div style={{
+              backgroundColor: '#1e293b',
+              padding: '1.5rem',
+              borderRadius: '0.75rem',
+              border: '1px solid #334155'
+            }}>
+              <h3 style={{ color: '#10b981', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>
+                {stats.activeUsers.toLocaleString()}
+              </h3>
+              <p style={{ color: '#94a3b8', margin: '0.5rem 0 0 0' }}>Active Users</p>
+            </div>
 
-          <div style={{
-            backgroundColor: '#1e293b',
-            padding: '1.5rem',
-            borderRadius: '0.75rem',
-            border: '1px solid #334155'
-          }}>
-            <h3 style={{ color: '#f59e0b', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>
-              {stats?.byRole.client.toLocaleString()}
-            </h3>
-            <p style={{ color: '#94a3b8', margin: '0.5rem 0 0 0' }}>Clients</p>
-          </div>
+            <div style={{
+              backgroundColor: '#1e293b',
+              padding: '1.5rem',
+              borderRadius: '0.75rem',
+              border: '1px solid #334155'
+            }}>
+              <h3 style={{ color: '#f59e0b', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>
+                {(stats.byRole?.client || 0).toLocaleString()}
+              </h3>
+              <p style={{ color: '#94a3b8', margin: '0.5rem 0 0 0' }}>Clients</p>
+            </div>
 
-          <div style={{
-            backgroundColor: '#1e293b',
-            padding: '1.5rem',
-            borderRadius: '0.75rem',
-            border: '1px solid #334155'
-          }}>
-            <h3 style={{ color: '#8b5cf6', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>
-              {(stats?.byRole.customer_service || 0) + (stats?.byRole.route_admin || 0) + (stats?.byRole.company_admin || 0) + (stats?.byRole.system_admin || 0)}
-            </h3>
-            <p style={{ color: '#94a3b8', margin: '0.5rem 0 0 0' }}>Administrators</p>
+            <div style={{
+              backgroundColor: '#1e293b',
+              padding: '1.5rem',
+              borderRadius: '0.75rem',
+              border: '1px solid #334155'
+            }}>
+              <h3 style={{ color: '#8b5cf6', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>
+                {stats.recentRegistrations.toLocaleString()}
+              </h3>
+              <p style={{ color: '#94a3b8', margin: '0.5rem 0 0 0' }}>Recent (30 days)</p>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Filters and Search */}
         <div style={{
@@ -408,7 +501,8 @@ export default function SystemAdminUsersPage() {
             display: 'flex',
             flexWrap: 'wrap' as const,
             gap: '1rem',
-            alignItems: 'center'
+            alignItems: 'center',
+            marginBottom: '1rem'
           }}>
             {/* Search */}
             <div style={{
@@ -486,6 +580,61 @@ export default function SystemAdminUsersPage() {
               <option value="inactive">Inactive</option>
             </select>
           </div>
+
+          {/* Bulk Actions */}
+          {selectedUsers.length > 0 && (
+            <div style={{
+              display: 'flex',
+              gap: '0.5rem',
+              alignItems: 'center'
+            }}>
+              <span style={{ color: '#94a3b8', fontSize: '0.875rem' }}>
+                {selectedUsers.length} selected
+              </span>
+              <button
+                onClick={() => handleBulkAction('activate')}
+                style={{
+                  backgroundColor: '#10b981',
+                  color: 'white',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '0.375rem',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem'
+                }}
+              >
+                Activate
+              </button>
+              <button
+                onClick={() => handleBulkAction('deactivate')}
+                style={{
+                  backgroundColor: '#f59e0b',
+                  color: 'white',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '0.375rem',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem'
+                }}
+              >
+                Deactivate
+              </button>
+              <button
+                onClick={() => handleBulkAction('delete')}
+                style={{
+                  backgroundColor: '#ef4444',
+                  color: 'white',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '0.375rem',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem'
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Users Table */}
@@ -513,7 +662,11 @@ export default function SystemAdminUsersPage() {
                     color: '#f1f5f9',
                     fontWeight: '600'
                   }}>
-                    <input type="checkbox" />
+                    <input 
+                      type="checkbox" 
+                      checked={selectedUsers.length === users.length && users.length > 0}
+                      onChange={handleSelectAll}
+                    />
                   </th>
                   <th style={{
                     padding: '1rem',
@@ -554,13 +707,17 @@ export default function SystemAdminUsersPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredUsers.map((user, index) => (
+                {users.map((user, index) => (
                   <tr key={user._id} style={{
-                    borderBottom: index < filteredUsers.length - 1 ? '1px solid #334155' : 'none',
+                    borderBottom: index < users.length - 1 ? '1px solid #334155' : 'none',
                     backgroundColor: index % 2 === 0 ? '#1e293b' : '#1a2332'
                   }}>
                     <td style={{ padding: '1rem' }}>
-                      <input type="checkbox" />
+                      <input 
+                        type="checkbox" 
+                        checked={selectedUsers.includes(user._id)}
+                        onChange={() => handleSelectUser(user._id)}
+                      />
                     </td>
                     <td style={{ padding: '1rem' }}>
                       <div>
@@ -576,6 +733,14 @@ export default function SystemAdminUsersPage() {
                         }}>
                           {user.email}
                         </div>
+                        {user.company && (
+                          <div style={{
+                            color: '#94a3b8',
+                            fontSize: '0.75rem'
+                          }}>
+                            {user.company}
+                          </div>
+                        )}
                       </div>
                     </td>
                     <td style={{ padding: '1rem' }}>
@@ -596,16 +761,21 @@ export default function SystemAdminUsersPage() {
                       </div>
                     </td>
                     <td style={{ padding: '1rem' }}>
-                      <span style={{
-                        backgroundColor: user.isActive ? '#10b981' : '#6b7280',
-                        color: 'white',
-                        padding: '0.25rem 0.75rem',
-                        borderRadius: '0.25rem',
-                        fontSize: '0.75rem',
-                        fontWeight: '500'
-                      }}>
+                      <button
+                        onClick={() => handleToggleUserStatus(user._id)}
+                        style={{
+                          backgroundColor: user.isActive ? '#10b981' : '#6b7280',
+                          color: 'white',
+                          padding: '0.25rem 0.75rem',
+                          borderRadius: '0.25rem',
+                          fontSize: '0.75rem',
+                          fontWeight: '500',
+                          border: 'none',
+                          cursor: 'pointer'
+                        }}
+                      >
                         {user.isActive ? 'Active' : 'Inactive'}
-                      </span>
+                      </button>
                     </td>
                     <td style={{ padding: '1rem', color: '#94a3b8' }}>
                       {formatDate(user.createdAt)}
@@ -665,16 +835,61 @@ export default function SystemAdminUsersPage() {
         {/* Pagination */}
         <div style={{
           display: 'flex',
-          justifyContent: 'between',
+          justifyContent: 'space-between',
           alignItems: 'center',
           marginTop: '2rem',
           color: '#94a3b8'
         }}>
           <div>
-            Showing {filteredUsers.length} of {users.length} users
+            Showing {users.length} of {pagination.totalUsers} users (Page {pagination.currentPage} of {pagination.totalPages})
           </div>
-          <div>
-            {/* Add pagination controls here */}
+          <div style={{
+            display: 'flex',
+            gap: '0.5rem',
+            alignItems: 'center'
+          }}>
+            <button
+              onClick={() => handlePageChange(pagination.currentPage - 1)}
+              disabled={!pagination.hasPrev}
+              style={{
+                backgroundColor: pagination.hasPrev ? '#374151' : '#1f2937',
+                color: pagination.hasPrev ? '#f9fafb' : '#6b7280',
+                padding: '0.5rem',
+                border: 'none',
+                borderRadius: '0.375rem',
+                cursor: pagination.hasPrev ? 'pointer' : 'not-allowed',
+                display: 'flex',
+                alignItems: 'center'
+              }}
+            >
+              <ChevronLeftIcon width={16} height={16} />
+            </button>
+            
+            <span style={{ 
+              padding: '0.5rem 1rem',
+              backgroundColor: '#374151',
+              borderRadius: '0.375rem',
+              color: '#f9fafb'
+            }}>
+              {pagination.currentPage}
+            </span>
+
+            <button
+              onClick={() => handlePageChange(pagination.currentPage + 1)}
+              disabled={!pagination.hasNext}
+              style={{
+                backgroundColor: pagination.hasNext ? '#374151' : '#1f2937',
+                color: pagination.hasNext ? '#f9fafb' : '#6b7280',
+                padding: '0.5rem',
+                border: 'none',
+                borderRadius: '0.375rem',
+                cursor: pagination.hasNext ? 'pointer' : 'not-allowed',
+                display: 'flex',
+                alignItems: 'center'
+              }}
+            >
+              <ChevronRightIcon width={16} height={16} />
+            </button>
           </div>
         </div>
       </div>
@@ -720,29 +935,37 @@ export default function SystemAdminUsersPage() {
             }}>
               <button
                 onClick={() => setShowDeleteModal(false)}
+                disabled={deleting}
                 style={{
                   backgroundColor: '#374151',
                   color: '#f9fafb',
                   padding: '0.5rem 1rem',
                   border: 'none',
                   borderRadius: '0.5rem',
-                  cursor: 'pointer'
+                  cursor: deleting ? 'not-allowed' : 'pointer',
+                  opacity: deleting ? 0.7 : 1
                 }}
               >
                 Cancel
               </button>
               <button
                 onClick={() => userToDelete && handleDeleteUser(userToDelete)}
+                disabled={deleting}
                 style={{
                   backgroundColor: '#ef4444',
                   color: 'white',
                   padding: '0.5rem 1rem',
                   border: 'none',
                   borderRadius: '0.5rem',
-                  cursor: 'pointer'
+                  cursor: deleting ? 'not-allowed' : 'pointer',
+                  opacity: deleting ? 0.7 : 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
                 }}
               >
-                Delete
+                {deleting && <ArrowPathIcon width={16} height={16} className="animate-spin" />}
+                {deleting ? 'Deleting...' : 'Delete'}
               </button>
             </div>
           </div>
