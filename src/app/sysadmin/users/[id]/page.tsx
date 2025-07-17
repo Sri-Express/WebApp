@@ -1,4 +1,4 @@
-// src/app/sysadmin/users/[id]/page.tsx - UPDATED WITH REAL API INTEGRATION
+// src/app/sysadmin/users/[id]/page.tsx - UPDATED VERSION WITH WORKING ACTIVITY TAB
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -24,7 +24,11 @@ import {
   ChartBarIcon,
   ArrowPathIcon,
   EyeIcon,
-  DocumentTextIcon
+  DocumentTextIcon,
+  FunnelIcon,
+  MagnifyingGlassIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon
 } from '@heroicons/react/24/outline';
 
 interface User {
@@ -54,16 +58,13 @@ interface UserStatistics {
   lastActiveDate: string;
   averageSessionsPerDay: number;
   activityByCategory: Record<string, number>;
-  // Role-specific stats
   tripsBooked?: number;
   completedTrips?: number;
   devicesManaged?: number;
   onlineDevices?: number;
   ticketsHandled?: number;
   usersManaged?: number;
-  // Security metrics
   failedLoginAttempts: number;
-  // Trends
   trends: {
     loginTrend: number;
     activityTrend: number;
@@ -75,46 +76,107 @@ interface UserActivity {
   action: string;
   description: string;
   category: string;
+  severity: string;
   timestamp: string;
   ipAddress?: string;
   userAgent?: string;
-  endpoint?: string;
-  method?: string;
-  statusCode?: number;
-  details?: Record<string, any>;
+  metadata?: Record<string, any>;
+}
+
+interface ActivityResponse {
+  activities: UserActivity[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalActivities: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+  summary: {
+    totalActivities: number;
+    categorySummary: Record<string, any>;
+    availableActions: string[];
+    availableCategories: string[];
+  };
 }
 
 export default function UserDetailsPage() {
   const router = useRouter();
   const params = useParams();
-  const userId = params.id as string;
+  
+  // ⭐ Parameter handling with validation
+  const [userId, setUserId] = useState<string | null>(null);
+  const [paramError, setParamError] = useState<string>('');
 
   const [user, setUser] = useState<User | null>(null);
   const [userStats, setUserStats] = useState<UserStatistics | null>(null);
   const [recentActivity, setRecentActivity] = useState<UserActivity[]>([]);
+  
+  // ⭐ NEW: Activity tab state
+  const [fullActivityData, setFullActivityData] = useState<ActivityResponse | null>(null);
+  const [activityPage, setActivityPage] = useState(1);
+  const [activityCategory, setActivityCategory] = useState('all');
+  const [activityAction, setActivityAction] = useState('all');
+  
   const [loading, setLoading] = useState(true);
   const [statsLoading, setStatsLoading] = useState(true);
   const [activityLoading, setActivityLoading] = useState(true);
+  const [fullActivityLoading, setFullActivityLoading] = useState(false); // ⭐ NEW
   const [error, setError] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'activity' | 'details'>('overview');
 
-  // Get auth token
+  // ⭐ Validate and set user ID from params
+  useEffect(() => {
+    console.log('🔍 Raw params:', params);
+    
+    if (params && params.id) {
+      const rawId = Array.isArray(params.id) ? params.id[0] : params.id;
+      console.log('🔍 Raw ID:', rawId);
+      
+      if (rawId === '[id]' || rawId === '%5Bid%5D') {
+        setParamError('Invalid user ID parameter - received literal [id]');
+        console.error('❌ Received literal [id] instead of actual user ID');
+        return;
+      }
+      
+      const objectIdPattern = /^[0-9a-fA-F]{24}$/;
+      if (!objectIdPattern.test(rawId)) {
+        setParamError(`Invalid user ID format: ${rawId}`);
+        console.error('❌ Invalid ObjectId format:', rawId);
+        return;
+      }
+      
+      console.log('✅ Valid user ID:', rawId);
+      setUserId(rawId);
+      setParamError('');
+    } else {
+      setParamError('No user ID provided in URL');
+      console.error('❌ No user ID in params');
+    }
+  }, [params]);
+
   const getToken = () => {
     return localStorage.getItem('token');
   };
 
-  // API call helper
+  // ⭐ API call helper with better error handling
   const apiCall = useCallback(async (endpoint: string, options: RequestInit = {}) => {
     const token = getToken();
     if (!token) {
+      console.error('❌ No auth token found');
       router.push('/sysadmin/login');
       return null;
     }
 
+    console.log(`🌐 API Call: ${endpoint}`);
+    
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${endpoint}`, {
+      const fullUrl = `${process.env.NEXT_PUBLIC_API_URL}${endpoint}`;
+      console.log(`🌐 Full URL: ${fullUrl}`);
+      
+      const response = await fetch(fullUrl, {
         ...options,
         headers: {
           'Content-Type': 'application/json',
@@ -123,63 +185,83 @@ export default function UserDetailsPage() {
         },
       });
 
+      console.log(`🌐 Response status: ${response.status}`);
+      
       if (!response.ok) {
         if (response.status === 401) {
+          console.error('❌ Unauthorized - removing token');
           localStorage.removeItem('token');
           router.push('/sysadmin/login');
           return null;
         }
-        throw new Error(`API Error: ${response.status}`);
+        
+        let errorMessage = `API Error: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+          console.error('❌ API Error Data:', errorData);
+        } catch (e) {
+          console.error('❌ Could not parse error response');
+        }
+        
+        throw new Error(errorMessage);
       }
 
-      return await response.json();
+      const data = await response.json();
+      console.log(`✅ API Success:`, data);
+      return data;
     } catch (error) {
-      console.error('API call error:', error);
+      console.error('❌ API call error:', error);
       return null;
     }
   }, [router]);
 
   // Load user data
   useEffect(() => {
+    if (!userId) return;
+    
     const loadUserData = async () => {
+      console.log(`📊 Loading user data for ID: ${userId}`);
       setLoading(true);
       setError('');
       
       try {
-        // Load user details
         const userResponse = await apiCall(`/admin/users/${userId}`);
         if (userResponse) {
+          console.log('✅ User data loaded:', userResponse);
           setUser(userResponse);
         } else {
-          setError('User not found');
+          setError('User not found or failed to load');
           return;
         }
       } catch (err) {
+        console.error('❌ Error loading user:', err);
         setError('Failed to load user details');
-        console.error('Error loading user:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    if (userId) {
-      loadUserData();
-    }
+    loadUserData();
   }, [userId, apiCall]);
 
   // Load user statistics
   useEffect(() => {
+    if (!userId) return;
+    
     const loadUserStats = async () => {
-      if (!userId) return;
-      
+      console.log(`📈 Loading user stats for ID: ${userId}`);
       setStatsLoading(true);
       try {
         const statsResponse = await apiCall(`/admin/users/${userId}/stats`);
         if (statsResponse) {
+          console.log('✅ User stats loaded:', statsResponse);
           setUserStats(statsResponse);
+        } else {
+          console.log('⚠️ No user stats received');
         }
       } catch (err) {
-        console.error('Error loading user stats:', err);
+        console.error('❌ Error loading user stats:', err);
       } finally {
         setStatsLoading(false);
       }
@@ -188,19 +270,23 @@ export default function UserDetailsPage() {
     loadUserStats();
   }, [userId, apiCall]);
 
-  // Load user activity
+  // Load recent activity (for Overview tab)
   useEffect(() => {
+    if (!userId) return;
+    
     const loadUserActivity = async () => {
-      if (!userId) return;
-      
+      console.log(`📋 Loading user activity for ID: ${userId}`);
       setActivityLoading(true);
       try {
         const activityResponse = await apiCall(`/admin/users/${userId}/activity?limit=10`);
         if (activityResponse && activityResponse.activities) {
+          console.log('✅ User activity loaded:', activityResponse.activities);
           setRecentActivity(activityResponse.activities);
+        } else {
+          console.log('⚠️ No user activity received or wrong format');
         }
       } catch (err) {
-        console.error('Error loading user activity:', err);
+        console.error('❌ Error loading user activity:', err);
       } finally {
         setActivityLoading(false);
       }
@@ -208,6 +294,44 @@ export default function UserDetailsPage() {
 
     loadUserActivity();
   }, [userId, apiCall]);
+
+  // ⭐ NEW: Load full activity data for Activity tab
+  const loadFullActivity = useCallback(async (page = 1, category = 'all', action = 'all') => {
+    if (!userId) return;
+    
+    console.log(`📋 Loading full activity for ID: ${userId}, page: ${page}, category: ${category}, action: ${action}`);
+    setFullActivityLoading(true);
+    
+    try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: '20',
+        category,
+        action
+      });
+      
+      const activityResponse = await apiCall(`/admin/users/${userId}/activity?${params.toString()}`);
+      if (activityResponse) {
+        console.log('✅ Full activity loaded:', activityResponse);
+        setFullActivityData(activityResponse);
+      } else {
+        console.log('⚠️ No full activity received');
+        setFullActivityData(null);
+      }
+    } catch (err) {
+      console.error('❌ Error loading full activity:', err);
+      setFullActivityData(null);
+    } finally {
+      setFullActivityLoading(false);
+    }
+  }, [userId, apiCall]);
+
+  // ⭐ NEW: Load full activity when Activity tab is accessed or filters change
+  useEffect(() => {
+    if (activeTab === 'activity') {
+      loadFullActivity(activityPage, activityCategory, activityAction);
+    }
+  }, [activeTab, activityPage, activityCategory, activityAction, loadFullActivity]);
 
   const getRoleIcon = (role: string) => {
     switch (role) {
@@ -276,13 +400,58 @@ export default function UserDetailsPage() {
         return <ChatBubbleLeftRightIcon width={16} height={16} color="#10b981" />;
       case 'device_configured':
         return <Cog6ToothIcon width={16} height={16} color="#8b5cf6" />;
+      case 'user_created':
+      case 'user_updated':
+      case 'user_deleted':
+        return <UserIcon width={16} height={16} color="#3b82f6" />;
+      case 'device_created':
+      case 'device_updated':
+      case 'device_deleted':
+        return <Cog6ToothIcon width={16} height={16} color="#f59e0b" />;
+      case 'users_list_view':
+      case 'devices_list_view':
+        return <EyeIcon width={16} height={16} color="#94a3b8" />;
       default:
         return <ClockIcon width={16} height={16} color="#94a3b8" />;
     }
   };
 
+  // ⭐ NEW: Get category color
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case 'auth':
+        return '#3b82f6';
+      case 'profile':
+        return '#10b981';
+      case 'device':
+        return '#f59e0b';
+      case 'trip':
+        return '#06b6d4';
+      case 'system':
+        return '#ef4444';
+      default:
+        return '#6b7280';
+    }
+  };
+
+  // ⭐ NEW: Get severity color
+  const getSeverityColor = (severity: string) => {
+    switch (severity) {
+      case 'critical':
+        return '#ef4444';
+      case 'high':
+        return '#f59e0b';
+      case 'medium':
+        return '#3b82f6';
+      case 'low':
+        return '#10b981';
+      default:
+        return '#6b7280';
+    }
+  };
+
   const handleToggleStatus = async () => {
-    if (!user) return;
+    if (!user || !userId) return;
     
     setActionLoading('toggle');
     try {
@@ -290,7 +459,6 @@ export default function UserDetailsPage() {
         method: 'PATCH',
       });
       
-      // Update local state
       setUser(prev => prev ? { ...prev, isActive: !prev.isActive } : null);
     } catch (error) {
       console.error('Error toggling user status:', error);
@@ -300,6 +468,8 @@ export default function UserDetailsPage() {
   };
 
   const handleDeleteUser = async () => {
+    if (!userId) return;
+    
     setActionLoading('delete');
     try {
       await apiCall(`/admin/users/${userId}`, {
@@ -345,6 +515,66 @@ export default function UserDetailsPage() {
     return '#6b7280';
   };
 
+  // ⭐ Handle parameter errors
+  if (paramError) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        minHeight: '100vh',
+        backgroundColor: '#0f172a',
+        color: '#f1f5f9',
+        flexDirection: 'column',
+        gap: '1rem'
+      }}>
+        <ExclamationTriangleIcon width={48} height={48} color="#ef4444" />
+        <div style={{ textAlign: 'center' }}>
+          <h2 style={{ color: '#ef4444', marginBottom: '0.5rem' }}>Invalid User ID</h2>
+          <p>{paramError}</p>
+          <p style={{ color: '#94a3b8', fontSize: '0.875rem', marginTop: '0.5rem' }}>
+            Raw params: {JSON.stringify(params)}
+          </p>
+        </div>
+        <Link
+          href="/sysadmin/users"
+          style={{
+            backgroundColor: '#3b82f6',
+            color: 'white',
+            padding: '0.75rem 1.5rem',
+            borderRadius: '0.5rem',
+            textDecoration: 'none'
+          }}
+        >
+          Back to Users
+        </Link>
+      </div>
+    );
+  }
+
+  // Show loading while waiting for userId
+  if (!userId) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        minHeight: '100vh',
+        backgroundColor: '#0f172a',
+        color: '#f1f5f9'
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem'
+        }}>
+          <ArrowPathIcon width={24} height={24} className="animate-spin" />
+          Resolving user ID...
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div style={{ 
@@ -380,7 +610,12 @@ export default function UserDetailsPage() {
         gap: '1rem'
       }}>
         <ExclamationTriangleIcon width={48} height={48} color="#ef4444" />
-        <div>{error || 'User not found'}</div>
+        <div style={{ textAlign: 'center' }}>
+          <div>{error || 'User not found'}</div>
+          <p style={{ color: '#94a3b8', fontSize: '0.875rem', marginTop: '0.5rem' }}>
+            User ID: {userId}
+          </p>
+        </div>
         <Link
           href="/sysadmin/users"
           style={{
@@ -399,6 +634,17 @@ export default function UserDetailsPage() {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#0f172a' }}>
+      {/* Debug info (remove in production) */}
+      <div style={{
+        backgroundColor: '#1e293b',
+        padding: '0.5rem',
+        fontSize: '0.75rem',
+        color: '#94a3b8',
+        borderBottom: '1px solid #334155'
+      }}>
+        🐛 Debug: User ID = {userId} | Valid: {/^[0-9a-fA-F]{24}$/.test(userId)} | Type: {typeof userId}
+      </div>
+
       {/* Navigation */}
       <nav style={{
         backgroundColor: '#1e293b',
@@ -900,41 +1146,428 @@ export default function UserDetailsPage() {
               )}
 
               <div style={{ marginTop: '1rem' }}>
-                <Link
-                  href={`/sysadmin/users/${userId}/activity`}
+                <button
+                  onClick={() => setActiveTab('activity')}
                   style={{
                     color: '#3b82f6',
-                    textDecoration: 'none',
+                    backgroundColor: 'transparent',
+                    border: 'none',
                     fontSize: '0.875rem',
-                    fontWeight: '500'
+                    fontWeight: '500',
+                    cursor: 'pointer'
                   }}
                 >
                   View Full Activity Log →
-                </Link>
+                </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* Additional tab content would go here */}
+        {/* ⭐ NEW: Full Activity Tab Implementation */}
         {activeTab === 'activity' && (
           <div style={{
             backgroundColor: '#1e293b',
-            padding: '2rem',
             borderRadius: '0.75rem',
             border: '1px solid #334155',
-            textAlign: 'center'
+            overflow: 'hidden'
           }}>
-            <h2 style={{ color: '#f1f5f9', marginBottom: '1rem' }}>Full Activity Log</h2>
-            <p style={{ color: '#94a3b8', marginBottom: '2rem' }}>
-              Detailed activity tracking and audit logs for this user.
-            </p>
-            <div style={{ color: '#94a3b8' }}>
-              🚧 Full activity view coming soon...
+            {/* Activity Header with Filters */}
+            <div style={{
+              padding: '1.5rem',
+              borderBottom: '1px solid #334155'
+            }}>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '1rem'
+              }}>
+                <h2 style={{
+                  color: '#f1f5f9',
+                  fontSize: '1.25rem',
+                  fontWeight: 'bold',
+                  margin: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}>
+                  <ClockIcon width={20} height={20} />
+                  Complete Activity Log
+                  {fullActivityLoading && <ArrowPathIcon width={16} height={16} className="animate-spin" />}
+                </h2>
+                
+                {fullActivityData && (
+                  <div style={{
+                    color: '#94a3b8',
+                    fontSize: '0.875rem'
+                  }}>
+                    {fullActivityData.pagination.totalActivities} total activities
+                  </div>
+                )}
+              </div>
+
+              {/* Filters */}
+              <div style={{
+                display: 'flex',
+                gap: '1rem',
+                alignItems: 'center',
+                flexWrap: 'wrap'
+              }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}>
+                  <FunnelIcon width={16} height={16} color="#94a3b8" />
+                  <span style={{ color: '#94a3b8', fontSize: '0.875rem' }}>Filter:</span>
+                </div>
+
+                <select
+                  value={activityCategory}
+                  onChange={(e) => {
+                    setActivityCategory(e.target.value);
+                    setActivityPage(1);
+                  }}
+                  style={{
+                    padding: '0.5rem 0.75rem',
+                    borderRadius: '0.375rem',
+                    border: '1px solid #475569',
+                    backgroundColor: '#334155',
+                    color: '#f1f5f9',
+                    fontSize: '0.875rem',
+                    outline: 'none'
+                  }}
+                >
+                  <option value="all">All Categories</option>
+                  <option value="auth">Authentication</option>
+                  <option value="profile">Profile</option>
+                  <option value="device">Device</option>
+                  <option value="trip">Trip</option>
+                  <option value="system">System</option>
+                  <option value="other">Other</option>
+                </select>
+
+                <select
+                  value={activityAction}
+                  onChange={(e) => {
+                    setActivityAction(e.target.value);
+                    setActivityPage(1);
+                  }}
+                  style={{
+                    padding: '0.5rem 0.75rem',
+                    borderRadius: '0.375rem',
+                    border: '1px solid #475569',
+                    backgroundColor: '#334155',
+                    color: '#f1f5f9',
+                    fontSize: '0.875rem',
+                    outline: 'none'
+                  }}
+                >
+                  <option value="all">All Actions</option>
+                  {fullActivityData?.summary.availableActions.map((action) => (
+                    <option key={action} value={action}>
+                      {action.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    </option>
+                  ))}
+                </select>
+
+                <button
+                  onClick={() => {
+                    setActivityCategory('all');
+                    setActivityAction('all');
+                    setActivityPage(1);
+                  }}
+                  style={{
+                    backgroundColor: '#374151',
+                    color: '#f9fafb',
+                    padding: '0.5rem 0.75rem',
+                    border: 'none',
+                    borderRadius: '0.375rem',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem'
+                  }}
+                >
+                  Clear Filters
+                </button>
+              </div>
+            </div>
+
+            {/* Activity Content */}
+            <div style={{ padding: '1.5rem' }}>
+              {fullActivityLoading ? (
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'center', 
+                  alignItems: 'center', 
+                  height: '200px',
+                  color: '#94a3b8'
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
+                  }}>
+                    <ArrowPathIcon width={20} height={20} className="animate-spin" />
+                    Loading activity log...
+                  </div>
+                </div>
+              ) : fullActivityData && fullActivityData.activities.length > 0 ? (
+                <>
+                  {/* Activity List */}
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '1rem',
+                    marginBottom: '2rem'
+                  }}>
+                    {fullActivityData.activities.map((activity, index) => (
+                      <div key={activity.id} style={{
+                        backgroundColor: '#334155',
+                        padding: '1.5rem',
+                        borderRadius: '0.5rem',
+                        border: '1px solid #475569',
+                        position: 'relative'
+                      }}>
+                        {/* Timeline line */}
+                        {index < fullActivityData.activities.length - 1 && (
+                          <div style={{
+                            position: 'absolute',
+                            left: '2rem',
+                            top: '3.5rem',
+                            bottom: '-1rem',
+                            width: '2px',
+                            backgroundColor: '#475569'
+                          }} />
+                        )}
+
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: '1rem'
+                        }}>
+                          {/* Activity Icon */}
+                          <div style={{
+                            backgroundColor: getCategoryColor(activity.category),
+                            padding: '0.5rem',
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            minWidth: '2.5rem',
+                            minHeight: '2.5rem',
+                            position: 'relative',
+                            zIndex: 1
+                          }}>
+                            {getActionIcon(activity.action)}
+                          </div>
+
+                          {/* Activity Content */}
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'flex-start',
+                              marginBottom: '0.5rem'
+                            }}>
+                              <div>
+                                <h3 style={{
+                                  color: '#f1f5f9',
+                                  fontSize: '1rem',
+                                  fontWeight: '600',
+                                  margin: 0,
+                                  marginBottom: '0.25rem'
+                                }}>
+                                  {activity.description}
+                                </h3>
+                                <div style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '1rem',
+                                  color: '#94a3b8',
+                                  fontSize: '0.875rem'
+                                }}>
+                                  <span>{formatDateTime(activity.timestamp)}</span>
+                                  <span>•</span>
+                                  <span>{getTimeSince(activity.timestamp)}</span>
+                                  {activity.ipAddress && (
+                                    <>
+                                      <span>•</span>
+                                      <span>{activity.ipAddress}</span>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div style={{
+                                display: 'flex',
+                                gap: '0.5rem',
+                                alignItems: 'center'
+                              }}>
+                                {/* Category Badge */}
+                                <span style={{
+                                  backgroundColor: getCategoryColor(activity.category),
+                                  color: 'white',
+                                  padding: '0.25rem 0.5rem',
+                                  borderRadius: '0.25rem',
+                                  fontSize: '0.75rem',
+                                  fontWeight: '500'
+                                }}>
+                                  {activity.category}
+                                </span>
+
+                                {/* Severity Badge */}
+                                <span style={{
+                                  backgroundColor: getSeverityColor(activity.severity),
+                                  color: 'white',
+                                  padding: '0.25rem 0.5rem',
+                                  borderRadius: '0.25rem',
+                                  fontSize: '0.75rem',
+                                  fontWeight: '500'
+                                }}>
+                                  {activity.severity}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Additional Metadata */}
+                            {(activity.userAgent || activity.metadata) && (
+                              <div style={{
+                                backgroundColor: '#1e293b',
+                                padding: '0.75rem',
+                                borderRadius: '0.375rem',
+                                marginTop: '0.75rem'
+                              }}>
+                                {activity.userAgent && (
+                                  <div style={{
+                                    color: '#94a3b8',
+                                    fontSize: '0.75rem',
+                                    marginBottom: '0.25rem'
+                                  }}>
+                                    <strong>User Agent:</strong> {activity.userAgent.length > 80 ? 
+                                      `${activity.userAgent.substring(0, 80)}...` : 
+                                      activity.userAgent
+                                    }
+                                  </div>
+                                )}
+                                {activity.metadata && Object.keys(activity.metadata).length > 0 && (
+                                  <div style={{
+                                    color: '#94a3b8',
+                                    fontSize: '0.75rem'
+                                  }}>
+                                    <strong>Additional Info:</strong> {JSON.stringify(activity.metadata)}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Pagination */}
+                  {fullActivityData.pagination.totalPages > 1 && (
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      paddingTop: '1rem',
+                      borderTop: '1px solid #334155'
+                    }}>
+                      <div style={{ color: '#94a3b8', fontSize: '0.875rem' }}>
+                        Showing {fullActivityData.activities.length} of {fullActivityData.pagination.totalActivities} activities
+                        (Page {fullActivityData.pagination.currentPage} of {fullActivityData.pagination.totalPages})
+                      </div>
+                      
+                      <div style={{
+                        display: 'flex',
+                        gap: '0.5rem',
+                        alignItems: 'center'
+                      }}>
+                        <button
+                          onClick={() => setActivityPage(prev => prev - 1)}
+                          disabled={!fullActivityData.pagination.hasPrev}
+                          style={{
+                            backgroundColor: fullActivityData.pagination.hasPrev ? '#374151' : '#1f2937',
+                            color: fullActivityData.pagination.hasPrev ? '#f9fafb' : '#6b7280',
+                            padding: '0.5rem',
+                            border: 'none',
+                            borderRadius: '0.375rem',
+                            cursor: fullActivityData.pagination.hasPrev ? 'pointer' : 'not-allowed',
+                            display: 'flex',
+                            alignItems: 'center'
+                          }}
+                        >
+                          <ChevronLeftIcon width={16} height={16} />
+                        </button>
+                        
+                        <span style={{ 
+                          padding: '0.5rem 1rem',
+                          backgroundColor: '#374151',
+                          borderRadius: '0.375rem',
+                          color: '#f9fafb',
+                          fontSize: '0.875rem'
+                        }}>
+                          {fullActivityData.pagination.currentPage}
+                        </span>
+
+                        <button
+                          onClick={() => setActivityPage(prev => prev + 1)}
+                          disabled={!fullActivityData.pagination.hasNext}
+                          style={{
+                            backgroundColor: fullActivityData.pagination.hasNext ? '#374151' : '#1f2937',
+                            color: fullActivityData.pagination.hasNext ? '#f9fafb' : '#6b7280',
+                            padding: '0.5rem',
+                            border: 'none',
+                            borderRadius: '0.375rem',
+                            cursor: fullActivityData.pagination.hasNext ? 'pointer' : 'not-allowed',
+                            display: 'flex',
+                            alignItems: 'center'
+                          }}
+                        >
+                          <ChevronRightIcon width={16} height={16} />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div style={{
+                  textAlign: 'center',
+                  padding: '2rem',
+                  color: '#94a3b8'
+                }}>
+                  <ClockIcon width={48} height={48} color="#6b7280" style={{ margin: '0 auto 1rem' }} />
+                  <h3 style={{ color: '#f1f5f9', marginBottom: '0.5rem' }}>No Activity Found</h3>
+                  <p>No activities match the current filters or this user hasn't performed any activities yet.</p>
+                  {(activityCategory !== 'all' || activityAction !== 'all') && (
+                    <button
+                      onClick={() => {
+                        setActivityCategory('all');
+                        setActivityAction('all');
+                        setActivityPage(1);
+                      }}
+                      style={{
+                        backgroundColor: '#3b82f6',
+                        color: 'white',
+                        padding: '0.5rem 1rem',
+                        border: 'none',
+                        borderRadius: '0.375rem',
+                        cursor: 'pointer',
+                        marginTop: '1rem'
+                      }}
+                    >
+                      Clear Filters
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}
 
+        {/* Details Tab - (existing implementation continues...) */}
         {activeTab === 'details' && (
           <div style={{
             backgroundColor: '#1e293b',
