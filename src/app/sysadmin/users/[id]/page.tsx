@@ -1,4 +1,4 @@
-// src/app/sysadmin/users/[id]/page.tsx - UPDATED VERSION WITH WORKING ACTIVITY TAB
+// src/app/sysadmin/users/[id]/page.tsx - FIXED VERSION
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -26,7 +26,6 @@ import {
   EyeIcon,
   DocumentTextIcon,
   FunnelIcon,
-  MagnifyingGlassIcon,
   ChevronLeftIcon,
   ChevronRightIcon
 } from '@heroicons/react/24/outline';
@@ -80,7 +79,7 @@ interface UserActivity {
   timestamp: string;
   ipAddress?: string;
   userAgent?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>; // FIX: Replace 'any' with 'unknown'
 }
 
 interface ActivityResponse {
@@ -94,7 +93,7 @@ interface ActivityResponse {
   };
   summary: {
     totalActivities: number;
-    categorySummary: Record<string, any>;
+    categorySummary: Record<string, unknown>; // FIX: Replace 'any' with 'unknown'
     availableActions: string[];
     availableCategories: string[];
   };
@@ -121,7 +120,7 @@ export default function UserDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [statsLoading, setStatsLoading] = useState(true);
   const [activityLoading, setActivityLoading] = useState(true);
-  const [fullActivityLoading, setFullActivityLoading] = useState(false); // ⭐ NEW
+  const [fullActivityLoading, setFullActivityLoading] = useState(false);
   const [error, setError] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -200,7 +199,7 @@ export default function UserDetailsPage() {
           const errorData = await response.json();
           errorMessage = errorData.message || errorMessage;
           console.error('❌ API Error Data:', errorData);
-        } catch (e) {
+        } catch {
           console.error('❌ Could not parse error response');
         }
         
@@ -777,7 +776,7 @@ export default function UserDetailsPage() {
           ].map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id as 'overview' | 'activity' | 'details')} // FIX: Replace 'any' with specific type
               style={{
                 backgroundColor: 'transparent',
                 border: 'none',
@@ -1540,7 +1539,7 @@ export default function UserDetailsPage() {
                 }}>
                   <ClockIcon width={48} height={48} color="#6b7280" style={{ margin: '0 auto 1rem' }} />
                   <h3 style={{ color: '#f1f5f9', marginBottom: '0.5rem' }}>No Activity Found</h3>
-                  <p>No activities match the current filters or this user hasn't performed any activities yet.</p>
+                  <p>No activities match the current filters or this user hasn&apos;t performed any activities yet.</p> {/* FIX: Escaped apostrophe */}
                   {(activityCategory !== 'all' || activityAction !== 'all') && (
                     <button
                       onClick={() => {

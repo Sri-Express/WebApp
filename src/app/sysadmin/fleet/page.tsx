@@ -1,4 +1,4 @@
-// src/app/sysadmin/fleet/page.tsx
+// src/app/sysadmin/fleet/page.tsx - FIXED VERSION
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -12,11 +12,9 @@ import {
   ExclamationTriangleIcon,
   InformationCircleIcon,
   BuildingOfficeIcon,
-  MapPinIcon,
+  // FIX: Removed unused imports: MapPinIcon, DocumentTextIcon, CalendarIcon
   PhoneIcon,
   EnvelopeIcon,
-  DocumentTextIcon,
-  CalendarIcon,
   UsersIcon
 } from '@heroicons/react/24/outline';
 
@@ -995,7 +993,7 @@ export default function FleetManagementPage() {
               Reject Fleet Application
             </h3>
             <p style={{ color: '#94a3b8', marginBottom: '1rem' }}>
-              Please provide a reason for rejecting <strong>{showRejectionModal.companyName}</strong>'s application:
+              Please provide a reason for rejecting <strong>{showRejectionModal.companyName}</strong>&apos;s application:
             </p>
             <textarea
               value={rejectionReason}
