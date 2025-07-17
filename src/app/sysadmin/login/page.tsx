@@ -41,6 +41,12 @@ export default function SystemAdminLoginPage() {
       const data = await response.json();
 
       if (!response.ok) {
+        // Check if MFA is required
+        if (data.requiresMfa && !mfaRequired) {
+          setMfaRequired(true);
+          setError('Please enter your MFA code to continue');
+          return;
+        }
         throw new Error(data.message || 'Login failed');
       }
 

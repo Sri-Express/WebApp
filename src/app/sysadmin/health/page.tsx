@@ -9,17 +9,13 @@ import {
   ServerIcon,
   CpuChipIcon,
   CircleStackIcon,
-  GlobeAltIcon,
-  ClockIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon,
   XCircleIcon,
   ChartBarIcon,
   ArrowPathIcon,
-  BoltIcon,
   ShieldCheckIcon,
   WifiIcon,
-  FireIcon,
   EyeIcon,
   InformationCircleIcon
 } from '@heroicons/react/24/outline';
@@ -74,45 +70,6 @@ export default function SystemHealthPage() {
   const [loading, setLoading] = useState(true);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [selectedService, setSelectedService] = useState<ServiceHealth | null>(null);
-
-  // Get auth token
-  const getToken = () => {
-    return localStorage.getItem('token');
-  };
-
-  // API call helper
-  const apiCall = async (endpoint: string, options: RequestInit = {}) => {
-    const token = getToken();
-    if (!token) {
-      router.push('/sysadmin/login');
-      return null;
-    }
-
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${endpoint}`, {
-        ...options,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-          ...options.headers,
-        },
-      });
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          localStorage.removeItem('token');
-          router.push('/sysadmin/login');
-          return null;
-        }
-        throw new Error(`API Error: ${response.status}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('API call error:', error);
-      return null;
-    }
-  };
 
   // Load health data
   const loadHealthData = async () => {

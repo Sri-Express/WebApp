@@ -1,7 +1,7 @@
 // src/app/sysadmin/emergency/page.tsx
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
@@ -13,11 +13,9 @@ import {
   PhoneIcon,
   BellAlertIcon,
   CheckCircleIcon,
-  XCircleIcon,
   ArrowPathIcon,
   PlusIcon,
   EyeIcon,
-  ChatBubbleLeftRightIcon,
   ShieldExclamationIcon,
   FireIcon,
   TruckIcon,
@@ -127,8 +125,8 @@ export default function EmergencyManagementPage() {
     return localStorage.getItem('token');
   };
 
-  // API call helper
-  const apiCall = async (endpoint: string, options: RequestInit = {}) => {
+  // API call helper - wrapped in useCallback to fix dependency warning
+  const apiCall = useCallback(async (endpoint: string, options: RequestInit = {}) => {
     const token = getToken();
     if (!token) {
       router.push('/sysadmin/login');
@@ -159,7 +157,7 @@ export default function EmergencyManagementPage() {
       console.error('API call error:', error);
       return null;
     }
-  };
+  }, [router]);
 
   // Load dashboard data
   useEffect(() => {
@@ -183,7 +181,7 @@ export default function EmergencyManagementPage() {
     };
 
     loadData();
-  }, []);
+  }, [apiCall]);
 
   const handleCreateAlert = async () => {
     if (!alertForm.title || !alertForm.description || !alertForm.address) return;
