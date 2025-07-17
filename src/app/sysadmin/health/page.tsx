@@ -3,7 +3,6 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { 
   HeartIcon,
   ServerIcon,
@@ -63,7 +62,6 @@ interface HealthOverview {
 }
 
 export default function SystemHealthPage() {
-  const router = useRouter();
   const [healthOverview, setHealthOverview] = useState<HealthOverview | null>(null);
   const [services, setServices] = useState<ServiceHealth[]>([]);
   const [metrics, setMetrics] = useState<SystemMetrics | null>(null);
