@@ -1,7 +1,7 @@
 // src/app/sysadmin/dashboard/page.tsx
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
@@ -13,18 +13,67 @@ import {
   ExclamationTriangleIcon,
   ShieldCheckIcon,
   GlobeAltIcon,
-  ServerIcon
+  ServerIcon,
+  ArrowPathIcon,
+  CheckCircleIcon
 } from '@heroicons/react/24/outline';
 
 interface SystemStats {
   totalUsers: number;
+  activeUsers: number;
+  totalDevices: number;
   activeDevices: number;
-  totalFleets: number;
+  offlineDevices: number;
+  maintenanceDevices: number;
+  totalAlerts: number;
+  totalTrips: number;
+  todayTrips: number;
   systemUptime: number;
   apiRequests: number;
   errorRate: number;
-  activeRoutes: number;
-  pendingApprovals: number;
+  recentActivity: {
+    newUsers: number;
+    newTrips: number;
+  };
+  usersByRole: Record<string, number>;
+  devicesByStatus: {
+    online: number;
+    offline: number;
+    maintenance: number;
+  };
+}
+
+interface FleetStats {
+  total: number;
+  approved: number;
+  pending: number;
+  rejected: number;
+  suspended: number;
+}
+
+interface SystemAlert {
+  id: string;
+  type: 'error' | 'warning' | 'info';
+  category: string;
+  title: string;
+  message: string;
+  device?: {
+    id: string;
+    deviceId: string;
+    vehicleNumber: string;
+  };
+  timestamp: string;
+  priority: 'high' | 'medium' | 'low';
+}
+
+interface AlertsResponse {
+  alerts: SystemAlert[];
+  summary: {
+    total: number;
+    high: number;
+    medium: number;
+    low: number;
+  };
 }
 
 interface User {
@@ -34,86 +83,153 @@ interface User {
   _id?: string;
 }
 
-interface Alert {
-  id: number;
-  type: 'error' | 'warning' | 'info';
-  message: string;
-  timestamp: string;
-}
-
 export default function SystemAdminDashboard() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [stats, setStats] = useState<SystemStats | null>(null);
+  const [fleetStats, setFleetStats] = useState<FleetStats | null>(null);
+  const [alerts, setAlerts] = useState<SystemAlert[]>([]);
+  const [alertsSummary, setAlertsSummary] = useState<AlertsResponse['summary'] | null>(null);
   const [loading, setLoading] = useState(true);
-  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [autoRefresh, setAutoRefresh] = useState(true);
 
-  // Load dashboard data
-  useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      
-      try {
-        // Check if user is system admin
-        const userData = localStorage.getItem('user');
-        if (userData) {
-          const parsedUser = JSON.parse(userData);
-          if (parsedUser.role !== 'system_admin') {
-            router.push('/sysadmin/login');
-            return;
-          }
-          setUser(parsedUser);
-        }
+  // API base URL
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
-        // Load system stats (mock data for now)
-        const mockStats: SystemStats = {
-          totalUsers: 1547,
-          activeDevices: 89,
-          totalFleets: 12,
-          systemUptime: 99.8,
-          apiRequests: 245780,
-          errorRate: 0.2,
-          activeRoutes: 156,
-          pendingApprovals: 3
-        };
-        setStats(mockStats);
+  // Get auth token
+  const getAuthToken = () => {
+    return localStorage.getItem('token');
+  };
 
-        // Load alerts (mock data)
-        const mockAlerts: Alert[] = [
-          {
-            id: 1,
-            type: 'warning',
-            message: 'High API usage detected - 90% of rate limit',
-            timestamp: new Date(Date.now() - 300000).toISOString()
-          },
-          {
-            id: 2,
-            type: 'info',
-            message: 'Fleet registration pending approval',
-            timestamp: new Date(Date.now() - 1800000).toISOString()
-          },
-          {
-            id: 3,
-            type: 'error',
-            message: 'Device offline: Bus #LK-4567',
-            timestamp: new Date(Date.now() - 3600000).toISOString()
-          }
-        ];
-        setAlerts(mockAlerts);
-      } catch (error) {
-        console.error('Error loading data:', error);
-      } finally {
-        setLoading(false);
+  // Fetch system stats
+  const fetchSystemStats = async () => {
+    const token = getAuthToken();
+    if (!token) throw new Error('No auth token');
+
+    const response = await fetch(`${API_BASE_URL}/admin/system/stats`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
       }
-    };
+    });
 
-    loadData();
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    return response.json();
+  };
+
+  // Fetch fleet stats
+  const fetchFleetStats = async () => {
+    const token = getAuthToken();
+    if (!token) throw new Error('No auth token');
+
+    const response = await fetch(`${API_BASE_URL}/admin/fleet/stats`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    return response.json();
+  };
+
+  // Fetch system alerts
+  const fetchSystemAlerts = async () => {
+    const token = getAuthToken();
+    if (!token) throw new Error('No auth token');
+
+    const response = await fetch(`${API_BASE_URL}/admin/system/alerts`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    return response.json();
+  };
+
+  // Load all dashboard data
+  const loadDashboardData = useCallback(async (isRefresh = false) => {
+    if (isRefresh) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
+    
+    setError(null);
+
+    try {
+      // Check if user is system admin
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        const parsedUser = JSON.parse(userData);
+        if (parsedUser.role !== 'system_admin') {
+          router.push('/sysadmin/login');
+          return;
+        }
+        setUser(parsedUser);
+      } else {
+        router.push('/sysadmin/login');
+        return;
+      }
+
+      // Fetch all data in parallel
+      const [systemStatsData, fleetStatsData, alertsData] = await Promise.all([
+        fetchSystemStats(),
+        fetchFleetStats().catch(() => ({ total: 0, approved: 0, pending: 0, rejected: 0, suspended: 0 })), // Fallback for fleet stats
+        fetchSystemAlerts()
+      ]);
+
+      setStats(systemStatsData);
+      setFleetStats(fleetStatsData);
+      setAlerts(alertsData.alerts || []);
+      setAlertsSummary(alertsData.summary || { total: 0, high: 0, medium: 0, low: 0 });
+
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+      setError(error instanceof Error ? error.message : 'Failed to load dashboard data');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
   }, [router]);
+
+  // Initial load
+  useEffect(() => {
+    loadDashboardData();
+  }, [loadDashboardData]);
+
+  // Auto refresh every 30 seconds
+  useEffect(() => {
+    if (!autoRefresh) return;
+
+    const interval = setInterval(() => {
+      loadDashboardData(true);
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [autoRefresh, loadDashboardData]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     router.push('/sysadmin/login');
+  };
+
+  const handleRefresh = () => {
+    loadDashboardData(true);
   };
 
   const quickActions = [
@@ -122,21 +238,25 @@ export default function SystemAdminDashboard() {
       description: 'Create and manage users',
       href: '/sysadmin/users',
       icon: UsersIcon,
-      color: '#3b82f6'
+      color: '#3b82f6',
+      count: stats?.totalUsers
     },
     {
       name: 'Device Management',
       description: 'Monitor and control devices',
       href: '/sysadmin/devices',
       icon: DevicePhoneMobileIcon,
-      color: '#10b981'
+      color: '#10b981',
+      count: stats?.activeDevices
     },
     {
       name: 'Fleet Approvals',
       description: 'Review fleet registrations',
       href: '/sysadmin/fleet',
       icon: TruckIcon,
-      color: '#f59e0b'
+      color: '#f59e0b',
+      count: fleetStats?.pending || 0,
+      urgent: (fleetStats?.pending || 0) > 0
     },
     {
       name: 'AI Module',
@@ -155,7 +275,7 @@ export default function SystemAdminDashboard() {
     {
       name: 'Global Map',
       description: 'View all vehicles',
-      href: '/sysadmin/map',
+      href: '/sysadmin/devices/monitor',
       icon: GlobeAltIcon,
       color: '#06b6d4'
     }
@@ -174,15 +294,21 @@ export default function SystemAdminDashboard() {
     }
   };
 
-  const formatUptime = (uptime: number) => {
+  const formatUptime = (uptime: number | undefined) => {
+    if (uptime === undefined || uptime === null || isNaN(uptime)) {
+      return '---';
+    }
     return `${uptime.toFixed(1)}%`;
   };
 
-  const formatNumber = (num: number) => {
+  const formatNumber = (num: number | undefined) => {
+    if (num === undefined || num === null || isNaN(num)) {
+      return '---';
+    }
     return num.toLocaleString();
   };
 
-  if (loading) {
+  if (loading && !stats) {
     return (
       <div style={{ 
         display: 'flex', 
@@ -192,7 +318,53 @@ export default function SystemAdminDashboard() {
         backgroundColor: '#0f172a',
         color: '#f1f5f9'
       }}>
-        <div>Loading system dashboard...</div>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '1rem'
+        }}>
+          <ArrowPathIcon width={32} height={32} className="animate-spin" />
+          <div>Loading system dashboard...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && !stats) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        minHeight: '100vh',
+        backgroundColor: '#0f172a',
+        color: '#f1f5f9'
+      }}>
+        <div style={{
+          textAlign: 'center',
+          padding: '2rem',
+          backgroundColor: '#1e293b',
+          borderRadius: '0.75rem',
+          border: '1px solid #ef4444'
+        }}>
+          <ExclamationTriangleIcon width={48} height={48} color="#ef4444" style={{ margin: '0 auto 1rem' }} />
+          <h2 style={{ color: '#ef4444', marginBottom: '1rem' }}>Failed to Load Dashboard</h2>
+          <p style={{ color: '#94a3b8', marginBottom: '1.5rem' }}>{error}</p>
+          <button
+            onClick={() => loadDashboardData()}
+            style={{
+              backgroundColor: '#3b82f6',
+              color: 'white',
+              padding: '0.75rem 1.5rem',
+              borderRadius: '0.5rem',
+              border: 'none',
+              cursor: 'pointer'
+            }}
+          >
+            Retry
+          </button>
+        </div>
       </div>
     );
   }
@@ -239,6 +411,49 @@ export default function SystemAdminDashboard() {
           </div>
           
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            {/* Auto Refresh Toggle */}
+            <label style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              color: '#94a3b8',
+              fontSize: '0.875rem',
+              cursor: 'pointer'
+            }}>
+              <input
+                type="checkbox"
+                checked={autoRefresh}
+                onChange={(e) => setAutoRefresh(e.target.checked)}
+                style={{ accentColor: '#3b82f6' }}
+              />
+              Auto Refresh
+            </label>
+
+            {/* Refresh Button */}
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              style={{
+                backgroundColor: '#374151',
+                color: '#f9fafb',
+                padding: '0.5rem',
+                borderRadius: '0.5rem',
+                border: 'none',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                opacity: refreshing ? 0.7 : 1
+              }}
+            >
+              <ArrowPathIcon 
+                width={16} 
+                height={16} 
+                style={{ 
+                  animation: refreshing ? 'spin 1s linear infinite' : 'none'
+                }} 
+              />
+            </button>
+
             <div style={{
               backgroundColor: '#dc2626',
               color: 'white',
@@ -288,9 +503,14 @@ export default function SystemAdminDashboard() {
               <UsersIcon width={32} height={32} color="#3b82f6" />
               <div>
                 <h3 style={{ color: '#3b82f6', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>
-                  {stats ? formatNumber(stats.totalUsers) : '0'}
+                  {formatNumber(stats?.totalUsers)}
                 </h3>
                 <p style={{ color: '#94a3b8', margin: '0.5rem 0 0 0' }}>Total Users</p>
+                {stats && (
+                  <p style={{ color: '#10b981', fontSize: '0.875rem', margin: '0.25rem 0 0 0' }}>
+                    {formatNumber(stats.activeUsers)} active • {formatNumber(stats.recentActivity.newUsers)} new this week
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -305,9 +525,14 @@ export default function SystemAdminDashboard() {
               <DevicePhoneMobileIcon width={32} height={32} color="#10b981" />
               <div>
                 <h3 style={{ color: '#10b981', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>
-                  {stats ? formatNumber(stats.activeDevices) : '0'}
+                  {formatNumber(stats?.activeDevices)}
                 </h3>
                 <p style={{ color: '#94a3b8', margin: '0.5rem 0 0 0' }}>Active Devices</p>
+                {stats && (
+                  <p style={{ color: '#94a3b8', fontSize: '0.875rem', margin: '0.25rem 0 0 0' }}>
+                    {formatNumber(stats.offlineDevices)} offline • {formatNumber(stats.maintenanceDevices)} maintenance
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -322,9 +547,18 @@ export default function SystemAdminDashboard() {
               <TruckIcon width={32} height={32} color="#f59e0b" />
               <div>
                 <h3 style={{ color: '#f59e0b', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>
-                  {stats ? formatNumber(stats.totalFleets) : '0'}
+                  {formatNumber(fleetStats?.total)}
                 </h3>
                 <p style={{ color: '#94a3b8', margin: '0.5rem 0 0 0' }}>Fleet Companies</p>
+                {fleetStats && (
+                  <p style={{ 
+                    color: (fleetStats.pending || 0) > 0 ? '#f59e0b' : '#94a3b8', 
+                    fontSize: '0.875rem', 
+                    margin: '0.25rem 0 0 0' 
+                  }}>
+                    {formatNumber(fleetStats.approved)} approved • {formatNumber(fleetStats.pending)} pending
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -339,13 +573,41 @@ export default function SystemAdminDashboard() {
               <ServerIcon width={32} height={32} color="#8b5cf6" />
               <div>
                 <h3 style={{ color: '#8b5cf6', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>
-                  {stats ? formatUptime(stats.systemUptime) : '0%'}
+                  {formatUptime(stats?.systemUptime)}
                 </h3>
                 <p style={{ color: '#94a3b8', margin: '0.5rem 0 0 0' }}>System Uptime</p>
+                {stats && (
+                  <p style={{ 
+                    color: stats.errorRate < 1 ? '#10b981' : '#f59e0b', 
+                    fontSize: '0.875rem', 
+                    margin: '0.25rem 0 0 0' 
+                  }}>
+                    {stats.errorRate}% error rate
+                  </p>
+                )}
               </div>
             </div>
           </div>
         </div>
+
+        {/* Real-time Status Bar */}
+        {error && (
+          <div style={{
+            backgroundColor: '#fef2f2',
+            border: '1px solid #fca5a5',
+            borderRadius: '0.5rem',
+            padding: '1rem',
+            marginBottom: '2rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <ExclamationTriangleIcon width={20} height={20} color="#dc2626" />
+            <span style={{ color: '#dc2626' }}>
+              Some data may be outdated due to connection issues. Last successful update: {stats ? 'Just now' : 'Unknown'}
+            </span>
+          </div>
+        )}
 
         {/* Quick Actions */}
         <div style={{
@@ -377,14 +639,15 @@ export default function SystemAdminDashboard() {
                   padding: '1.5rem',
                   borderRadius: '0.5rem',
                   textDecoration: 'none',
-                  border: '1px solid #475569',
+                  border: action.urgent ? '1px solid #f59e0b' : '1px solid #475569',
                   transition: 'all 0.2s',
-                  display: 'block'
+                  display: 'block',
+                  position: 'relative'
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   <action.icon width={24} height={24} color={action.color} />
-                  <div>
+                  <div style={{ flex: 1 }}>
                     <h3 style={{ 
                       color: '#f1f5f9', 
                       fontSize: '1.1rem', 
@@ -401,7 +664,31 @@ export default function SystemAdminDashboard() {
                       {action.description}
                     </p>
                   </div>
+                  {action.count !== undefined && (
+                    <div style={{
+                      backgroundColor: action.urgent ? '#f59e0b' : action.color,
+                      color: 'white',
+                      padding: '0.25rem 0.5rem',
+                      borderRadius: '0.25rem',
+                      fontSize: '0.875rem',
+                      fontWeight: 'bold'
+                    }}>
+                      {formatNumber(action.count)}
+                    </div>
+                  )}
                 </div>
+                {action.urgent && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '0.5rem',
+                    right: '0.5rem',
+                    width: '8px',
+                    height: '8px',
+                    backgroundColor: '#f59e0b',
+                    borderRadius: '50%',
+                    animation: 'pulse 2s infinite'
+                  }} />
+                )}
               </Link>
             ))}
           </div>
@@ -417,69 +704,158 @@ export default function SystemAdminDashboard() {
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '1rem',
+            justifyContent: 'space-between',
             marginBottom: '1.5rem'
           }}>
-            <ExclamationTriangleIcon width={24} height={24} color="#f59e0b" />
-            <h2 style={{
-              color: '#f1f5f9',
-              fontSize: '1.5rem',
-              fontWeight: 'bold',
-              margin: 0
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '1rem'
             }}>
-              System Alerts
-            </h2>
+              <ExclamationTriangleIcon width={24} height={24} color="#f59e0b" />
+              <h2 style={{
+                color: '#f1f5f9',
+                fontSize: '1.5rem',
+                fontWeight: 'bold',
+                margin: 0
+              }}>
+                System Alerts
+              </h2>
+            </div>
+            
+            {alertsSummary && (
+              <div style={{
+                display: 'flex',
+                gap: '1rem',
+                fontSize: '0.875rem'
+              }}>
+                <span style={{ color: '#ef4444' }}>
+                  {alertsSummary.high} High
+                </span>
+                <span style={{ color: '#f59e0b' }}>
+                  {alertsSummary.medium} Medium
+                </span>
+                <span style={{ color: '#3b82f6' }}>
+                  {alertsSummary.low} Low
+                </span>
+              </div>
+            )}
           </div>
           
           {alerts.length > 0 ? (
-            alerts.map((alert) => (
-              <div key={alert.id} style={{
-                backgroundColor: '#334155',
-                padding: '1rem',
-                borderRadius: '0.5rem',
-                marginBottom: '1rem',
-                borderLeft: `4px solid ${getAlertColor(alert.type)}`
-              }}>
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center'
+            <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+              {alerts.slice(0, 5).map((alert) => (
+                <div key={alert.id} style={{
+                  backgroundColor: '#334155',
+                  padding: '1rem',
+                  borderRadius: '0.5rem',
+                  marginBottom: '1rem',
+                  borderLeft: `4px solid ${getAlertColor(alert.type)}`
                 }}>
-                  <div>
-                    <p style={{
-                      color: '#f1f5f9',
-                      margin: 0,
-                      fontWeight: '500'
-                    }}>
-                      {alert.message}
-                    </p>
-                    <p style={{
-                      color: '#94a3b8',
-                      fontSize: '0.875rem',
-                      margin: '0.25rem 0 0 0'
-                    }}>
-                      {new Date(alert.timestamp).toLocaleString()}
-                    </p>
-                  </div>
                   <div style={{
-                    backgroundColor: getAlertColor(alert.type),
-                    color: 'white',
-                    padding: '0.25rem 0.75rem',
-                    borderRadius: '0.25rem',
-                    fontSize: '0.75rem',
-                    fontWeight: '600',
-                    textTransform: 'uppercase' as const
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'flex-start'
                   }}>
-                    {alert.type}
+                    <div style={{ flex: 1 }}>
+                      <p style={{
+                        color: '#f1f5f9',
+                        margin: 0,
+                        fontWeight: '500'
+                      }}>
+                        {alert.title}
+                      </p>
+                      <p style={{
+                        color: '#94a3b8',
+                        fontSize: '0.875rem',
+                        margin: '0.25rem 0',
+                        lineHeight: '1.4'
+                      }}>
+                        {alert.message}
+                      </p>
+                      <div style={{
+                        display: 'flex',
+                        gap: '1rem',
+                        fontSize: '0.75rem',
+                        color: '#64748b'
+                      }}>
+                        <span>Category: {alert.category}</span>
+                        {alert.device && (
+                          <span>Device: {alert.device.vehicleNumber}</span>
+                        )}
+                        <span>{new Date(alert.timestamp).toLocaleString()}</span>
+                      </div>
+                    </div>
+                    <div style={{
+                      backgroundColor: getAlertColor(alert.type),
+                      color: 'white',
+                      padding: '0.25rem 0.75rem',
+                      borderRadius: '0.25rem',
+                      fontSize: '0.75rem',
+                      fontWeight: '600',
+                      textTransform: 'uppercase',
+                      marginLeft: '1rem'
+                    }}>
+                      {alert.priority}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))
+              ))}
+              
+              {alerts.length > 5 && (
+                <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+                  <Link 
+                    href="/sysadmin/health"
+                    style={{
+                      color: '#3b82f6',
+                      textDecoration: 'none',
+                      fontSize: '0.875rem'
+                    }}
+                  >
+                    View all {alerts.length} alerts →
+                  </Link>
+                </div>
+              )}
+            </div>
           ) : (
-            <p style={{ color: '#94a3b8' }}>No active alerts</p>
+            <div style={{ 
+              textAlign: 'center', 
+              padding: '2rem',
+              color: '#94a3b8' 
+            }}>
+              <CheckCircleIcon width={48} height={48} color="#10b981" style={{ margin: '0 auto 1rem' }} />
+              <p style={{ margin: 0 }}>No active alerts - All systems operational</p>
+            </div>
+          )}
+        </div>
+
+        {/* Last Updated */}
+        <div style={{
+          textAlign: 'center',
+          marginTop: '2rem',
+          color: '#64748b',
+          fontSize: '0.875rem'
+        }}>
+          Last updated: {new Date().toLocaleString()}
+          {refreshing && (
+            <span style={{ marginLeft: '0.5rem', color: '#3b82f6' }}>
+              • Refreshing...
+            </span>
           )}
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+      `}</style>
     </div>
   );
 }
