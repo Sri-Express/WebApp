@@ -1,4 +1,4 @@
-// src/app/sysadmin/ai/page.tsx
+// src/app/sysadmin/ai/page.tsx - UPDATED WITH REAL API CALLS
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -31,6 +31,23 @@ interface AIModule {
   lastTrained: string;
   version: string;
   type: 'prediction' | 'optimization' | 'analysis';
+  config: {
+    autoRetrain: boolean;
+    confidenceThreshold: number;
+    trainingInterval: number;
+    dataPoints: number;
+  };
+  performance: {
+    totalPredictions: number;
+    successfulPredictions: number;
+    avgResponseTime: number;
+    lastPrediction: string | null;
+  };
+  resources: {
+    cpuUsage: number;
+    memoryUsage: number;
+    gpuUsage?: number;
+  };
 }
 
 interface AIStats {
@@ -39,8 +56,11 @@ interface AIStats {
   trainingModules: number;
   totalPredictions: number;
   averageAccuracy: number;
-  cpuUsage: number;
-  memoryUsage: number;
+  systemCpuUsage: number;
+  systemMemoryUsage: number;
+  systemGpuUsage?: number;
+  dailyPredictions: number;
+  errorRate: number;
 }
 
 export default function AIModulePage() {
@@ -49,14 +69,52 @@ export default function AIModulePage() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [selectedModule, setSelectedModule] = useState<AIModule | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  // Load AI module data
+  // Load AI module data from backend
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
+      setError(null);
       
       try {
-        // Mock data for now since AI module isn't implemented yet
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('No authentication token found');
+        }
+
+        // Call real backend API
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/ai`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        // Format data for our interface
+        const formattedModules = data.modules.map((module: any) => ({
+          ...module,
+          lastTrained: module.lastTrained || new Date().toISOString(),
+          performance: {
+            ...module.performance,
+            lastPrediction: module.performance.lastPrediction || null
+          }
+        }));
+
+        setModules(formattedModules);
+        setStats(data.stats);
+      } catch (error) {
+        console.error('Error loading AI modules:', error);
+        setError(error instanceof Error ? error.message : 'Failed to load AI modules');
+        
+        // Fallback to mock data if API fails
         const mockModules: AIModule[] = [
           {
             id: 'arrival-predictor',
@@ -66,7 +124,24 @@ export default function AIModulePage() {
             accuracy: 87.5,
             lastTrained: '2025-01-15T10:30:00Z',
             version: '2.1.3',
-            type: 'prediction'
+            type: 'prediction',
+            config: {
+              autoRetrain: true,
+              confidenceThreshold: 0.85,
+              trainingInterval: 24,
+              dataPoints: 10000
+            },
+            performance: {
+              totalPredictions: 45230,
+              successfulPredictions: 39576,
+              avgResponseTime: 120,
+              lastPrediction: new Date().toISOString()
+            },
+            resources: {
+              cpuUsage: 15.2,
+              memoryUsage: 256,
+              gpuUsage: 45.8
+            }
           },
           {
             id: 'route-optimizer',
@@ -76,44 +151,41 @@ export default function AIModulePage() {
             accuracy: 92.1,
             lastTrained: '2025-01-10T14:20:00Z',
             version: '1.8.2',
-            type: 'optimization'
-          },
-          {
-            id: 'demand-forecaster',
-            name: 'Demand Forecaster',
-            description: 'Forecasts passenger demand for different routes and times',
-            status: 'training',
-            accuracy: 78.3,
-            lastTrained: '2025-01-17T08:15:00Z',
-            version: '3.0.1',
-            type: 'analysis'
-          },
-          {
-            id: 'anomaly-detector',
-            name: 'Anomaly Detector',
-            description: 'Detects unusual patterns in vehicle behavior and system performance',
-            status: 'error',
-            accuracy: 65.4,
-            lastTrained: '2025-01-12T16:45:00Z',
-            version: '1.5.7',
-            type: 'analysis'
+            type: 'optimization',
+            config: {
+              autoRetrain: false,
+              confidenceThreshold: 0.9,
+              trainingInterval: 48,
+              dataPoints: 8500
+            },
+            performance: {
+              totalPredictions: 12450,
+              successfulPredictions: 11467,
+              avgResponseTime: 85,
+              lastPrediction: new Date(Date.now() - 86400000).toISOString()
+            },
+            resources: {
+              cpuUsage: 0,
+              memoryUsage: 0
+            }
           }
         ];
 
         const mockStats: AIStats = {
-          totalModules: 4,
+          totalModules: 2,
           activeModules: 1,
-          trainingModules: 1,
-          totalPredictions: 156789,
-          averageAccuracy: 80.8,
-          cpuUsage: 34.2,
-          memoryUsage: 67.8
+          trainingModules: 0,
+          totalPredictions: 57680,
+          averageAccuracy: 89.8,
+          systemCpuUsage: 15.2,
+          systemMemoryUsage: 256,
+          systemGpuUsage: 45.8,
+          dailyPredictions: 5768,
+          errorRate: 1.2
         };
 
         setModules(mockModules);
         setStats(mockStats);
-      } catch (error) {
-        console.error('Error loading AI modules:', error);
       } finally {
         setLoading(false);
       }
@@ -169,33 +241,54 @@ export default function AIModulePage() {
     setActionLoading(`${moduleId}-${action}`);
     
     try {
-      // Mock API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      let endpoint = '';
+      let method = 'POST';
+      let body: any = {};
+
+      if (action === 'train') {
+        endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/admin/ai/${moduleId}/train`;
+        body = {
+          epochs: 100,
+          batchSize: 32,
+          learningRate: 0.001,
+          validationSplit: 0.2
+        };
+      } else {
+        endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/admin/ai/${moduleId}/toggle`;
+        body = { action };
+      }
+
+      const response = await fetch(endpoint, {
+        method,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
       
-      // Update module status based on action
+      // Update module status locally
       setModules(prev => prev.map(module => {
         if (module.id === moduleId) {
-          let newStatus = module.status;
-          switch (action) {
-            case 'start':
-              newStatus = 'active';
-              break;
-            case 'stop':
-              newStatus = 'inactive';
-              break;
-            case 'restart':
-              newStatus = 'active';
-              break;
-            case 'train':
-              newStatus = 'training';
-              break;
-          }
-          return { ...module, status: newStatus };
+          return { ...module, ...data.module };
         }
         return module;
       }));
+
     } catch (error) {
       console.error(`Error performing ${action} on module ${moduleId}:`, error);
+      setError(error instanceof Error ? error.message : `Failed to ${action} module`);
     } finally {
       setActionLoading(null);
     }
@@ -308,6 +401,23 @@ export default function AIModulePage() {
         margin: '0 auto',
         padding: '2rem 1.5rem'
       }}>
+        {/* Error Message */}
+        {error && (
+          <div style={{
+            backgroundColor: '#7f1d1d',
+            border: '1px solid #dc2626',
+            padding: '1rem',
+            borderRadius: '0.5rem',
+            marginBottom: '1.5rem',
+            color: '#fca5a5'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <ExclamationTriangleIcon width={20} height={20} />
+              <span>Error: {error}</span>
+            </div>
+          </div>
+        )}
+
         {/* System Stats */}
         <div style={{
           display: 'grid',
@@ -325,7 +435,7 @@ export default function AIModulePage() {
               <CpuChipIcon width={32} height={32} color="#8b5cf6" />
               <div>
                 <h3 style={{ color: '#8b5cf6', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>
-                  {stats?.totalModules}
+                  {stats?.totalModules || 0}
                 </h3>
                 <p style={{ color: '#94a3b8', margin: '0.5rem 0 0 0' }}>Total Modules</p>
               </div>
@@ -342,7 +452,7 @@ export default function AIModulePage() {
               <CheckCircleIcon width={32} height={32} color="#10b981" />
               <div>
                 <h3 style={{ color: '#10b981', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>
-                  {stats?.activeModules}
+                  {stats?.activeModules || 0}
                 </h3>
                 <p style={{ color: '#94a3b8', margin: '0.5rem 0 0 0' }}>Active</p>
               </div>
@@ -359,7 +469,7 @@ export default function AIModulePage() {
               <ChartBarIcon width={32} height={32} color="#f59e0b" />
               <div>
                 <h3 style={{ color: '#f59e0b', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>
-                  {stats?.averageAccuracy.toFixed(1)}%
+                  {stats?.averageAccuracy?.toFixed(1) || 0}%
                 </h3>
                 <p style={{ color: '#94a3b8', margin: '0.5rem 0 0 0' }}>Avg Accuracy</p>
               </div>
@@ -376,7 +486,7 @@ export default function AIModulePage() {
               <BoltIcon width={32} height={32} color="#06b6d4" />
               <div>
                 <h3 style={{ color: '#06b6d4', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>
-                  {stats?.totalPredictions.toLocaleString()}
+                  {stats?.totalPredictions?.toLocaleString() || 0}
                 </h3>
                 <p style={{ color: '#94a3b8', margin: '0.5rem 0 0 0' }}>Predictions</p>
               </div>
@@ -419,7 +529,7 @@ export default function AIModulePage() {
                 marginBottom: '0.5rem'
               }}>
                 <span style={{ color: '#e2e8f0', fontWeight: '600' }}>CPU Usage</span>
-                <span style={{ color: '#f1f5f9', fontWeight: 'bold' }}>{stats?.cpuUsage}%</span>
+                <span style={{ color: '#f1f5f9', fontWeight: 'bold' }}>{stats?.systemCpuUsage?.toFixed(1) || 0}%</span>
               </div>
               <div style={{
                 backgroundColor: '#334155',
@@ -428,9 +538,9 @@ export default function AIModulePage() {
                 overflow: 'hidden'
               }}>
                 <div style={{
-                  backgroundColor: stats && stats.cpuUsage > 80 ? '#ef4444' : stats && stats.cpuUsage > 60 ? '#f59e0b' : '#10b981',
+                  backgroundColor: stats && stats.systemCpuUsage > 80 ? '#ef4444' : stats && stats.systemCpuUsage > 60 ? '#f59e0b' : '#10b981',
                   height: '100%',
-                  width: `${stats?.cpuUsage}%`,
+                  width: `${stats?.systemCpuUsage || 0}%`,
                   borderRadius: '0.5rem',
                   transition: 'width 0.3s ease'
                 }} />
@@ -446,7 +556,7 @@ export default function AIModulePage() {
                 marginBottom: '0.5rem'
               }}>
                 <span style={{ color: '#e2e8f0', fontWeight: '600' }}>Memory Usage</span>
-                <span style={{ color: '#f1f5f9', fontWeight: 'bold' }}>{stats?.memoryUsage}%</span>
+                <span style={{ color: '#f1f5f9', fontWeight: 'bold' }}>{stats?.systemMemoryUsage || 0} MB</span>
               </div>
               <div style={{
                 backgroundColor: '#334155',
@@ -455,14 +565,43 @@ export default function AIModulePage() {
                 overflow: 'hidden'
               }}>
                 <div style={{
-                  backgroundColor: stats && stats.memoryUsage > 80 ? '#ef4444' : stats && stats.memoryUsage > 60 ? '#f59e0b' : '#10b981',
+                  backgroundColor: '#06b6d4',
                   height: '100%',
-                  width: `${stats?.memoryUsage}%`,
+                  width: `${Math.min((stats?.systemMemoryUsage || 0) / 10, 100)}%`,
                   borderRadius: '0.5rem',
                   transition: 'width 0.3s ease'
                 }} />
               </div>
             </div>
+
+            {/* GPU Usage */}
+            {stats?.systemGpuUsage !== undefined && (
+              <div>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '0.5rem'
+                }}>
+                  <span style={{ color: '#e2e8f0', fontWeight: '600' }}>GPU Usage</span>
+                  <span style={{ color: '#f1f5f9', fontWeight: 'bold' }}>{stats.systemGpuUsage.toFixed(1)}%</span>
+                </div>
+                <div style={{
+                  backgroundColor: '#334155',
+                  borderRadius: '0.5rem',
+                  height: '8px',
+                  overflow: 'hidden'
+                }}>
+                  <div style={{
+                    backgroundColor: '#8b5cf6',
+                    height: '100%',
+                    width: `${stats.systemGpuUsage}%`,
+                    borderRadius: '0.5rem',
+                    transition: 'width 0.3s ease'
+                  }} />
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -754,9 +893,10 @@ export default function AIModulePage() {
             margin: 0,
             lineHeight: '1.5'
           }}>
-            The AI modules are currently in development phase. Full integration with real-time data and 
-            production-ready machine learning models will be available in the next release. Current modules 
-            use simulated data for demonstration purposes.
+            {error ? 
+              'AI modules are currently running in demo mode. Some features may use simulated data.' :
+              'AI system is connected and operational. All modules are managed through the backend API.'
+            }
           </p>
         </div>
       </div>
@@ -869,6 +1009,50 @@ export default function AIModulePage() {
                   }}>
                     {selectedModule.type}
                   </p>
+                </div>
+              </div>
+
+              <div>
+                <label style={{ color: '#94a3b8', fontSize: '0.875rem' }}>Performance</label>
+                <div style={{
+                  backgroundColor: '#334155',
+                  padding: '1rem',
+                  borderRadius: '0.5rem',
+                  marginTop: '0.5rem'
+                }}>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '0.5rem'
+                  }}>
+                    <div>
+                      <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Total Predictions:</span>
+                      <p style={{ color: '#f1f5f9', margin: '0.25rem 0 0 0' }}>
+                        {selectedModule.performance.totalPredictions.toLocaleString()}
+                      </p>
+                    </div>
+                    <div>
+                      <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Success Rate:</span>
+                      <p style={{ color: '#f1f5f9', margin: '0.25rem 0 0 0' }}>
+                        {((selectedModule.performance.successfulPredictions / selectedModule.performance.totalPredictions) * 100).toFixed(1)}%
+                      </p>
+                    </div>
+                    <div>
+                      <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Avg Response Time:</span>
+                      <p style={{ color: '#f1f5f9', margin: '0.25rem 0 0 0' }}>
+                        {selectedModule.performance.avgResponseTime}ms
+                      </p>
+                    </div>
+                    <div>
+                      <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Last Prediction:</span>
+                      <p style={{ color: '#f1f5f9', margin: '0.25rem 0 0 0' }}>
+                        {selectedModule.performance.lastPrediction ? 
+                          formatDateTime(selectedModule.performance.lastPrediction) : 
+                          'Never'
+                        }
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
 
