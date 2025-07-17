@@ -11,10 +11,8 @@ import {
   BellIcon,
   GlobeAltIcon,
   ClockIcon,
-  KeyIcon,
   EnvelopeIcon,
   DevicePhoneMobileIcon,
-  CurrencyDollarIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon,
   InformationCircleIcon,
@@ -79,7 +77,6 @@ export default function SystemSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('system');
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const [hasChanges, setHasChanges] = useState(false);
 
   // Get auth token
@@ -190,7 +187,7 @@ export default function SystemSettingsPage() {
     loadSettings();
   }, []);
 
-  const handleChange = (section: keyof SystemSettings, field: string, value: any) => {
+  const handleChange = (section: keyof SystemSettings, field: string, value: string | number | boolean) => {
     if (!settings) return;
 
     setSettings(prev => {
@@ -203,7 +200,7 @@ export default function SystemSettingsPage() {
           [section]: {
             ...prev[section],
             [subField]: {
-              ...(prev[section] as any)[subField],
+              ...(prev[section] as Record<string, Record<string, string | number | boolean>>)[subField],
               [subKey]: value
             }
           }
@@ -236,7 +233,7 @@ export default function SystemSettingsPage() {
       // Show success message
     } catch (error) {
       console.error('Error saving settings:', error);
-      setErrors({ submit: 'Failed to save settings' });
+      // Could show error message here if needed
     } finally {
       setSaving(false);
     }

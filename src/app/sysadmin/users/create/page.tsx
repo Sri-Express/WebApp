@@ -14,8 +14,7 @@ import {
   ChatBubbleLeftRightIcon,
   BuildingOfficeIcon,
   EnvelopeIcon,
-  KeyIcon,
-  InformationCircleIcon
+  KeyIcon
 } from '@heroicons/react/24/outline';
 
 interface CreateUserForm {
