@@ -1,7 +1,7 @@
 // src/app/sysadmin/users/[id]/edit/page.tsx
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 import { 
@@ -11,10 +11,8 @@ import {
   PhoneIcon,
   BuildingOfficeIcon,
   ShieldCheckIcon,
-  KeyIcon,
   ChatBubbleLeftRightIcon,
   TruckIcon,
-  InformationCircleIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
@@ -47,7 +45,7 @@ export default function EditUserPage() {
   };
 
   // API call helper
-  const apiCall = async (endpoint: string, options: RequestInit = {}) => {
+  const apiCall = useCallback(async (endpoint: string, options: RequestInit = {}) => {
     const token = getToken();
     if (!token) {
       router.push('/sysadmin/login');
@@ -78,7 +76,7 @@ export default function EditUserPage() {
       console.error('API call error:', error);
       return null;
     }
-  };
+  }, [router]);
 
   // Load user data
   useEffect(() => {
@@ -112,7 +110,7 @@ export default function EditUserPage() {
     if (userId) {
       loadUserData();
     }
-  }, [userId]);
+  }, [userId, apiCall]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     if (!formData) return;

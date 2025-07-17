@@ -3,7 +3,6 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { 
   CpuChipIcon,
   BoltIcon,
@@ -45,52 +44,11 @@ interface AIStats {
 }
 
 export default function AIModulePage() {
-  const router = useRouter();
   const [modules, setModules] = useState<AIModule[]>([]);
   const [stats, setStats] = useState<AIStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [selectedModule, setSelectedModule] = useState<AIModule | null>(null);
-  const [showConfigModal, setShowConfigModal] = useState(false);
-
-  // Get auth token
-  const getToken = () => {
-    return localStorage.getItem('token');
-  };
-
-  // API call helper
-  const apiCall = async (endpoint: string, options: RequestInit = {}) => {
-    const token = getToken();
-    if (!token) {
-      router.push('/sysadmin/login');
-      return null;
-    }
-
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${endpoint}`, {
-        ...options,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-          ...options.headers,
-        },
-      });
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          localStorage.removeItem('token');
-          router.push('/sysadmin/login');
-          return null;
-        }
-        throw new Error(`API Error: ${response.status}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('API call error:', error);
-      return null;
-    }
-  };
 
   // Load AI module data
   useEffect(() => {
@@ -243,10 +201,6 @@ export default function AIModulePage() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
-  };
-
   const formatDateTime = (dateString: string) => {
     return new Date(dateString).toLocaleString();
   };
@@ -313,7 +267,6 @@ export default function AIModulePage() {
           
           <div style={{ display: 'flex', gap: '1rem' }}>
             <button
-              onClick={() => setShowConfigModal(true)}
               style={{
                 backgroundColor: '#374151',
                 color: '#f9fafb',

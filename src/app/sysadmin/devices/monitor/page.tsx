@@ -1,7 +1,7 @@
 // src/app/sysadmin/devices/monitor/page.tsx
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
@@ -10,13 +10,13 @@ import {
   MagnifyingGlassIcon,
   MapPinIcon,
   SignalIcon,
-  BatteryIcon,
+  BoltIcon, // Replaced BatteryIcon
   TruckIcon,
   CheckCircleIcon,
   XCircleIcon,
   ClockIcon,
   ExclamationTriangleIcon,
-  RefreshCcwIcon,
+  ArrowPathIcon, // Replaced RefreshCcwIcon
   ViewColumnsIcon,
   MapIcon,
   FunnelIcon,
@@ -64,7 +64,6 @@ export default function DeviceMonitorPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
-  const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
 
   // Get auth token
@@ -73,7 +72,7 @@ export default function DeviceMonitorPage() {
   };
 
   // API call helper
-  const apiCall = async (endpoint: string, options: RequestInit = {}) => {
+  const apiCall = useCallback(async (endpoint: string, options: RequestInit = {}) => {
     const token = getToken();
     if (!token) {
       router.push('/sysadmin/login');
@@ -104,10 +103,10 @@ export default function DeviceMonitorPage() {
       console.error('API call error:', error);
       return null;
     }
-  };
+  }, [router]);
 
   // Load devices data
-  const loadDevices = async () => {
+  const loadDevices = useCallback(async () => {
     try {
       const response = await apiCall('/admin/devices?limit=1000');
       if (response?.devices) {
@@ -116,7 +115,7 @@ export default function DeviceMonitorPage() {
     } catch (error) {
       console.error('Error loading devices:', error);
     }
-  };
+  }, [apiCall]);
 
   // Initial load
   useEffect(() => {
@@ -127,7 +126,7 @@ export default function DeviceMonitorPage() {
     };
 
     initialLoad();
-  }, []);
+  }, [loadDevices]);
 
   // Auto refresh every 30 seconds
   useEffect(() => {
@@ -138,7 +137,7 @@ export default function DeviceMonitorPage() {
     }, 30000);
 
     return () => clearInterval(interval);
-  }, [autoRefresh]);
+  }, [autoRefresh, loadDevices]);
 
   // Filter devices
   useEffect(() => {
@@ -364,7 +363,7 @@ export default function DeviceMonitorPage() {
                 opacity: loading ? 0.7 : 1
               }}
             >
-              <RefreshCcwIcon width={16} height={16} />
+              <ArrowPathIcon width={16} height={16} />
               Refresh
             </button>
           </div>
@@ -671,7 +670,7 @@ export default function DeviceMonitorPage() {
                   marginBottom: '1rem'
                 }}>
                   <div style={{ textAlign: 'center' }}>
-                    <BatteryIcon width={20} height={20} color={getBatteryColor(device.batteryLevel)} style={{ margin: '0 auto 0.25rem' }} />
+                    <BoltIcon width={20} height={20} color={getBatteryColor(device.batteryLevel)} style={{ margin: '0 auto 0.25rem' }} />
                     <div style={{ color: getBatteryColor(device.batteryLevel), fontSize: '0.875rem', fontWeight: '600' }}>
                       {device.batteryLevel}%
                     </div>

@@ -1,18 +1,16 @@
 // src/app/sysadmin/devices/page.tsx
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
   DevicePhoneMobileIcon, 
   PlusIcon, 
   MagnifyingGlassIcon,
-  SignalIcon,
   MapPinIcon,
-  BatteryIcon,
+  BoltIcon, // Replaced BatteryIcon with BoltIcon
   TruckIcon,
-  WifiIcon,
   ExclamationTriangleIcon,
   CheckCircleIcon,
   XCircleIcon,
@@ -69,18 +67,6 @@ interface DeviceStats {
   totalAlerts: number;
 }
 
-interface ApiResponse {
-  devices: Device[];
-  pagination: {
-    currentPage: number;
-    totalPages: number;
-    totalDevices: number;
-    hasNext: boolean;
-    hasPrev: boolean;
-  };
-  stats: DeviceStats;
-}
-
 export default function SystemAdminDevicesPage() {
   const router = useRouter();
   const [devices, setDevices] = useState<Device[]>([]);
@@ -109,7 +95,7 @@ export default function SystemAdminDevicesPage() {
   };
 
   // API call helper
-  const apiCall = async (endpoint: string, options: RequestInit = {}) => {
+  const apiCall = useCallback(async (endpoint: string, options: RequestInit = {}) => {
     const token = getToken();
     if (!token) {
       router.push('/sysadmin/login');
@@ -140,10 +126,10 @@ export default function SystemAdminDevicesPage() {
       console.error('API call error:', error);
       return null;
     }
-  };
+  }, [router]);
 
   // Load devices data from real API
-  const loadDevices = async (page = 1, search = '', status = 'all', type = 'all') => {
+  const loadDevices = useCallback(async (page = 1, search = '', status = 'all', type = 'all') => {
     setLoading(true);
     
     try {
@@ -183,12 +169,12 @@ export default function SystemAdminDevicesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiCall]);
 
   // Initial load
   useEffect(() => {
     loadDevices();
-  }, []);
+  }, [loadDevices]);
 
   // Handle search and filter changes
   useEffect(() => {
@@ -198,7 +184,7 @@ export default function SystemAdminDevicesPage() {
     }, 500); // Debounce search
 
     return () => clearTimeout(timeoutId);
-  }, [searchTerm, filterStatus, filterType]);
+  }, [searchTerm, filterStatus, filterType, loadDevices]);
 
   // Handle pagination
   const handlePageChange = (page: number) => {
@@ -371,14 +357,6 @@ export default function SystemAdminDevicesPage() {
     if (level > 50) return '#10b981';
     if (level > 20) return '#f59e0b';
     return '#ef4444';
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
-  };
-
-  const formatDateTime = (dateString: string) => {
-    return new Date(dateString).toLocaleString();
   };
 
   const getTimeSince = (dateString: string) => {
@@ -990,7 +968,7 @@ export default function SystemAdminDevicesPage() {
                         alignItems: 'center',
                         gap: '0.5rem'
                       }}>
-                        <BatteryIcon width={16} height={16} color={getBatteryColor(device.batteryLevel)} />
+                        <BoltIcon width={16} height={16} color={getBatteryColor(device.batteryLevel)} />
                         <span style={{
                           color: getBatteryColor(device.batteryLevel),
                           fontWeight: '500'

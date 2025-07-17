@@ -1,24 +1,21 @@
 // src/app/sysadmin/devices/[id]/page.tsx
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 import { 
   DevicePhoneMobileIcon,
   MapPinIcon,
   SignalIcon,
-  BatteryIcon,
-  TruckIcon,
-  WifiIcon,
+  BoltIcon, // Replaced BatteryIcon
   ExclamationTriangleIcon,
   CheckCircleIcon,
   XCircleIcon,
   ClockIcon,
   PencilIcon,
   TrashIcon,
-  RefreshCcwIcon,
-  CalendarIcon,
+  ArrowPathIcon, // Replaced RefreshCcwIcon
   CpuChipIcon,
   UserIcon,
   GlobeAltIcon
@@ -77,7 +74,7 @@ export default function DeviceDetailsPage() {
   };
 
   // API call helper
-  const apiCall = async (endpoint: string, options: RequestInit = {}) => {
+  const apiCall = useCallback(async (endpoint: string, options: RequestInit = {}) => {
     const token = getToken();
     if (!token) {
       router.push('/sysadmin/login');
@@ -108,7 +105,7 @@ export default function DeviceDetailsPage() {
       console.error('API call error:', error);
       return null;
     }
-  };
+  }, [router]);
 
   // Load device data
   useEffect(() => {
@@ -134,7 +131,7 @@ export default function DeviceDetailsPage() {
     if (deviceId) {
       loadDevice();
     }
-  }, [deviceId]);
+  }, [deviceId, apiCall]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -373,7 +370,7 @@ export default function DeviceDetailsPage() {
                 opacity: actionLoading === 'refresh' ? 0.7 : 1
               }}
             >
-              <RefreshCcwIcon width={16} height={16} />
+              <ArrowPathIcon width={16} height={16} />
               Refresh
             </button>
             <Link
@@ -481,7 +478,7 @@ export default function DeviceDetailsPage() {
               gap: '0.5rem',
               marginBottom: '0.5rem'
             }}>
-              <BatteryIcon width={20} height={20} color={getBatteryColor(device.batteryLevel)} />
+              <BoltIcon width={20} height={20} color={getBatteryColor(device.batteryLevel)} />
               <h3 style={{
                 color: '#f1f5f9',
                 fontSize: '1rem',

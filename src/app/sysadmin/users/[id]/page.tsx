@@ -1,7 +1,7 @@
 // src/app/sysadmin/users/[id]/page.tsx
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 import { 
@@ -21,8 +21,7 @@ import {
   ChatBubbleLeftRightIcon,
   TruckIcon,
   Cog6ToothIcon,
-  ChartBarIcon,
-  InformationCircleIcon
+  ChartBarIcon
 } from '@heroicons/react/24/outline';
 
 interface User {
@@ -76,7 +75,7 @@ export default function UserDetailsPage() {
   };
 
   // API call helper
-  const apiCall = async (endpoint: string, options: RequestInit = {}) => {
+  const apiCall = useCallback(async (endpoint: string, options: RequestInit = {}) => {
     const token = getToken();
     if (!token) {
       router.push('/sysadmin/login');
@@ -107,7 +106,7 @@ export default function UserDetailsPage() {
       console.error('API call error:', error);
       return null;
     }
-  };
+  }, [router]);
 
   // Load user data
   useEffect(() => {
@@ -185,7 +184,7 @@ export default function UserDetailsPage() {
     if (userId) {
       loadUserData();
     }
-  }, [userId]);
+  }, [userId, apiCall]);
 
   const getRoleIcon = (role: string) => {
     switch (role) {

@@ -1,20 +1,18 @@
 // src/app/sysadmin/users/page.tsx
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
   UsersIcon, 
   PlusIcon, 
   MagnifyingGlassIcon,
-  FunnelIcon,
   UserIcon,
   ShieldCheckIcon,
   PhoneIcon,
   ChatBubbleLeftRightIcon,
   BuildingOfficeIcon,
-  TruckIcon,
   PencilIcon,
   TrashIcon,
   EyeIcon,
@@ -45,18 +43,6 @@ interface UserStats {
   byRole: Record<string, number>;
 }
 
-interface ApiResponse {
-  users: User[];
-  pagination: {
-    currentPage: number;
-    totalPages: number;
-    totalUsers: number;
-    hasNext: boolean;
-    hasPrev: boolean;
-  };
-  stats: UserStats;
-}
-
 export default function SystemAdminUsersPage() {
   const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
@@ -84,7 +70,7 @@ export default function SystemAdminUsersPage() {
   };
 
   // API call helper
-  const apiCall = async (endpoint: string, options: RequestInit = {}) => {
+  const apiCall = useCallback(async (endpoint: string, options: RequestInit = {}) => {
     const token = getToken();
     if (!token) {
       router.push('/sysadmin/login');
@@ -115,10 +101,10 @@ export default function SystemAdminUsersPage() {
       console.error('API call error:', error);
       return null;
     }
-  };
+  }, [router]);
 
   // Load users data from real API
-  const loadUsers = async (page = 1, search = '', role = 'all', status = 'all') => {
+  const loadUsers = useCallback(async (page = 1, search = '', role = 'all', status = 'all') => {
     setLoading(true);
     
     try {
@@ -158,12 +144,12 @@ export default function SystemAdminUsersPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiCall]);
 
   // Initial load
   useEffect(() => {
     loadUsers();
-  }, []);
+  }, [loadUsers]);
 
   // Handle search and filter changes
   useEffect(() => {
@@ -173,7 +159,7 @@ export default function SystemAdminUsersPage() {
     }, 500); // Debounce search
 
     return () => clearTimeout(timeoutId);
-  }, [searchTerm, filterRole, filterStatus]);
+  }, [searchTerm, filterRole, filterStatus, loadUsers]);
 
   // Handle pagination
   const handlePageChange = (page: number) => {
