@@ -1,4 +1,4 @@
-// src/app/sysadmin/users/[id]/page.tsx
+// src/app/sysadmin/users/[id]/page.tsx - UPDATED WITH REAL API INTEGRATION
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -21,7 +21,10 @@ import {
   ChatBubbleLeftRightIcon,
   TruckIcon,
   Cog6ToothIcon,
-  ChartBarIcon
+  ChartBarIcon,
+  ArrowPathIcon,
+  EyeIcon,
+  DocumentTextIcon
 } from '@heroicons/react/24/outline';
 
 interface User {
@@ -39,21 +42,46 @@ interface User {
   updatedAt: string;
 }
 
+interface UserStatistics {
+  userId: string;
+  role: string;
+  accountCreated: string;
+  lastLogin?: string;
+  isActive: boolean;
+  totalLogins: number;
+  totalActivities: number;
+  recentActivities: number;
+  lastActiveDate: string;
+  averageSessionsPerDay: number;
+  activityByCategory: Record<string, number>;
+  // Role-specific stats
+  tripsBooked?: number;
+  completedTrips?: number;
+  devicesManaged?: number;
+  onlineDevices?: number;
+  ticketsHandled?: number;
+  usersManaged?: number;
+  // Security metrics
+  failedLoginAttempts: number;
+  // Trends
+  trends: {
+    loginTrend: number;
+    activityTrend: number;
+  };
+}
+
 interface UserActivity {
   id: string;
   action: string;
   description: string;
+  category: string;
   timestamp: string;
   ipAddress?: string;
   userAgent?: string;
-}
-
-interface UserStats {
-  totalLogins: number;
-  devicesManaged?: number;
-  ticketsHandled?: number;
-  tripsBooked?: number;
-  lastActiveDate: string;
+  endpoint?: string;
+  method?: string;
+  statusCode?: number;
+  details?: Record<string, any>;
 }
 
 export default function UserDetailsPage() {
@@ -62,12 +90,15 @@ export default function UserDetailsPage() {
   const userId = params.id as string;
 
   const [user, setUser] = useState<User | null>(null);
-  const [userStats, setUserStats] = useState<UserStats | null>(null);
+  const [userStats, setUserStats] = useState<UserStatistics | null>(null);
   const [recentActivity, setRecentActivity] = useState<UserActivity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [activityLoading, setActivityLoading] = useState(true);
   const [error, setError] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'overview' | 'activity' | 'details'>('overview');
 
   // Get auth token
   const getToken = () => {
@@ -123,56 +154,6 @@ export default function UserDetailsPage() {
           setError('User not found');
           return;
         }
-
-        // Mock user stats and activity (replace with real API calls)
-        const mockStats: UserStats = {
-          totalLogins: 47,
-          devicesManaged: userResponse.role === 'route_admin' ? 12 : 
-                          userResponse.role === 'company_admin' ? 25 : undefined,
-          ticketsHandled: userResponse.role === 'customer_service' ? 156 : undefined,
-          tripsBooked: userResponse.role === 'client' ? 23 : undefined,
-          lastActiveDate: userResponse.lastLogin || userResponse.updatedAt
-        };
-
-        const mockActivity: UserActivity[] = [
-          {
-            id: '1',
-            action: 'login',
-            description: 'User logged in successfully',
-            timestamp: new Date(Date.now() - 300000).toISOString(),
-            ipAddress: '192.168.1.100',
-            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-          },
-          {
-            id: '2',
-            action: 'profile_update',
-            description: 'Updated profile information',
-            timestamp: new Date(Date.now() - 3600000).toISOString(),
-            ipAddress: '192.168.1.100'
-          },
-          {
-            id: '3',
-            action: userResponse.role === 'client' ? 'trip_booking' : 
-                   userResponse.role === 'customer_service' ? 'ticket_resolved' :
-                   userResponse.role === 'route_admin' ? 'device_configured' : 'system_access',
-            description: userResponse.role === 'client' ? 'Booked trip: Colombo to Kandy' :
-                        userResponse.role === 'customer_service' ? 'Resolved support ticket #12345' :
-                        userResponse.role === 'route_admin' ? 'Configured device DEV001' :
-                        'Accessed system management panel',
-            timestamp: new Date(Date.now() - 7200000).toISOString(),
-            ipAddress: '192.168.1.100'
-          },
-          {
-            id: '4',
-            action: 'password_change',
-            description: 'Changed account password',
-            timestamp: new Date(Date.now() - 86400000).toISOString(),
-            ipAddress: '192.168.1.100'
-          }
-        ];
-
-        setUserStats(mockStats);
-        setRecentActivity(mockActivity);
       } catch (err) {
         setError('Failed to load user details');
         console.error('Error loading user:', err);
@@ -184,6 +165,48 @@ export default function UserDetailsPage() {
     if (userId) {
       loadUserData();
     }
+  }, [userId, apiCall]);
+
+  // Load user statistics
+  useEffect(() => {
+    const loadUserStats = async () => {
+      if (!userId) return;
+      
+      setStatsLoading(true);
+      try {
+        const statsResponse = await apiCall(`/admin/users/${userId}/stats`);
+        if (statsResponse) {
+          setUserStats(statsResponse);
+        }
+      } catch (err) {
+        console.error('Error loading user stats:', err);
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+
+    loadUserStats();
+  }, [userId, apiCall]);
+
+  // Load user activity
+  useEffect(() => {
+    const loadUserActivity = async () => {
+      if (!userId) return;
+      
+      setActivityLoading(true);
+      try {
+        const activityResponse = await apiCall(`/admin/users/${userId}/activity?limit=10`);
+        if (activityResponse && activityResponse.activities) {
+          setRecentActivity(activityResponse.activities);
+        }
+      } catch (err) {
+        console.error('Error loading user activity:', err);
+      } finally {
+        setActivityLoading(false);
+      }
+    };
+
+    loadUserActivity();
   }, [userId, apiCall]);
 
   const getRoleIcon = (role: string) => {
@@ -310,6 +333,18 @@ export default function UserDetailsPage() {
     return `${Math.floor(diffInMinutes / 1440)}d ago`;
   };
 
+  const getTrendIcon = (trend: number) => {
+    if (trend > 0) return '↗️';
+    if (trend < 0) return '↘️';
+    return '➡️';
+  };
+
+  const getTrendColor = (trend: number) => {
+    if (trend > 0) return '#10b981';
+    if (trend < 0) return '#ef4444';
+    return '#6b7280';
+  };
+
   if (loading) {
     return (
       <div style={{ 
@@ -320,7 +355,14 @@ export default function UserDetailsPage() {
         backgroundColor: '#0f172a',
         color: '#f1f5f9'
       }}>
-        <div>Loading user details...</div>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem'
+        }}>
+          <ArrowPathIcon width={24} height={24} className="animate-spin" />
+          Loading user details...
+        </div>
       </div>
     );
   }
@@ -470,6 +512,47 @@ export default function UserDetailsPage() {
         </div>
       </nav>
 
+      {/* Tab Navigation */}
+      <div style={{
+        backgroundColor: '#1e293b',
+        borderBottom: '1px solid #334155'
+      }}>
+        <div style={{
+          maxWidth: '1400px',
+          margin: '0 auto',
+          padding: '0 1.5rem',
+          display: 'flex',
+          gap: '2rem'
+        }}>
+          {[
+            { id: 'overview', label: 'Overview', icon: <EyeIcon width={16} height={16} /> },
+            { id: 'activity', label: 'Activity', icon: <ClockIcon width={16} height={16} /> },
+            { id: 'details', label: 'Details', icon: <DocumentTextIcon width={16} height={16} /> }
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              style={{
+                backgroundColor: 'transparent',
+                border: 'none',
+                padding: '1rem 0',
+                color: activeTab === tab.id ? '#3b82f6' : '#94a3b8',
+                borderBottom: activeTab === tab.id ? '2px solid #3b82f6' : '2px solid transparent',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                fontSize: '0.875rem',
+                fontWeight: '500'
+              }}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div style={{
         maxWidth: '1400px',
         margin: '0 auto',
@@ -491,7 +574,7 @@ export default function UserDetailsPage() {
             <span style={{ color: user.isActive ? '#10b981' : '#ef4444' }}>
               {user.isActive ? <CheckCircleIcon width={32} height={32} /> : <XCircleIcon width={32} height={32} />}
             </span>
-            <div>
+            <div style={{ flex: 1 }}>
               <h2 style={{
                 color: '#f1f5f9',
                 fontSize: '1.25rem',
@@ -507,15 +590,352 @@ export default function UserDetailsPage() {
                 {user.isActive ? 'User can access the system' : 'User is blocked from accessing the system'}
               </p>
             </div>
+            {userStats && userStats.trends && (
+              <div style={{
+                display: 'flex',
+                gap: '1rem',
+                alignItems: 'center'
+              }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{
+                    color: getTrendColor(userStats.trends.loginTrend),
+                    fontSize: '1.5rem',
+                    fontWeight: 'bold'
+                  }}>
+                    {getTrendIcon(userStats.trends.loginTrend)} {Math.abs(userStats.trends.loginTrend)}%
+                  </div>
+                  <div style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Login Trend</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{
+                    color: getTrendColor(userStats.trends.activityTrend),
+                    fontSize: '1.5rem',
+                    fontWeight: 'bold'
+                  }}>
+                    {getTrendIcon(userStats.trends.activityTrend)} {Math.abs(userStats.trends.activityTrend)}%
+                  </div>
+                  <div style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Activity Trend</div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-          gap: '2rem'
-        }}>
-          {/* User Information */}
+        {/* Tab Content */}
+        {activeTab === 'overview' && (
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
+            gap: '2rem'
+          }}>
+            {/* User Statistics */}
+            <div style={{
+              backgroundColor: '#1e293b',
+              padding: '2rem',
+              borderRadius: '0.75rem',
+              border: '1px solid #334155'
+            }}>
+              <h2 style={{
+                color: '#f1f5f9',
+                fontSize: '1.25rem',
+                fontWeight: 'bold',
+                marginBottom: '1.5rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}>
+                <ChartBarIcon width={20} height={20} />
+                Activity Statistics
+                {statsLoading && <ArrowPathIcon width={16} height={16} className="animate-spin" />}
+              </h2>
+
+              {statsLoading ? (
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'center', 
+                  alignItems: 'center', 
+                  height: '200px',
+                  color: '#94a3b8'
+                }}>
+                  Loading statistics...
+                </div>
+              ) : userStats ? (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '1.5rem'
+                }}>
+                  <div style={{
+                    backgroundColor: '#334155',
+                    padding: '1rem',
+                    borderRadius: '0.5rem',
+                    textAlign: 'center'
+                  }}>
+                    <div style={{
+                      color: '#3b82f6',
+                      fontSize: '2rem',
+                      fontWeight: 'bold',
+                      marginBottom: '0.25rem'
+                    }}>
+                      {userStats.totalLogins.toLocaleString()}
+                    </div>
+                    <div style={{ color: '#94a3b8', fontSize: '0.875rem' }}>
+                      Total Logins
+                    </div>
+                  </div>
+
+                  <div style={{
+                    backgroundColor: '#334155',
+                    padding: '1rem',
+                    borderRadius: '0.5rem',
+                    textAlign: 'center'
+                  }}>
+                    <div style={{
+                      color: '#10b981',
+                      fontSize: '2rem',
+                      fontWeight: 'bold',
+                      marginBottom: '0.25rem'
+                    }}>
+                      {userStats.totalActivities.toLocaleString()}
+                    </div>
+                    <div style={{ color: '#94a3b8', fontSize: '0.875rem' }}>
+                      Total Activities
+                    </div>
+                  </div>
+
+                  {/* Role-specific statistics */}
+                  {userStats.devicesManaged && (
+                    <div style={{
+                      backgroundColor: '#334155',
+                      padding: '1rem',
+                      borderRadius: '0.5rem',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{
+                        color: '#f59e0b',
+                        fontSize: '2rem',
+                        fontWeight: 'bold',
+                        marginBottom: '0.25rem'
+                      }}>
+                        {userStats.devicesManaged}
+                      </div>
+                      <div style={{ color: '#94a3b8', fontSize: '0.875rem' }}>
+                        Devices Managed
+                      </div>
+                    </div>
+                  )}
+
+                  {userStats.tripsBooked && (
+                    <div style={{
+                      backgroundColor: '#334155',
+                      padding: '1rem',
+                      borderRadius: '0.5rem',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{
+                        color: '#06b6d4',
+                        fontSize: '2rem',
+                        fontWeight: 'bold',
+                        marginBottom: '0.25rem'
+                      }}>
+                        {userStats.tripsBooked}
+                      </div>
+                      <div style={{ color: '#94a3b8', fontSize: '0.875rem' }}>
+                        Trips Booked
+                      </div>
+                    </div>
+                  )}
+
+                  {userStats.ticketsHandled && (
+                    <div style={{
+                      backgroundColor: '#334155',
+                      padding: '1rem',
+                      borderRadius: '0.5rem',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{
+                        color: '#8b5cf6',
+                        fontSize: '2rem',
+                        fontWeight: 'bold',
+                        marginBottom: '0.25rem'
+                      }}>
+                        {userStats.ticketsHandled}
+                      </div>
+                      <div style={{ color: '#94a3b8', fontSize: '0.875rem' }}>
+                        Tickets Handled
+                      </div>
+                    </div>
+                  )}
+
+                  <div style={{
+                    backgroundColor: '#334155',
+                    padding: '1rem',
+                    borderRadius: '0.5rem',
+                    textAlign: 'center'
+                  }}>
+                    <div style={{
+                      color: '#ef4444',
+                      fontSize: '2rem',
+                      fontWeight: 'bold',
+                      marginBottom: '0.25rem'
+                    }}>
+                      {userStats.failedLoginAttempts}
+                    </div>
+                    <div style={{ color: '#94a3b8', fontSize: '0.875rem' }}>
+                      Failed Logins
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ color: '#94a3b8', textAlign: 'center' }}>
+                  Failed to load statistics
+                </div>
+              )}
+
+              {userStats && (
+                <div style={{
+                  backgroundColor: '#334155',
+                  padding: '1rem',
+                  borderRadius: '0.5rem',
+                  marginTop: '1rem'
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}>
+                    <span style={{ color: '#94a3b8', fontSize: '0.875rem' }}>
+                      Last Activity
+                    </span>
+                    <span style={{ color: '#f1f5f9', fontWeight: '500' }}>
+                      {getTimeSince(userStats.lastActiveDate)}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Recent Activity */}
+            <div style={{
+              backgroundColor: '#1e293b',
+              padding: '2rem',
+              borderRadius: '0.75rem',
+              border: '1px solid #334155'
+            }}>
+              <h2 style={{
+                color: '#f1f5f9',
+                fontSize: '1.25rem',
+                fontWeight: 'bold',
+                marginBottom: '1.5rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}>
+                <ClockIcon width={20} height={20} />
+                Recent Activity
+                {activityLoading && <ArrowPathIcon width={16} height={16} className="animate-spin" />}
+              </h2>
+
+              {activityLoading ? (
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'center', 
+                  alignItems: 'center', 
+                  height: '200px',
+                  color: '#94a3b8'
+                }}>
+                  Loading activity...
+                </div>
+              ) : recentActivity.length > 0 ? (
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '1rem',
+                  maxHeight: '400px',
+                  overflowY: 'auto'
+                }}>
+                  {recentActivity.map((activity) => (
+                    <div key={activity.id} style={{
+                      backgroundColor: '#334155',
+                      padding: '1rem',
+                      borderRadius: '0.5rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '1rem'
+                    }}>
+                      {getActionIcon(activity.action)}
+                      <div style={{ flex: 1 }}>
+                        <div style={{
+                          color: '#f1f5f9',
+                          fontSize: '0.875rem',
+                          fontWeight: '500',
+                          marginBottom: '0.25rem'
+                        }}>
+                          {activity.description}
+                        </div>
+                        <div style={{
+                          color: '#94a3b8',
+                          fontSize: '0.75rem'
+                        }}>
+                          {getTimeSince(activity.timestamp)}
+                          {activity.ipAddress && ` • ${activity.ipAddress}`}
+                        </div>
+                      </div>
+                      <div style={{
+                        backgroundColor: '#1e293b',
+                        padding: '0.25rem 0.5rem',
+                        borderRadius: '0.25rem',
+                        fontSize: '0.75rem',
+                        color: '#94a3b8'
+                      }}>
+                        {activity.category}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ color: '#94a3b8', textAlign: 'center' }}>
+                  No recent activity found
+                </div>
+              )}
+
+              <div style={{ marginTop: '1rem' }}>
+                <Link
+                  href={`/sysadmin/users/${userId}/activity`}
+                  style={{
+                    color: '#3b82f6',
+                    textDecoration: 'none',
+                    fontSize: '0.875rem',
+                    fontWeight: '500'
+                  }}
+                >
+                  View Full Activity Log →
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Additional tab content would go here */}
+        {activeTab === 'activity' && (
+          <div style={{
+            backgroundColor: '#1e293b',
+            padding: '2rem',
+            borderRadius: '0.75rem',
+            border: '1px solid #334155',
+            textAlign: 'center'
+          }}>
+            <h2 style={{ color: '#f1f5f9', marginBottom: '1rem' }}>Full Activity Log</h2>
+            <p style={{ color: '#94a3b8', marginBottom: '2rem' }}>
+              Detailed activity tracking and audit logs for this user.
+            </p>
+            <div style={{ color: '#94a3b8' }}>
+              🚧 Full activity view coming soon...
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'details' && (
           <div style={{
             backgroundColor: '#1e293b',
             padding: '2rem',
@@ -536,9 +956,9 @@ export default function UserDetailsPage() {
             </h2>
 
             <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '1rem'
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+              gap: '2rem'
             }}>
               <div>
                 <label style={{
@@ -736,236 +1156,45 @@ export default function UserDetailsPage() {
                 </div>
               )}
             </div>
-          </div>
 
-          {/* User Statistics */}
-          <div style={{
-            backgroundColor: '#1e293b',
-            padding: '2rem',
-            borderRadius: '0.75rem',
-            border: '1px solid #334155'
-          }}>
-            <h2 style={{
-              color: '#f1f5f9',
-              fontSize: '1.25rem',
-              fontWeight: 'bold',
-              marginBottom: '1.5rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
-            }}>
-              <ChartBarIcon width={20} height={20} />
-              Activity Statistics
-            </h2>
-
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '1.5rem'
-            }}>
-              <div style={{
-                backgroundColor: '#334155',
-                padding: '1rem',
-                borderRadius: '0.5rem',
-                textAlign: 'center'
-              }}>
-                <div style={{
-                  color: '#3b82f6',
-                  fontSize: '2rem',
+            {/* Permissions */}
+            {user.permissions && user.permissions.length > 0 && (
+              <div style={{ marginTop: '2rem' }}>
+                <h3 style={{
+                  color: '#f1f5f9',
+                  fontSize: '1.125rem',
                   fontWeight: 'bold',
-                  marginBottom: '0.25rem'
-                }}>
-                  {userStats?.totalLogins}
-                </div>
-                <div style={{ color: '#94a3b8', fontSize: '0.875rem' }}>
-                  Total Logins
-                </div>
-              </div>
-
-              {userStats?.devicesManaged && (
-                <div style={{
-                  backgroundColor: '#334155',
-                  padding: '1rem',
-                  borderRadius: '0.5rem',
-                  textAlign: 'center'
-                }}>
-                  <div style={{
-                    color: '#10b981',
-                    fontSize: '2rem',
-                    fontWeight: 'bold',
-                    marginBottom: '0.25rem'
-                  }}>
-                    {userStats.devicesManaged}
-                  </div>
-                  <div style={{ color: '#94a3b8', fontSize: '0.875rem' }}>
-                    Devices Managed
-                  </div>
-                </div>
-              )}
-
-              {userStats?.ticketsHandled && (
-                <div style={{
-                  backgroundColor: '#334155',
-                  padding: '1rem',
-                  borderRadius: '0.5rem',
-                  textAlign: 'center'
-                }}>
-                  <div style={{
-                    color: '#f59e0b',
-                    fontSize: '2rem',
-                    fontWeight: 'bold',
-                    marginBottom: '0.25rem'
-                  }}>
-                    {userStats.ticketsHandled}
-                  </div>
-                  <div style={{ color: '#94a3b8', fontSize: '0.875rem' }}>
-                    Tickets Handled
-                  </div>
-                </div>
-              )}
-
-              {userStats?.tripsBooked && (
-                <div style={{
-                  backgroundColor: '#334155',
-                  padding: '1rem',
-                  borderRadius: '0.5rem',
-                  textAlign: 'center'
-                }}>
-                  <div style={{
-                    color: '#06b6d4',
-                    fontSize: '2rem',
-                    fontWeight: 'bold',
-                    marginBottom: '0.25rem'
-                  }}>
-                    {userStats.tripsBooked}
-                  </div>
-                  <div style={{ color: '#94a3b8', fontSize: '0.875rem' }}>
-                    Trips Booked
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div style={{
-              backgroundColor: '#334155',
-              padding: '1rem',
-              borderRadius: '0.5rem',
-              marginTop: '1rem'
-            }}>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center'
-              }}>
-                <span style={{ color: '#94a3b8', fontSize: '0.875rem' }}>
-                  Last Activity
-                </span>
-                <span style={{ color: '#f1f5f9', fontWeight: '500' }}>
-                  {getTimeSince(userStats?.lastActiveDate || user.updatedAt)}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Permissions */}
-          {user.permissions && user.permissions.length > 0 && (
-            <div style={{
-              backgroundColor: '#1e293b',
-              padding: '2rem',
-              borderRadius: '0.75rem',
-              border: '1px solid #334155'
-            }}>
-              <h2 style={{
-                color: '#f1f5f9',
-                fontSize: '1.25rem',
-                fontWeight: 'bold',
-                marginBottom: '1.5rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem'
-              }}>
-                <KeyIcon width={20} height={20} />
-                Permissions
-              </h2>
-
-              <div style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: '0.5rem'
-              }}>
-                {user.permissions.map((permission) => (
-                  <span key={permission} style={{
-                    backgroundColor: '#334155',
-                    color: '#f1f5f9',
-                    padding: '0.25rem 0.75rem',
-                    borderRadius: '0.25rem',
-                    fontSize: '0.875rem',
-                    border: '1px solid #475569'
-                  }}>
-                    {permission.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Recent Activity */}
-          <div style={{
-            backgroundColor: '#1e293b',
-            padding: '2rem',
-            borderRadius: '0.75rem',
-            border: '1px solid #334155'
-          }}>
-            <h2 style={{
-              color: '#f1f5f9',
-              fontSize: '1.25rem',
-              fontWeight: 'bold',
-              marginBottom: '1.5rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
-            }}>
-              <ClockIcon width={20} height={20} />
-              Recent Activity
-            </h2>
-
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '1rem'
-            }}>
-              {recentActivity.map((activity) => (
-                <div key={activity.id} style={{
-                  backgroundColor: '#334155',
-                  padding: '1rem',
-                  borderRadius: '0.5rem',
+                  marginBottom: '1rem',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '1rem'
+                  gap: '0.5rem'
                 }}>
-                  {getActionIcon(activity.action)}
-                  <div style={{ flex: 1 }}>
-                    <div style={{
+                  <KeyIcon width={20} height={20} />
+                  Permissions
+                </h3>
+
+                <div style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: '0.5rem'
+                }}>
+                  {user.permissions.map((permission) => (
+                    <span key={permission} style={{
+                      backgroundColor: '#334155',
                       color: '#f1f5f9',
+                      padding: '0.25rem 0.75rem',
+                      borderRadius: '0.25rem',
                       fontSize: '0.875rem',
-                      fontWeight: '500',
-                      marginBottom: '0.25rem'
+                      border: '1px solid #475569'
                     }}>
-                      {activity.description}
-                    </div>
-                    <div style={{
-                      color: '#94a3b8',
-                      fontSize: '0.75rem'
-                    }}>
-                      {getTimeSince(activity.timestamp)}
-                      {activity.ipAddress && ` • ${activity.ipAddress}`}
-                    </div>
-                  </div>
+                      {permission.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    </span>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
           </div>
-        </div>
+        )}
 
         {/* Admin Note */}
         {user.role === 'system_admin' && (
@@ -1083,9 +1312,13 @@ export default function UserDetailsPage() {
                   border: 'none',
                   borderRadius: '0.5rem',
                   cursor: 'pointer',
-                  opacity: actionLoading === 'delete' ? 0.7 : 1
+                  opacity: actionLoading === 'delete' ? 0.7 : 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
                 }}
               >
+                {actionLoading === 'delete' && <ArrowPathIcon width={16} height={16} className="animate-spin" />}
                 {actionLoading === 'delete' ? 'Deleting...' : 'Delete User'}
               </button>
             </div>
