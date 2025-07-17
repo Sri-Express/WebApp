@@ -195,12 +195,29 @@ export default function SystemSettingsPage() {
       
       if (field.includes('.')) {
         const [subField, subKey] = field.split('.');
+        
+        // Handle nested objects (specifically for monitoring.alertThresholds)
+        if (section === 'monitoring' && subField === 'alertThresholds') {
+          return {
+            ...prev,
+            [section]: {
+              ...prev[section],
+              [subField]: {
+                ...prev[section].alertThresholds,
+                [subKey]: value
+              }
+            }
+          };
+        }
+        
+        // For other potential nested cases (currently only monitoring.alertThresholds exists)
+        // This handles the case more specifically without using any
         return {
           ...prev,
           [section]: {
             ...prev[section],
             [subField]: {
-              ...(prev[section] as Record<string, Record<string, string | number | boolean>>)[subField],
+              ...(prev[section] as Record<string, unknown>)[subField] as Record<string, unknown>,
               [subKey]: value
             }
           }
