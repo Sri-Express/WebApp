@@ -1,4 +1,4 @@
-// src/app/payments/page.tsx
+// src/app/payments/page.tsx - FIXED VERSION
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -6,66 +6,20 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 interface Payment {
-  _id: string;
-  paymentId: string;
-  userId: string;
-  bookingId: string;
-  amount: {
-    subtotal: number;
-    taxes: number;
-    fees: number;
-    discounts: number;
-    total: number;
-    currency: string;
-  };
-  paymentMethod: {
-    type: 'card' | 'bank_transfer' | 'digital_wallet' | 'cash';
-    provider: string;
-    lastFourDigits?: string;
-    walletType?: string;
-  };
-  transactionInfo: {
-    transactionId: string;
-    gatewayTransactionId: string;
-    gatewayProvider: string;
-    authorizationCode: string;
-  };
+  _id: string; paymentId: string; userId: string; bookingId: string;
+  amount: { subtotal: number; taxes: number; fees: number; discounts: number; total: number; currency: string; };
+  paymentMethod: { type: 'card' | 'bank_transfer' | 'digital_wallet' | 'cash'; provider: string; lastFourDigits?: string; walletType?: string; };
+  transactionInfo: { transactionId: string; gatewayTransactionId: string; gatewayProvider: string; authorizationCode: string; };
   status: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled' | 'refunded' | 'partially_refunded';
-  statusHistory: Array<{
-    status: string;
-    timestamp: string;
-    reason?: string;
-  }>;
-  billingInfo: {
-    name: string;
-    email: string;
-    phone: string;
-  };
-  refundInfo?: {
-    refundId: string;
-    refundAmount: number;
-    refundReason: string;
-    refundMethod: string;
-    refundDate: string;
-  };
-  timestamps: {
-    initiatedAt: string;
-    processedAt?: string;
-    completedAt?: string;
-    failedAt?: string;
-    refundedAt?: string;
-  };
-  createdAt: string;
-  updatedAt: string;
+  statusHistory: Array<{ status: string; timestamp: string; reason?: string; }>;
+  billingInfo: { name: string; email: string; phone: string; };
+  refundInfo?: { refundId: string; refundAmount: number; refundReason: string; refundMethod: string; refundDate: string; };
+  timestamps: { initiatedAt: string; processedAt?: string; completedAt?: string; failedAt?: string; refundedAt?: string; };
+  createdAt: string; updatedAt: string;
 }
 
 interface PaymentStats {
-  totalPayments: number;
-  totalAmount: number;
-  successfulPayments: number;
-  failedPayments: number;
-  refundedPayments: number;
-  pendingPayments: number;
+  totalPayments: number; totalAmount: number; successfulPayments: number; failedPayments: number; refundedPayments: number; pendingPayments: number;
 }
 
 export default function PaymentsPage() {
@@ -81,11 +35,18 @@ export default function PaymentsPage() {
 
   const getToken = () => localStorage.getItem('token');
 
+  // ✅ FIXED: Robust URL construction to handle double /api issue
   const apiCall = useCallback(async (endpoint: string, options: RequestInit = {}) => {
     const token = getToken();
     if (!token) { router.push('/login'); return null; }
-    const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    
+    let baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    // Remove trailing /api if present to avoid double /api
+    if (baseURL.endsWith('/api')) baseURL = baseURL.slice(0, -4);
+    
     const fullURL = `${baseURL}/api${endpoint}`;
+    console.log('API Call:', fullURL); // Debug log
+    
     try {
       const response = await fetch(fullURL, { ...options, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, ...options.headers } });
       if (!response.ok) { if (response.status === 401) { localStorage.removeItem('token'); localStorage.removeItem('user'); router.push('/login'); return null; } throw new Error(`API Error: ${response.status}`); }
@@ -106,43 +67,12 @@ export default function PaymentsPage() {
 
   useEffect(() => { loadPayments(); }, [loadPayments]);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return '#10B981';
-      case 'pending': case 'processing': return '#F59E0B';
-      case 'failed': case 'cancelled': return '#EF4444';
-      case 'refunded': case 'partially_refunded': return '#8B5CF6';
-      default: return '#6B7280';
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'completed': return 'Completed';
-      case 'pending': return 'Pending';
-      case 'processing': return 'Processing';
-      case 'failed': return 'Failed';
-      case 'cancelled': return 'Cancelled';
-      case 'refunded': return 'Refunded';
-      case 'partially_refunded': return 'Partially Refunded';
-      default: return 'Unknown';
-    }
-  };
-
-  const getPaymentMethodIcon = (type: string) => {
-    switch (type) {
-      case 'card': return '💳';
-      case 'bank_transfer': return '🏦';
-      case 'digital_wallet': return '📱';
-      case 'cash': return '💵';
-      default: return '💳';
-    }
-  };
-
+  const getStatusColor = (status: string) => ({ 'completed': '#10B981', 'pending': '#F59E0B', 'processing': '#F59E0B', 'failed': '#EF4444', 'cancelled': '#EF4444', 'refunded': '#8B5CF6', 'partially_refunded': '#8B5CF6' }[status] || '#6B7280');
+  const getStatusLabel = (status: string) => ({ 'completed': 'Completed', 'pending': 'Pending', 'processing': 'Processing', 'failed': 'Failed', 'cancelled': 'Cancelled', 'refunded': 'Refunded', 'partially_refunded': 'Partially Refunded' }[status] || 'Unknown');
+  const getPaymentMethodIcon = (type: string) => ({ 'card': '💳', 'bank_transfer': '🏦', 'digital_wallet': '📱', 'cash': '💵' }[type] || '💳');
   const formatPrice = (price: number) => `Rs. ${price.toLocaleString()}`;
   const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString();
   const formatDateTime = (dateString: string) => new Date(dateString).toLocaleString();
-
   const handleViewDetails = (payment: Payment) => { setSelectedPayment(payment); setShowDetails(true); };
 
   if (loading) {
@@ -219,9 +149,7 @@ export default function PaymentsPage() {
         </div>
 
         {/* Error Message */}
-        {error && (
-          <div style={{ backgroundColor: '#FEE2E2', color: '#DC2626', padding: '1rem', borderRadius: '0.5rem', border: '1px solid #FCA5A5', marginBottom: '2rem' }}>{error}</div>
-        )}
+        {error && ( <div style={{ backgroundColor: '#FEE2E2', color: '#DC2626', padding: '1rem', borderRadius: '0.5rem', border: '1px solid #FCA5A5', marginBottom: '2rem' }}>{error}</div> )}
 
         {/* Payment History */}
         {payments.length > 0 ? (
@@ -290,12 +218,8 @@ export default function PaymentsPage() {
                 )}
 
                 <div style={{ display: 'flex', gap: '0.5rem', paddingTop: '1rem', borderTop: '1px solid #f3f4f6' }}>
-                  <button onClick={() => handleViewDetails(payment)} style={{ backgroundColor: '#3B82F6', color: 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', fontSize: '0.9rem', fontWeight: '500' }}>
-                    View Details
-                  </button>
-                  <Link href={`/bookings/${payment.bookingId}`} style={{ backgroundColor: '#10B981', color: 'white', padding: '0.5rem 1rem', borderRadius: '0.5rem', textDecoration: 'none', fontSize: '0.9rem', fontWeight: '500' }}>
-                    View Booking
-                  </Link>
+                  <button onClick={() => handleViewDetails(payment)} style={{ backgroundColor: '#3B82F6', color: 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', fontSize: '0.9rem', fontWeight: '500' }}>View Details</button>
+                  <Link href={`/bookings/${payment.bookingId}`} style={{ backgroundColor: '#10B981', color: 'white', padding: '0.5rem 1rem', borderRadius: '0.5rem', textDecoration: 'none', fontSize: '0.9rem', fontWeight: '500' }}>View Booking</Link>
                 </div>
               </div>
             ))}
@@ -305,9 +229,7 @@ export default function PaymentsPage() {
             <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>💳</div>
             <h3 style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>No payment history found</h3>
             <p style={{ marginBottom: '1rem' }}>Your payment transactions will appear here</p>
-            <Link href="/search" style={{ backgroundColor: '#F59E0B', color: 'white', padding: '0.75rem 1.5rem', borderRadius: '0.5rem', textDecoration: 'none', fontWeight: '500', display: 'inline-block' }}>
-              Book Your First Ticket
-            </Link>
+            <Link href="/search" style={{ backgroundColor: '#F59E0B', color: 'white', padding: '0.75rem 1.5rem', borderRadius: '0.5rem', textDecoration: 'none', fontWeight: '500', display: 'inline-block' }}>Book Your First Ticket</Link>
           </div>
         )}
       </div>
@@ -340,9 +262,7 @@ export default function PaymentsPage() {
             </div>
 
             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
-              <button onClick={() => setShowDetails(false)} style={{ backgroundColor: '#6B7280', color: 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: '0.5rem', cursor: 'pointer' }}>
-                Close
-              </button>
+              <button onClick={() => setShowDetails(false)} style={{ backgroundColor: '#6B7280', color: 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: '0.5rem', cursor: 'pointer' }}>Close</button>
             </div>
           </div>
         </div>

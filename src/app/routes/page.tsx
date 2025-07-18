@@ -1,4 +1,4 @@
-// src/app/routes/page.tsx
+// src/app/routes/page.tsx - FIXED VERSION
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -6,68 +6,21 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 interface Route {
-  _id: string;
-  routeId: string;
-  name: string;
-  startLocation: {
-    name: string;
-    coordinates: [number, number];
-    address: string;
-  };
-  endLocation: {
-    name: string;
-    coordinates: [number, number];
-    address: string;
-  };
-  waypoints: Array<{
-    name: string;
-    coordinates: [number, number];
-    estimatedTime: number;
-    order: number;
-  }>;
-  distance: number;
-  estimatedDuration: number;
-  schedules: Array<{
-    departureTime: string;
-    arrivalTime: string;
-    frequency: number;
-    daysOfWeek: string[];
-    isActive: boolean;
-  }>;
-  operatorInfo: {
-    fleetId: string;
-    companyName: string;
-    contactNumber: string;
-  };
-  vehicleInfo: {
-    type: 'bus' | 'train';
-    capacity: number;
-    amenities: string[];
-  };
-  pricing: {
-    basePrice: number;
-    pricePerKm: number;
-    discounts: Array<{
-      type: 'student' | 'senior' | 'military';
-      percentage: number;
-    }>;
-  };
-  status: 'active' | 'inactive' | 'maintenance';
-  avgRating: number;
-  totalReviews: number;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
+  _id: string; routeId: string; name: string;
+  startLocation: { name: string; coordinates: [number, number]; address: string; };
+  endLocation: { name: string; coordinates: [number, number]; address: string; };
+  waypoints: Array<{ name: string; coordinates: [number, number]; estimatedTime: number; order: number; }>;
+  distance: number; estimatedDuration: number;
+  schedules: Array<{ departureTime: string; arrivalTime: string; frequency: number; daysOfWeek: string[]; isActive: boolean; }>;
+  operatorInfo: { fleetId: string; companyName: string; contactNumber: string; };
+  vehicleInfo: { type: 'bus' | 'train'; capacity: number; amenities: string[]; };
+  pricing: { basePrice: number; pricePerKm: number; discounts: Array<{ type: 'student' | 'senior' | 'military'; percentage: number; }>; };
+  status: 'active' | 'inactive' | 'maintenance'; avgRating: number; totalReviews: number; isActive: boolean; createdAt: string; updatedAt: string;
 }
 
 interface RoutesFilters {
-  vehicleType: 'all' | 'bus' | 'train';
-  status: 'all' | 'active' | 'inactive' | 'maintenance';
-  minPrice: number;
-  maxPrice: number;
-  sortBy: 'name' | 'price' | 'rating' | 'distance' | 'duration';
-  sortOrder: 'asc' | 'desc';
-  search: string;
+  vehicleType: 'all' | 'bus' | 'train'; status: 'all' | 'active' | 'inactive' | 'maintenance'; minPrice: number; maxPrice: number;
+  sortBy: 'name' | 'price' | 'rating' | 'distance' | 'duration'; sortOrder: 'asc' | 'desc'; search: string;
 }
 
 export default function RoutesPage() {
@@ -75,26 +28,25 @@ export default function RoutesPage() {
   const [routes, setRoutes] = useState<Route[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [filters, setFilters] = useState<RoutesFilters>({
-    vehicleType: 'all',
-    status: 'active',
-    minPrice: 0,
-    maxPrice: 10000,
-    sortBy: 'name',
-    sortOrder: 'asc',
-    search: ''
-  });
+  const [filters, setFilters] = useState<RoutesFilters>({ vehicleType: 'all', status: 'active', minPrice: 0, maxPrice: 10000, sortBy: 'name', sortOrder: 'asc', search: '' });
   const [totalRoutes, setTotalRoutes] = useState(0);
   const [page, setPage] = useState(1);
   const [pageSize] = useState(12);
 
   const getToken = () => localStorage.getItem('token');
 
+  // ✅ FIXED: Robust URL construction to handle double /api issue
   const apiCall = useCallback(async (endpoint: string, options: RequestInit = {}) => {
     const token = getToken();
     if (!token) { router.push('/login'); return null; }
-    const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    
+    let baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    // Remove trailing /api if present to avoid double /api
+    if (baseURL.endsWith('/api')) baseURL = baseURL.slice(0, -4);
+    
     const fullURL = `${baseURL}/api${endpoint}`;
+    console.log('API Call:', fullURL); // Debug log
+    
     try {
       const response = await fetch(fullURL, { ...options, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, ...options.headers } });
       if (!response.ok) { if (response.status === 401) { localStorage.removeItem('token'); localStorage.removeItem('user'); router.push('/login'); return null; } throw new Error(`API Error: ${response.status}`); }
@@ -121,36 +73,13 @@ export default function RoutesPage() {
 
   useEffect(() => { loadRoutes(); }, [loadRoutes]);
 
-  const handleFilterChange = (key: keyof RoutesFilters, value: any) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
-    setPage(1); // Reset to first page when filters change
-  };
+  const handleFilterChange = (key: keyof RoutesFilters, value: any) => { setFilters(prev => ({ ...prev, [key]: value })); setPage(1); };
 
   const getVehicleIcon = (type: string) => type === 'bus' ? '🚌' : '🚊';
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return '#10B981';
-      case 'inactive': return '#6B7280';
-      case 'maintenance': return '#F59E0B';
-      default: return '#6B7280';
-    }
-  };
-
-  const renderStars = (rating: number) => {
-    const stars = [];
-    for (let i = 1; i <= 5; i++) {
-      stars.push(<span key={i} style={{ color: i <= rating ? '#F59E0B' : '#D1D5DB' }}>★</span>);
-    }
-    return stars;
-  };
-
+  const getStatusColor = (status: string) => ({ 'active': '#10B981', 'inactive': '#6B7280', 'maintenance': '#F59E0B' }[status] || '#6B7280');
+  const renderStars = (rating: number) => { const stars = []; for (let i = 1; i <= 5; i++) { stars.push(<span key={i} style={{ color: i <= rating ? '#F59E0B' : '#D1D5DB' }}>★</span>); } return stars; };
   const formatPrice = (price: number) => `Rs. ${price.toLocaleString()}`;
-  const formatDuration = (minutes: number) => {
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
-    return `${hours}h ${remainingMinutes}m`;
-  };
-
+  const formatDuration = (minutes: number) => { const hours = Math.floor(minutes / 60); const remainingMinutes = minutes % 60; return `${hours}h ${remainingMinutes}m`; };
   const totalPages = Math.ceil(totalRoutes / pageSize);
 
   if (loading) {
@@ -231,19 +160,13 @@ export default function RoutesPage() {
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ color: '#6B7280', fontSize: '0.9rem' }}>
-              Showing {routes.length} of {totalRoutes} routes
-            </div>
-            <button onClick={() => setFilters({ vehicleType: 'all', status: 'active', minPrice: 0, maxPrice: 10000, sortBy: 'name', sortOrder: 'asc', search: '' })} style={{ backgroundColor: '#6B7280', color: 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', fontSize: '0.9rem' }}>
-              Reset Filters
-            </button>
+            <div style={{ color: '#6B7280', fontSize: '0.9rem' }}>Showing {routes.length} of {totalRoutes} routes</div>
+            <button onClick={() => setFilters({ vehicleType: 'all', status: 'active', minPrice: 0, maxPrice: 10000, sortBy: 'name', sortOrder: 'asc', search: '' })} style={{ backgroundColor: '#6B7280', color: 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', fontSize: '0.9rem' }}>Reset Filters</button>
           </div>
         </div>
 
         {/* Error Message */}
-        {error && (
-          <div style={{ backgroundColor: '#FEE2E2', color: '#DC2626', padding: '1rem', borderRadius: '0.5rem', border: '1px solid #FCA5A5', marginBottom: '2rem' }}>{error}</div>
-        )}
+        {error && ( <div style={{ backgroundColor: '#FEE2E2', color: '#DC2626', padding: '1rem', borderRadius: '0.5rem', border: '1px solid #FCA5A5', marginBottom: '2rem' }}>{error}</div> )}
 
         {/* Routes Grid */}
         {routes.length > 0 ? (
@@ -270,39 +193,24 @@ export default function RoutesPage() {
 
                   <div style={{ marginBottom: '1rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: '#6B7280', marginBottom: '0.5rem' }}>
-                      <span style={{ fontWeight: '500' }}>{route.startLocation.name}</span>
-                      <span>→</span>
-                      <span style={{ fontWeight: '500' }}>{route.endLocation.name}</span>
+                      <span style={{ fontWeight: '500' }}>{route.startLocation.name}</span><span>→</span><span style={{ fontWeight: '500' }}>{route.endLocation.name}</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', fontSize: '0.85rem', color: '#6B7280' }}>
-                      <span>📍 {route.distance}km</span>
-                      <span>⏱️ {formatDuration(route.estimatedDuration)}</span>
-                      <span>👥 {route.vehicleInfo.capacity} seats</span>
+                      <span>📍 {route.distance}km</span><span>⏱️ {formatDuration(route.estimatedDuration)}</span><span>👥 {route.vehicleInfo.capacity} seats</span>
                     </div>
                   </div>
 
                   <div style={{ marginBottom: '1rem' }}>
-                    <div style={{ fontSize: '0.9rem', color: '#6B7280', marginBottom: '0.5rem' }}>
-                      <strong>Operator:</strong> {route.operatorInfo.companyName}
-                    </div>
-                    <div style={{ fontSize: '0.9rem', color: '#6B7280', marginBottom: '0.5rem' }}>
-                      <strong>Contact:</strong> {route.operatorInfo.contactNumber}
-                    </div>
+                    <div style={{ fontSize: '0.9rem', color: '#6B7280', marginBottom: '0.5rem' }}><strong>Operator:</strong> {route.operatorInfo.companyName}</div>
+                    <div style={{ fontSize: '0.9rem', color: '#6B7280', marginBottom: '0.5rem' }}><strong>Contact:</strong> {route.operatorInfo.contactNumber}</div>
                     {route.vehicleInfo.amenities.length > 0 && (
-                      <div style={{ fontSize: '0.85rem', color: '#6B7280' }}>
-                        <strong>Amenities:</strong> {route.vehicleInfo.amenities.slice(0, 3).join(', ')}
-                        {route.vehicleInfo.amenities.length > 3 && '...'}
-                      </div>
+                      <div style={{ fontSize: '0.85rem', color: '#6B7280' }}><strong>Amenities:</strong> {route.vehicleInfo.amenities.slice(0, 3).join(', ')}{route.vehicleInfo.amenities.length > 3 && '...'}</div>
                     )}
                   </div>
 
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <Link href={`/routes/${route._id}`} style={{ flex: 1, backgroundColor: '#3B82F6', color: 'white', padding: '0.75rem', borderRadius: '0.5rem', textDecoration: 'none', fontSize: '0.9rem', fontWeight: '500', textAlign: 'center' }}>
-                      View Details
-                    </Link>
-                    <Link href={`/book?routeId=${route._id}`} style={{ flex: 1, backgroundColor: '#F59E0B', color: 'white', padding: '0.75rem', borderRadius: '0.5rem', textDecoration: 'none', fontSize: '0.9rem', fontWeight: '500', textAlign: 'center' }}>
-                      Book Now
-                    </Link>
+                    <Link href={`/routes/${route._id}`} style={{ flex: 1, backgroundColor: '#3B82F6', color: 'white', padding: '0.75rem', borderRadius: '0.5rem', textDecoration: 'none', fontSize: '0.9rem', fontWeight: '500', textAlign: 'center' }}>View Details</Link>
+                    <Link href={`/book?routeId=${route._id}`} style={{ flex: 1, backgroundColor: '#F59E0B', color: 'white', padding: '0.75rem', borderRadius: '0.5rem', textDecoration: 'none', fontSize: '0.9rem', fontWeight: '500', textAlign: 'center' }}>Book Now</Link>
                   </div>
                 </div>
               ))}
@@ -311,22 +219,16 @@ export default function RoutesPage() {
             {/* Pagination */}
             {totalPages > 1 && (
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginTop: '2rem' }}>
-                <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1} style={{ backgroundColor: page === 1 ? '#E5E7EB' : '#3B82F6', color: page === 1 ? '#9CA3AF' : 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: '0.5rem', cursor: page === 1 ? 'not-allowed' : 'pointer' }}>
-                  Previous
-                </button>
+                <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1} style={{ backgroundColor: page === 1 ? '#E5E7EB' : '#3B82F6', color: page === 1 ? '#9CA3AF' : 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: '0.5rem', cursor: page === 1 ? 'not-allowed' : 'pointer' }}>Previous</button>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                   {[...Array(Math.min(5, totalPages))].map((_, i) => {
                     const pageNum = Math.max(1, Math.min(totalPages, page - 2 + i));
                     return (
-                      <button key={pageNum} onClick={() => setPage(pageNum)} style={{ backgroundColor: page === pageNum ? '#F59E0B' : 'white', color: page === pageNum ? 'white' : '#374151', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', cursor: 'pointer' }}>
-                        {pageNum}
-                      </button>
+                      <button key={pageNum} onClick={() => setPage(pageNum)} style={{ backgroundColor: page === pageNum ? '#F59E0B' : 'white', color: page === pageNum ? 'white' : '#374151', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', cursor: 'pointer' }}>{pageNum}</button>
                     );
                   })}
                 </div>
-                <button onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page === totalPages} style={{ backgroundColor: page === totalPages ? '#E5E7EB' : '#3B82F6', color: page === totalPages ? '#9CA3AF' : 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: '0.5rem', cursor: page === totalPages ? 'not-allowed' : 'pointer' }}>
-                  Next
-                </button>
+                <button onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page === totalPages} style={{ backgroundColor: page === totalPages ? '#E5E7EB' : '#3B82F6', color: page === totalPages ? '#9CA3AF' : 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: '0.5rem', cursor: page === totalPages ? 'not-allowed' : 'pointer' }}>Next</button>
               </div>
             )}
           </>
@@ -335,9 +237,7 @@ export default function RoutesPage() {
             <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🚌</div>
             <h3 style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>No routes found</h3>
             <p style={{ marginBottom: '1rem' }}>Try adjusting your search criteria or check back later</p>
-            <button onClick={() => setFilters({ vehicleType: 'all', status: 'active', minPrice: 0, maxPrice: 10000, sortBy: 'name', sortOrder: 'asc', search: '' })} style={{ backgroundColor: '#F59E0B', color: 'white', padding: '0.75rem 1.5rem', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', fontWeight: '500' }}>
-              Reset Filters
-            </button>
+            <button onClick={() => setFilters({ vehicleType: 'all', status: 'active', minPrice: 0, maxPrice: 10000, sortBy: 'name', sortOrder: 'asc', search: '' })} style={{ backgroundColor: '#F59E0B', color: 'white', padding: '0.75rem 1.5rem', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', fontWeight: '500' }}>Reset Filters</button>
           </div>
         )}
       </div>
