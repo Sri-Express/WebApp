@@ -17,32 +17,49 @@ interface Trip {
   status: 'upcoming' | 'completed' | 'cancelled';
 }
 
+// Flexible Booking interface to handle various possible structures
 interface Booking {
-  _id: string;
-  bookingId: string;
-  routeId: string;
-  travelDate: string;
-  departureTime: string;
-  passengerInfo: {
+  _id?: string;
+  id?: string;
+  bookingId?: string;
+  routeId?: string;
+  travelDate?: string;
+  date?: string; // fallback for travelDate
+  departureTime?: string;
+  passengerInfo?: {
     name: string;
   };
-  pricing: {
+  passenger?: { // fallback for passengerInfo
+    name: string;
+  };
+  pricing?: {
     totalAmount: number;
   };
-  status: 'confirmed' | 'pending' | 'cancelled' | 'completed' | 'no_show';
+  amount?: { // fallback for pricing
+    total: number;
+  };
+  price?: number; // fallback for amount
+  status?: 'confirmed' | 'pending' | 'cancelled' | 'completed' | 'no_show' | string; // allow string for unknown statuses
   qrCode?: string;
 }
 
+
+// Flexible Payment interface to handle various possible structures
 interface Payment {
-  _id: string;
-  paymentId: string;
-  amount: {
+  _id?: string;
+  id?: string;
+  paymentId?: string;
+  amount?: {
     total: number;
     currency: string;
   };
-  status: string;
-  createdAt: string;
+  total?: number;
+  currency?: string;
+  status?: string;
+  createdAt?: string;
+  date?: string;
 }
+
 
 interface DashboardStats {
   totalTrips: number;
@@ -136,7 +153,6 @@ export default function EnhancedDashboardPage() {
     }
   }, [router]);
 
-  // Load comprehensive dashboard data
   const loadDashboardData = useCallback(async (isRefresh = false) => {
     if (isRefresh) {
       setRefreshing(true);
@@ -145,61 +161,161 @@ export default function EnhancedDashboardPage() {
     }
     
     setApiErrors([]);
-
+  
     try {
-      console.log('Loading comprehensive dashboard data...');
-
+      console.log('🔄 Loading comprehensive dashboard data...');
+  
       // Load user profile if not cached
       const storedUser = localStorage.getItem('user');
       if (storedUser) {
         setUser(JSON.parse(storedUser));
       } else {
-        console.log('Loading user profile...');
+        console.log('👤 Loading user profile...');
         const userProfile = await apiCall('/auth/profile');
         if (userProfile) {
           setUser(userProfile);
           localStorage.setItem('user', JSON.stringify(userProfile));
         }
       }
-
+  
       // Load dashboard stats
-      console.log('Loading dashboard stats...');
+      console.log('📊 Loading dashboard stats...');
       const dashboardStats = await apiCall('/dashboard/stats');
       if (dashboardStats) {
         setStats(dashboardStats);
       }
-
+  
       // Load trip data
-      console.log('Loading trips data...');
+      console.log('🚌 Loading trips data...');
       const [recentTripsData, upcomingTripsData] = await Promise.all([
         apiCall('/dashboard/recent-trips'),
         apiCall('/dashboard/upcoming-trips')
       ]);
-
+  
       if (recentTripsData && Array.isArray(recentTripsData)) {
         setRecentTrips(recentTripsData);
       }
       if (upcomingTripsData && Array.isArray(upcomingTripsData)) {
         setUpcomingTrips(upcomingTripsData);
       }
+  
+      // Load booking data - FIXED VERSION
+      console.log('🎫 Loading bookings data...');
+      const bookingsResponse = await apiCall('/bookings?limit=5');
+      console.log('🎫 Raw bookings response:', bookingsResponse);
 
-      // Load booking data
-      console.log('Loading bookings data...');
-      const bookingsData = await apiCall('/bookings?limit=5');
-      if (bookingsData && Array.isArray(bookingsData)) {
-        setRecentBookings(bookingsData);
+      if (bookingsResponse) {
+        let bookingsArray = [];
+        
+        // Handle different response formats
+        if (Array.isArray(bookingsResponse)) {
+          // Direct array response
+          bookingsArray = bookingsResponse;
+          console.log('🎫 Using direct array format');
+        } else if (bookingsResponse.data && Array.isArray(bookingsResponse.data)) {
+          // Response with data property
+          bookingsArray = bookingsResponse.data;
+          console.log('🎫 Using response.data format');
+        } else if (bookingsResponse.bookings && Array.isArray(bookingsResponse.bookings)) {
+          // Response with bookings property
+          bookingsArray = bookingsResponse.bookings;
+          console.log('🎫 Using response.bookings format');
+        } else if (bookingsResponse.success && bookingsResponse.data) {
+          // Success response format
+          bookingsArray = Array.isArray(bookingsResponse.data) ? bookingsResponse.data : [];
+          console.log('🎫 Using success.data format');
+        } else if (typeof bookingsResponse === 'object' && !Array.isArray(bookingsResponse)) {
+          // If it's an object but not an array, try to extract booking data
+          console.log('🎫 Response is object, checking properties:', Object.keys(bookingsResponse));
+          
+          // Try common property names
+          const possibleArrays = ['data', 'bookings', 'history', 'results', 'items'];
+          for (const prop of possibleArrays) {
+            if (bookingsResponse[prop] && Array.isArray(bookingsResponse[prop])) {
+              bookingsArray = bookingsResponse[prop];
+              console.log(`🎫 Found bookings in response.${prop}`);
+              break;
+            }
+          }
+        }
+        
+        console.log('🎫 Final bookings array:', bookingsArray);
+        console.log('🎫 Bookings array length:', bookingsArray.length);
+        
+        // Validate booking objects before setting
+        const validBookings = bookingsArray.filter(booking => {
+          return booking && 
+                 typeof booking === 'object' && 
+                 (booking._id || booking.id || booking.bookingId);
+        });
+        
+        console.log('🎫 Valid bookings:', validBookings.length);
+        setRecentBookings(validBookings);
+      } else {
+        console.log('🎫 No bookings response received');
+        setRecentBookings([]);
       }
-
-      // Load payment data
-      console.log('Loading payments data...');
-      const paymentsData = await apiCall('/payments/history?limit=5');
-      if (paymentsData && Array.isArray(paymentsData)) {
-        setRecentPayments(paymentsData);
+  
+      // Load payment data - FIXED VERSION
+      console.log('💳 Loading payments data...');
+      const paymentsResponse = await apiCall('/payments/history?limit=5');
+      console.log('💳 Raw payments response:', paymentsResponse);
+      
+      if (paymentsResponse) {
+        let paymentsArray = [];
+        
+        // Handle different response formats
+        if (Array.isArray(paymentsResponse)) {
+          // Direct array response
+          paymentsArray = paymentsResponse;
+          console.log('💳 Using direct array format');
+        } else if (paymentsResponse.data && Array.isArray(paymentsResponse.data)) {
+          // Response with data property
+          paymentsArray = paymentsResponse.data;
+          console.log('💳 Using response.data format');
+        } else if (paymentsResponse.payments && Array.isArray(paymentsResponse.payments)) {
+          // Response with payments property
+          paymentsArray = paymentsResponse.payments;
+          console.log('💳 Using response.payments format');
+        } else if (paymentsResponse.success && paymentsResponse.data) {
+          // Success response format
+          paymentsArray = Array.isArray(paymentsResponse.data) ? paymentsResponse.data : [];
+          console.log('💳 Using success.data format');
+        } else if (typeof paymentsResponse === 'object' && !Array.isArray(paymentsResponse)) {
+          // If it's an object but not an array, try to extract payment data
+          console.log('💳 Response is object, checking properties:', Object.keys(paymentsResponse));
+          
+          // Try common property names
+          const possibleArrays = ['data', 'payments', 'history', 'results', 'items'];
+          for (const prop of possibleArrays) {
+            if (paymentsResponse[prop] && Array.isArray(paymentsResponse[prop])) {
+              paymentsArray = paymentsResponse[prop];
+              console.log(`💳 Found payments in response.${prop}`);
+              break;
+            }
+          }
+        }
+        
+        console.log('💳 Final payments array:', paymentsArray);
+        console.log('💳 Payments array length:', paymentsArray.length);
+        
+        // Validate payment objects before setting
+        const validPayments = paymentsArray.filter(payment => {
+          return payment && 
+                 typeof payment === 'object' && 
+                 (payment._id || payment.id || payment.paymentId);
+        });
+        
+        console.log('💳 Valid payments:', validPayments.length);
+        setRecentPayments(validPayments);
+      } else {
+        console.log('💳 No payments response received');
+        setRecentPayments([]);
       }
-
+  
       setLastRefresh(new Date());
     } catch (error) {
-      console.error('Error loading dashboard data:', error);
+      console.error('💥 Error loading dashboard data:', error);
       setApiErrors(prev => [...prev, 'Failed to load dashboard data']);
     } finally {
       setLoading(false);
@@ -402,55 +518,141 @@ export default function EnhancedDashboardPage() {
 
       {/* Recent Activity */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
-        {/* Recent Bookings */}
+        {/* Recent Bookings - SAFE RENDERING VERSION */}
         <div style={{ backgroundColor: 'white', padding: '1.5rem', borderRadius: '0.5rem', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)' }}>
           <h3 style={{ marginBottom: '1rem', fontSize: '1.2rem', fontWeight: '600' }}>Recent Bookings</h3>
-          {recentBookings.length > 0 ? (
-            recentBookings.slice(0, 3).map(booking => (
-              <div key={booking._id} style={{ padding: '0.75rem', border: '1px solid #f3f4f6', borderRadius: '0.5rem', marginBottom: '0.5rem', backgroundColor: '#f9fafb' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <div style={{ fontWeight: '600', color: '#1F2937', fontSize: '0.9rem' }}>Booking #{booking.bookingId}</div>
-                    <div style={{ color: '#6B7280', fontSize: '0.8rem' }}>{formatDate(booking.travelDate)}</div>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ color: '#F59E0B', fontWeight: '600', fontSize: '0.9rem' }}>{formatPrice(booking.pricing.totalAmount)}</div>
-                    <div style={{ fontSize: '0.7rem', color: booking.status === 'confirmed' ? '#10B981' : '#6B7280', textTransform: 'capitalize' }}>{booking.status}</div>
+          
+          {/* Debug info for development */}
+          {process.env.NODE_ENV === 'development' && (
+            <div style={{ backgroundColor: '#f3f4f6', padding: '0.5rem', borderRadius: '0.25rem', marginBottom: '1rem', fontSize: '0.75rem', color: '#6B7280' }}>
+              Debug: {recentBookings.length} bookings | Type: {typeof recentBookings} | IsArray: {Array.isArray(recentBookings).toString()}
+            </div>
+          )}
+          
+          {Array.isArray(recentBookings) && recentBookings.length > 0 ? (
+            recentBookings.slice(0, 3).map((booking, index) => {
+              // Safe extraction of booking data
+              const bookingId = booking?.bookingId || booking?._id || booking?.id || `booking-${index}`;
+              const amount = booking?.pricing?.totalAmount || booking?.amount?.total || booking?.price || 0;
+              const status = booking?.status || 'unknown';
+              const travelDate = booking?.travelDate || booking?.date || new Date().toISOString();
+              const passengerName = booking?.passengerInfo?.name || booking?.passenger?.name || 'Unknown';
+              
+              return (
+                <div key={bookingId as string} style={{ padding: '0.75rem', border: '1px solid #f3f4f6', borderRadius: '0.5rem', marginBottom: '0.5rem', backgroundColor: '#f9fafb' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontWeight: '600', color: '#1F2937', fontSize: '0.9rem' }}>
+                        Booking #{typeof bookingId === 'string' ? bookingId.slice(-8) : bookingId}
+                      </div>
+                      <div style={{ color: '#6B7280', fontSize: '0.8rem' }}>
+                        {formatDate(travelDate)} • {passengerName}
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ color: '#F59E0B', fontWeight: '600', fontSize: '0.9rem' }}>
+                        {formatPrice(amount)}
+                      </div>
+                      <div style={{ 
+                        fontSize: '0.7rem', 
+                        color: status === 'confirmed' ? '#10B981' : '#6B7280', 
+                        textTransform: 'capitalize' 
+                      }}>
+                        {status}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           ) : (
-            <div style={{ textAlign: 'center', padding: '1rem', color: '#6B7280', fontSize: '0.9rem' }}>No recent bookings</div>
+            <div style={{ textAlign: 'center', padding: '1rem', color: '#6B7280', fontSize: '0.9rem' }}>
+              {apiErrors.some(error => error.includes('booking')) ? (
+                <div style={{ color: '#EF4444' }}>⚠️ Error loading bookings</div>
+              ) : (
+                <>
+                  <div>🎫 No recent bookings</div>
+                  <div style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>
+                    Bookings will appear here after making reservations
+                  </div>
+                </>
+              )}
+            </div>
           )}
-          {recentBookings.length > 0 && (
-            <Link href="/bookings" style={{ color: '#F59E0B', textDecoration: 'none', fontSize: '0.9rem', fontWeight: '600' }}>View all bookings →</Link>
+          
+          {Array.isArray(recentBookings) && recentBookings.length > 0 && (
+            <Link href="/bookings" style={{ color: '#F59E0B', textDecoration: 'none', fontSize: '0.9rem', fontWeight: '600' }}>
+              View all bookings →
+            </Link>
           )}
         </div>
 
-        {/* Recent Payments */}
+        {/* Recent Payments - SAFE RENDERING VERSION */}
         <div style={{ backgroundColor: 'white', padding: '1.5rem', borderRadius: '0.5rem', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)' }}>
           <h3 style={{ marginBottom: '1rem', fontSize: '1.2rem', fontWeight: '600' }}>Recent Payments</h3>
-          {recentPayments.length > 0 ? (
-            recentPayments.slice(0, 3).map(payment => (
-              <div key={payment._id} style={{ padding: '0.75rem', border: '1px solid #f3f4f6', borderRadius: '0.5rem', marginBottom: '0.5rem', backgroundColor: '#f9fafb' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <div style={{ fontWeight: '600', color: '#1F2937', fontSize: '0.9rem' }}>Payment #{payment.paymentId}</div>
-                    <div style={{ color: '#6B7280', fontSize: '0.8rem' }}>{formatDate(payment.createdAt)}</div>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ color: '#10B981', fontWeight: '600', fontSize: '0.9rem' }}>{formatPrice(payment.amount.total)}</div>
-                    <div style={{ fontSize: '0.7rem', color: payment.status === 'completed' ? '#10B981' : '#6B7280', textTransform: 'capitalize' }}>{payment.status}</div>
+          
+          {/* Debug info for development */}
+          {process.env.NODE_ENV === 'development' && (
+            <div style={{ backgroundColor: '#f3f4f6', padding: '0.5rem', borderRadius: '0.25rem', marginBottom: '1rem', fontSize: '0.75rem', color: '#6B7280' }}>
+              Debug: {recentPayments.length} payments | Type: {typeof recentPayments} | IsArray: {Array.isArray(recentPayments).toString()}
+            </div>
+          )}
+          
+          {Array.isArray(recentPayments) && recentPayments.length > 0 ? (
+            recentPayments.slice(0, 3).map((payment, index) => {
+              // Safe extraction of payment data
+              const paymentId = payment?.paymentId || payment?._id || payment?.id || `payment-${index}`;
+              const amount = payment?.amount?.total || payment?.total || 0;
+              const currency = payment?.amount?.currency || payment?.currency || 'LKR';
+              const status = payment?.status || 'unknown';
+              const createdAt = payment?.createdAt || payment?.date || new Date().toISOString();
+              
+              return (
+                <div key={paymentId as string} style={{ padding: '0.75rem', border: '1px solid #f3f4f6', borderRadius: '0.5rem', marginBottom: '0.5rem', backgroundColor: '#f9fafb' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontWeight: '600', color: '#1F2937', fontSize: '0.9rem' }}>
+                        Payment #{typeof paymentId === 'string' ? paymentId.slice(-8) : paymentId}
+                      </div>
+                      <div style={{ color: '#6B7280', fontSize: '0.8rem' }}>
+                        {formatDate(createdAt)}
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ color: '#10B981', fontWeight: '600', fontSize: '0.9rem' }}>
+                        {formatPrice(amount)}
+                      </div>
+                      <div style={{ 
+                        fontSize: '0.7rem', 
+                        color: status === 'completed' ? '#10B981' : '#6B7280', 
+                        textTransform: 'capitalize' 
+                      }}>
+                        {status}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           ) : (
-            <div style={{ textAlign: 'center', padding: '1rem', color: '#6B7280', fontSize: '0.9rem' }}>No recent payments</div>
+            <div style={{ textAlign: 'center', padding: '1rem', color: '#6B7280', fontSize: '0.9rem' }}>
+              {apiErrors.some(error => error.includes('payment')) ? (
+                <div style={{ color: '#EF4444' }}>⚠️ Error loading payments</div>
+              ) : (
+                <>
+                  <div>💳 No recent payments</div>
+                  <div style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>
+                    Payments will appear here after booking trips
+                  </div>
+                </>
+              )}
+            </div>
           )}
-          {recentPayments.length > 0 && (
-            <Link href="/payments" style={{ color: '#F59E0B', textDecoration: 'none', fontSize: '0.9rem', fontWeight: '600' }}>View all payments →</Link>
+          
+          {Array.isArray(recentPayments) && recentPayments.length > 0 && (
+            <Link href="/payments" style={{ color: '#F59E0B', textDecoration: 'none', fontSize: '0.9rem', fontWeight: '600' }}>
+              View all payments →
+            </Link>
           )}
         </div>
       </div>
