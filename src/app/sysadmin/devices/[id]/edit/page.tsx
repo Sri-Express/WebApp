@@ -27,7 +27,29 @@ export default function EditDevicePage() {
   const getToken = () => localStorage.getItem('token');
   const apiCall = useCallback(async (endpoint: string, options: RequestInit = {}) => { const token = getToken(); if (!token) { router.push('/sysadmin/login'); return null; } try { const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${endpoint}`, { ...options, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, ...options.headers, }, }); if (!response.ok) { if (response.status === 401) { localStorage.removeItem('token'); router.push('/sysadmin/login'); return null; } throw new Error(`API Error: ${response.status}`); } return await response.json(); } catch (error) { console.error('API call error:', error); return null; } }, [router]);
   useEffect(() => { const loadData = async () => { setLoading(true); try { const deviceResponse = await apiCall(`/admin/devices/${deviceId}`); if (deviceResponse) { const deviceData: EditDeviceForm = { deviceId: deviceResponse.deviceId, vehicleNumber: deviceResponse.vehicleNumber, vehicleType: deviceResponse.vehicleType, assignedTo: deviceResponse.assignedTo, firmwareVersion: deviceResponse.firmwareVersion, installDate: deviceResponse.installDate.split('T')[0], location: deviceResponse.location, route: deviceResponse.route, status: deviceResponse.status, isActive: deviceResponse.isActive }; setFormData(deviceData); setOriginalData(deviceData); } setLoadingUsers(true); const usersResponse = await apiCall('/admin/users?limit=100&role=route_admin,company_admin'); if (usersResponse?.users) { setAvailableUsers(usersResponse.users); } setLoadingUsers(false); } catch (error) { console.error('Error loading data:', error); setErrors({ submit: 'Failed to load device data' }); } finally { setLoading(false); } }; if (deviceId) { loadData(); } }, [deviceId, apiCall]);
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => { if (!formData) return; const { name, value, type } = e.target; if (name.includes('.')) { const [parent, child] = name.split('.'); setFormData(prev => prev ? ({ ...prev, [parent]: { ...prev[parent as keyof EditDeviceForm] as Record<string, any>, [child]: type === 'number' ? parseFloat(value) : value } }) : null); } else { setFormData(prev => prev ? ({ ...prev, [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value }) : null); } if (errors[name]) { setErrors(prev => ({ ...prev, [name]: '' })); } };
+  
+  // ✅ FIXED: Rewrote handleChange to be fully type-safe and avoid `any`
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    if (!formData) return;
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
+
+    if (name.includes('.')) {
+      const [parentKey, childKey] = name.split('.') as [keyof EditDeviceForm, string];
+      setFormData(prev => {
+        if (!prev) return null;
+        const parentObject = prev[parentKey];
+        if (typeof parentObject === 'object' && parentObject !== null) {
+          return { ...prev, [parentKey]: { ...parentObject, [childKey]: type === 'number' ? parseFloat(value) : value, }, };
+        }
+        return prev;
+      });
+    } else {
+      setFormData(prev => prev ? ({ ...prev, [name]: type === 'checkbox' ? checked : value }) : null);
+    }
+    if (errors[name]) { setErrors(prev => ({ ...prev, [name]: '' })); }
+  };
+
   const handleAssignmentChange = (e: React.ChangeEvent<HTMLSelectElement>) => { if (!formData) return; const { name, value } = e.target; if (name === 'assignedTo.type') { if (value === 'system') { setFormData(prev => prev ? ({ ...prev, assignedTo: { type: 'system', userId: '', name: 'System Control' } }) : null); } else { setFormData(prev => prev ? ({ ...prev, assignedTo: { ...prev.assignedTo, type: value as 'route_admin' | 'company_admin', userId: '', name: '' } }) : null); } } else if (name === 'assignedTo.userId') { const selectedUser = availableUsers.find(user => user._id === value); setFormData(prev => prev ? ({ ...prev, assignedTo: { ...prev.assignedTo, userId: value, name: selectedUser?.name || '' } }) : null); } };
   const validateForm = () => { if (!formData) return false; const newErrors: Record<string, string> = {}; if (!formData.deviceId.trim()) { newErrors.deviceId = 'Device ID is required'; } if (!formData.vehicleNumber.trim()) { newErrors.vehicleNumber = 'Vehicle number is required'; } if (!formData.firmwareVersion.trim()) { newErrors.firmwareVersion = 'Firmware version is required'; } if (!formData.installDate) { newErrors.installDate = 'Install date is required'; } if (!formData.location.address.trim()) { newErrors['location.address'] = 'Address is required'; } if (formData.assignedTo.type !== 'system' && !formData.assignedTo.userId) { newErrors['assignedTo.userId'] = 'Please select a user for assignment'; } setErrors(newErrors); return Object.keys(newErrors).length === 0; };
   const hasChanges = () => { if (!formData || !originalData) return false; return JSON.stringify(formData) !== JSON.stringify(originalData); };
@@ -65,9 +87,7 @@ export default function EditDevicePage() {
     <div style={{ minHeight: '100vh', backgroundColor: currentThemeStyles.mainBg, position: 'relative', overflow: 'hidden' }}>
       <style jsx>{animationStyles}</style>
       
-      <div style={{ position: 'absolute', inset: 0, background: currentThemeStyles.bgGradient, zIndex: 0 }}>
-        {/* Animated background elements can go here if needed */}
-      </div>
+      <div style={{ position: 'absolute', inset: 0, background: currentThemeStyles.bgGradient, zIndex: 0 }}></div>
 
       <nav style={{ backgroundColor: 'rgba(30, 41, 59, 0.92)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(251, 191, 36, 0.3)', padding: '1rem 0', position: 'relative', zIndex: 10 }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -127,6 +147,26 @@ export default function EditDevicePage() {
             </div>
           </div>
 
+          {/* ✅ ADDED: Location Section */}
+          <div style={{ ...glassPanelStyle, marginBottom: '2rem' }}>
+            <h2 style={{ color: currentThemeStyles.textPrimary, fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><MapPinIcon width={20} height={20} />Location</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', color: currentThemeStyles.textPrimary, fontWeight: '600', marginBottom: '0.5rem' }}>Latitude</label>
+                <input type="number" step="any" name="location.latitude" value={formData.location.latitude} onChange={handleChange} style={{ width: '100%', padding: '0.875rem 1rem', borderRadius: '0.5rem', border: `1px solid ${currentThemeStyles.inputBorder}`, backgroundColor: currentThemeStyles.inputBg, color: currentThemeStyles.textPrimary, fontSize: '1rem', boxSizing: 'border-box' }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', color: currentThemeStyles.textPrimary, fontWeight: '600', marginBottom: '0.5rem' }}>Longitude</label>
+                <input type="number" step="any" name="location.longitude" value={formData.location.longitude} onChange={handleChange} style={{ width: '100%', padding: '0.875rem 1rem', borderRadius: '0.5rem', border: `1px solid ${currentThemeStyles.inputBorder}`, backgroundColor: currentThemeStyles.inputBg, color: currentThemeStyles.textPrimary, fontSize: '1rem', boxSizing: 'border-box' }} />
+              </div>
+            </div>
+            <div>
+              <label style={{ display: 'block', color: currentThemeStyles.textPrimary, fontWeight: '600', marginBottom: '0.5rem' }}>Address</label>
+              <input type="text" name="location.address" value={formData.location.address} onChange={handleChange} style={{ width: '100%', padding: '0.875rem 1rem', borderRadius: '0.5rem', border: `1px solid ${errors['location.address'] ? '#dc2626' : currentThemeStyles.inputBorder}`, backgroundColor: currentThemeStyles.inputBg, color: currentThemeStyles.textPrimary, fontSize: '1rem', boxSizing: 'border-box' }} />
+              {errors['location.address'] && <p style={{ color: '#fecaca', fontSize: '0.875rem', marginTop: '0.25rem' }}>{errors['location.address']}</p>}
+            </div>
+          </div>
+
           <div style={{ ...glassPanelStyle, marginBottom: '2rem' }}>
             <h2 style={{ color: currentThemeStyles.textPrimary, fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><UserIcon width={20} height={20} />Assignment</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
@@ -144,6 +184,12 @@ export default function EditDevicePage() {
                   {errors['assignedTo.userId'] && <p style={{ color: '#fecaca', fontSize: '0.875rem', marginTop: '0.25rem' }}>{errors['assignedTo.userId']}</p>}
                 </div>
               )}
+            </div>
+            {/* ✅ ADDED: Information Box */}
+            <div style={{ backgroundColor: currentThemeStyles.infoBoxBg, padding: '1rem', borderRadius: '0.5rem', marginTop: '1.5rem', border: `1px solid ${currentThemeStyles.inputBorder}` }}>
+              <p style={{ color: currentThemeStyles.textSecondary, fontSize: '0.875rem', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}><InformationCircleIcon width={20} height={20} />
+                {formData.assignedTo.type === 'system' ? 'Device will be managed by system administrators.' : 'Assigning to a user will give them control over this device.'}
+              </p>
             </div>
           </div>
 

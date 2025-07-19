@@ -5,12 +5,35 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { DevicePhoneMobileIcon, TruckIcon, MapPinIcon, CpuChipIcon, UserIcon, InformationCircleIcon, ArrowPathIcon, ChevronLeftIcon } from '@heroicons/react/24/outline';
+// ✅ FIXED: Removed unused ArrowPathIcon import
+import { DevicePhoneMobileIcon, TruckIcon, MapPinIcon, CpuChipIcon, UserIcon, InformationCircleIcon, ChevronLeftIcon } from '@heroicons/react/24/outline';
 import { useTheme } from '@/app/context/ThemeContext';
 import ThemeSwitcher from '@/app/components/ThemeSwitcher';
 
 interface CreateDeviceForm { deviceId: string; vehicleNumber: string; vehicleType: 'bus' | 'train'; assignedTo: { type: 'route_admin' | 'company_admin' | 'system'; userId: string; name: string; }; firmwareVersion: string; installDate: string; location: { latitude: number; longitude: number; address: string; }; route?: { routeId: string; name: string; }; }
 interface User { _id: string; name: string; email: string; role: string; }
+
+interface DevicePayload {
+  deviceId: string;
+  vehicleNumber: string;
+  vehicleType: 'bus' | 'train';
+  firmwareVersion: string;
+  installDate: string;
+  location: {
+    latitude: number;
+    longitude: number;
+    address: string;
+  };
+  assignedTo: {
+    type: 'system' | 'route_admin' | 'company_admin';
+    userId?: string;
+    name: string;
+  };
+  route?: {
+    routeId: string;
+    name: string;
+  };
+}
 
 export default function AddDevicePage() {
   const router = useRouter();
@@ -23,7 +46,6 @@ export default function AddDevicePage() {
 
   const getToken = () => localStorage.getItem('token');
 
-  // Enhanced apiCall function to capture backend error details
   const apiCall = useCallback(async (endpoint: string, options: RequestInit = {}) => {
     const token = getToken();
     if (!token) {
@@ -49,13 +71,12 @@ export default function AddDevicePage() {
       console.log('Response headers:', response.headers);
   
       if (!response.ok) {
-        // ✅ CAPTURE ERROR RESPONSE: Get the actual error message from backend
         let errorData;
         try {
           errorData = await response.json();
           console.log('=== BACKEND ERROR RESPONSE ===');
           console.log(JSON.stringify(errorData, null, 2));
-        } catch (parseError) {
+        } catch {
           console.log('Could not parse error response as JSON');
           const errorText = await response.text();
           console.log('Error response text:', errorText);
@@ -73,7 +94,6 @@ export default function AddDevicePage() {
       return await response.json();
     } catch (error) {
       console.error('API call error:', error);
-      // Re-throw the error so it can be caught by the calling function (handleSubmit)
       throw error;
     }
   }, [router]);
@@ -109,7 +129,6 @@ export default function AddDevicePage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Fixed device data preparation - updated handleSubmit function
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) {
@@ -118,28 +137,24 @@ export default function AddDevicePage() {
   
     setLoading(true);
     try {
-      // ✅ FIXED: Proper data structure matching backend expectations
-      const deviceData: any = { // Use 'any' temporarily to build the object
+      const deviceData: DevicePayload = {
         deviceId: formData.deviceId.trim(),
         vehicleNumber: formData.vehicleNumber.trim(),
         vehicleType: formData.vehicleType,
         firmwareVersion: formData.firmwareVersion.trim(),
         installDate: formData.installDate,
         
-        // ✅ FIXED: Ensure location object is complete
         location: {
           latitude: Number(formData.location.latitude) || 6.9271,
           longitude: Number(formData.location.longitude) || 79.8612,
           address: formData.location.address.trim() || 'No address provided'
         },
         
-        // ✅ FIXED: Ensure assignedTo object structure is correct
         assignedTo: (() => {
           if (formData.assignedTo.type === 'system') {
             return {
               type: 'system',
               name: 'System Control'
-              // No userId for system type
             };
           } else {
             return {
@@ -151,7 +166,6 @@ export default function AddDevicePage() {
         })()
       };
   
-      // Only add route if both fields exist
       if (formData.route?.routeId && formData.route?.name) {
         deviceData.route = {
           routeId: formData.route.routeId,
@@ -171,8 +185,6 @@ export default function AddDevicePage() {
         console.log('✅ Device created successfully:', response);
         router.push('/sysadmin/devices');
       } else {
-        // The error is now thrown from apiCall, so this part might not be reached
-        // but it's good to have a fallback.
         setErrors({ submit: 'Failed to create device. Check console for details.' });
       }
     } catch (error) {

@@ -68,13 +68,14 @@ interface RealtimeData {
   lastUpdate: string;
 }
 
-interface Schedule {
-  departureTime: string;
-  arrivalTime: string;
-  frequency: number;
-  daysOfWeek: string[];
-  isActive: boolean;
-}
+// ✅ FIXED: Removed the unused 'Schedule' interface
+// interface Schedule {
+//   departureTime: string;
+//   arrivalTime: string;
+//   frequency: number;
+//   daysOfWeek: string[];
+//   isActive: boolean;
+// }
 
 export default function RouteDetailsPage() {
   const router = useRouter();

@@ -35,17 +35,15 @@ export default function RoutesPage() {
 
   const getToken = () => localStorage.getItem('token');
 
-  // ✅ FIXED: Robust URL construction to handle double /api issue
   const apiCall = useCallback(async (endpoint: string, options: RequestInit = {}) => {
     const token = getToken();
     if (!token) { router.push('/login'); return null; }
     
     let baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-    // Remove trailing /api if present to avoid double /api
     if (baseURL.endsWith('/api')) baseURL = baseURL.slice(0, -4);
     
     const fullURL = `${baseURL}/api${endpoint}`;
-    console.log('API Call:', fullURL); // Debug log
+    console.log('API Call:', fullURL);
     
     try {
       const response = await fetch(fullURL, { ...options, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, ...options.headers } });
@@ -73,7 +71,8 @@ export default function RoutesPage() {
 
   useEffect(() => { loadRoutes(); }, [loadRoutes]);
 
-  const handleFilterChange = (key: keyof RoutesFilters, value: any) => { setFilters(prev => ({ ...prev, [key]: value })); setPage(1); };
+  // ✅ FIXED: Replaced `any` with a more specific `string | number` type
+  const handleFilterChange = (key: keyof RoutesFilters, value: string | number) => { setFilters(prev => ({ ...prev, [key]: value })); setPage(1); };
 
   const getVehicleIcon = (type: string) => type === 'bus' ? '🚌' : '🚊';
   const getStatusColor = (status: string) => ({ 'active': '#10B981', 'inactive': '#6B7280', 'maintenance': '#F59E0B' }[status] || '#6B7280');

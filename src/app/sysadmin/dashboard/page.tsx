@@ -1,7 +1,7 @@
 //src\app\sysadmin\dashboard\page.tsx
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { UsersIcon, DevicePhoneMobileIcon, TruckIcon, CpuChipIcon, ChartBarIcon, ExclamationTriangleIcon, ShieldCheckIcon, GlobeAltIcon, ServerIcon, CheckCircleIcon, BellIcon } from '@heroicons/react/24/outline';
