@@ -1,4 +1,4 @@
-// src/app/dashboard/page.tsx - FIXED VERSION
+// src/app/dashboard/page.tsx - ENHANCED PRODUCTION VERSION
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -6,91 +6,270 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 interface Trip {
-  _id: string; route: string; fromLocation: string; toLocation: string; date: string; time?: string; seat?: string; price: number; status: 'upcoming' | 'completed' | 'cancelled';
+  _id: string;
+  route: string;
+  fromLocation: string;
+  toLocation: string;
+  date: string;
+  time?: string;
+  seat?: string;
+  price: number;
+  status: 'upcoming' | 'completed' | 'cancelled';
+}
+
+interface Booking {
+  _id: string;
+  bookingId: string;
+  routeId: string;
+  travelDate: string;
+  departureTime: string;
+  passengerInfo: {
+    name: string;
+  };
+  pricing: {
+    totalAmount: number;
+  };
+  status: 'confirmed' | 'pending' | 'cancelled' | 'completed' | 'no_show';
+  qrCode?: string;
+}
+
+interface Payment {
+  _id: string;
+  paymentId: string;
+  amount: {
+    total: number;
+    currency: string;
+  };
+  status: string;
+  createdAt: string;
 }
 
 interface DashboardStats {
-  totalTrips: number; totalSpent: number; upcomingTrips: number; onTimeRate: number; totalBookings?: number; confirmedBookings?: number; totalPayments?: number; averagePayment?: number;
+  totalTrips: number;
+  totalSpent: number;
+  upcomingTrips: number;
+  onTimeRate: number;
+  totalBookings?: number;
+  confirmedBookings?: number;
+  totalPayments?: number;
+  averagePayment?: number;
+  recentActivity?: number;
+  favoriteRoutes?: string[];
 }
 
 interface User {
-  _id: string; name: string; email: string; phone?: string; role: string;
+  _id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  role: string;
 }
 
-export default function DashboardPage() {
+export default function EnhancedDashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+  
+  // Data states
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentTrips, setRecentTrips] = useState<Trip[]>([]);
   const [upcomingTrips, setUpcomingTrips] = useState<Trip[]>([]);
+  const [recentBookings, setRecentBookings] = useState<Booking[]>([]);
+  const [recentPayments, setRecentPayments] = useState<Payment[]>([]);
+  
+  // UI states
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileError, setProfileError] = useState('');
   const [profileSuccess, setProfileSuccess] = useState('');
+  const [apiErrors, setApiErrors] = useState<string[]>([]);
 
   const getToken = () => localStorage.getItem('token');
 
-  // ✅ FIXED: Enhanced API call helper with URL handling
+  // Enhanced API call helper with better error handling
   const apiCall = useCallback(async (endpoint: string, options: RequestInit = {}) => {
     const token = getToken();
-    if (!token) { console.log('No token found, redirecting to login'); router.push('/login'); return null; }
+    if (!token) {
+      console.log('No token found, redirecting to login');
+      router.push('/login');
+      return null;
+    }
 
     let baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-    // Remove trailing /api if present to avoid double /api
     if (baseURL.endsWith('/api')) baseURL = baseURL.slice(0, -4);
     
     const fullURL = `${baseURL}/api${endpoint}`;
     console.log(`Making API call to: ${fullURL}`);
 
     try {
-      const response = await fetch(fullURL, { ...options, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, ...options.headers } });
+      const response = await fetch(fullURL, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+          ...options.headers
+        }
+      });
+
       console.log(`API Response Status: ${response.status}`);
-      if (!response.ok) { if (response.status === 401) { console.log('Unauthorized, clearing token and redirecting'); localStorage.removeItem('token'); localStorage.removeItem('user'); router.push('/login'); return null; } throw new Error(`API Error: ${response.status} - ${response.statusText}`); }
-      const data = await response.json(); console.log(`API Response Data:`, data); return data;
-    } catch (error) { console.error('API call error:', error); return null; }
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          console.log('Unauthorized, clearing token and redirecting');
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          router.push('/login');
+          return null;
+        }
+        throw new Error(`API Error: ${response.status} - ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log(`API Response Data for ${endpoint}:`, data);
+      return data;
+    } catch (error) {
+      console.error(`API call error for ${endpoint}:`, error);
+      setApiErrors(prev => [...prev, `Failed to load ${endpoint}`]);
+      return null;
+    }
   }, [router]);
 
-  // Load dashboard data with better error handling
-  useEffect(() => {
-    const loadDashboardData = async () => {
+  // Load comprehensive dashboard data
+  const loadDashboardData = useCallback(async (isRefresh = false) => {
+    if (isRefresh) {
+      setRefreshing(true);
+    } else {
       setLoading(true);
-      try {
-        console.log('Loading dashboard data...');
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) { setUser(JSON.parse(storedUser)); }
-        if (!storedUser) { console.log('Loading user profile...'); const userProfile = await apiCall('/auth/profile'); if (userProfile) { setUser(userProfile); localStorage.setItem('user', JSON.stringify(userProfile)); } }
-        console.log('Loading dashboard stats...'); const dashboardStats = await apiCall('/dashboard/stats');
-        if (dashboardStats) { setStats(dashboardStats); } else { console.log('Failed to load stats, using defaults'); setStats({ totalTrips: 0, totalSpent: 0, upcomingTrips: 0, onTimeRate: 95 }); }
-        console.log('Loading recent trips...'); const recentTripsData = await apiCall('/dashboard/recent-trips');
-        if (recentTripsData && Array.isArray(recentTripsData)) { setRecentTrips(recentTripsData); } else { setRecentTrips([]); }
-        console.log('Loading upcoming trips...'); const upcomingTripsData = await apiCall('/dashboard/upcoming-trips');
-        if (upcomingTripsData && Array.isArray(upcomingTripsData)) { setUpcomingTrips(upcomingTripsData); } else { setUpcomingTrips([]); }
-      } catch (error) { console.error('Error loading dashboard data:', error); setStats({ totalTrips: 0, totalSpent: 0, upcomingTrips: 0, onTimeRate: 95 }); setRecentTrips([]); setUpcomingTrips([]); } finally { setLoading(false); }
-    };
-    const token = getToken(); if (!token) { router.push('/login'); return; } loadDashboardData();
-  }, [apiCall, router]);
+    }
+    
+    setApiErrors([]);
 
-  const createDemoData = async () => { console.log('Creating demo data...'); const result = await apiCall('/dashboard/demo-trip', { method: 'POST' }); if (result) { console.log('Demo data created successfully'); window.location.reload(); } else { console.log('Failed to create demo data'); } };
+    try {
+      console.log('Loading comprehensive dashboard data...');
 
-  const handleLogout = () => { localStorage.removeItem('token'); localStorage.removeItem('user'); router.push('/'); };
+      // Load user profile if not cached
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      } else {
+        console.log('Loading user profile...');
+        const userProfile = await apiCall('/auth/profile');
+        if (userProfile) {
+          setUser(userProfile);
+          localStorage.setItem('user', JSON.stringify(userProfile));
+        }
+      }
+
+      // Load dashboard stats
+      console.log('Loading dashboard stats...');
+      const dashboardStats = await apiCall('/dashboard/stats');
+      if (dashboardStats) {
+        setStats(dashboardStats);
+      }
+
+      // Load trip data
+      console.log('Loading trips data...');
+      const [recentTripsData, upcomingTripsData] = await Promise.all([
+        apiCall('/dashboard/recent-trips'),
+        apiCall('/dashboard/upcoming-trips')
+      ]);
+
+      if (recentTripsData && Array.isArray(recentTripsData)) {
+        setRecentTrips(recentTripsData);
+      }
+      if (upcomingTripsData && Array.isArray(upcomingTripsData)) {
+        setUpcomingTrips(upcomingTripsData);
+      }
+
+      // Load booking data
+      console.log('Loading bookings data...');
+      const bookingsData = await apiCall('/bookings?limit=5');
+      if (bookingsData && Array.isArray(bookingsData)) {
+        setRecentBookings(bookingsData);
+      }
+
+      // Load payment data
+      console.log('Loading payments data...');
+      const paymentsData = await apiCall('/payments/history?limit=5');
+      if (paymentsData && Array.isArray(paymentsData)) {
+        setRecentPayments(paymentsData);
+      }
+
+      setLastRefresh(new Date());
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+      setApiErrors(prev => [...prev, 'Failed to load dashboard data']);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [apiCall]);
+
+  // Initial data load
+  useEffect(() => {
+    const token = getToken();
+    if (!token) {
+      router.push('/login');
+      return;
+    }
+    loadDashboardData();
+  }, [loadDashboardData, router]);
+
+  // Auto-refresh every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadDashboardData(true);
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [loadDashboardData]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    router.push('/');
+  };
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
-    e.preventDefault(); if (!user) return; setProfileLoading(true); setProfileError(''); setProfileSuccess('');
-    const result = await apiCall('/dashboard/profile', { method: 'PUT', body: JSON.stringify({ name: user.name, email: user.email, phone: user.phone }) });
-    if (result) { setProfileSuccess('Profile updated successfully!'); setUser(result); localStorage.setItem('user', JSON.stringify(result)); setTimeout(() => { setProfileSuccess(''); }, 3000); } else { setProfileError('Failed to update profile'); }
+    e.preventDefault();
+    if (!user) return;
+
+    setProfileLoading(true);
+    setProfileError('');
+    setProfileSuccess('');
+
+    const result = await apiCall('/dashboard/profile', {
+      method: 'PUT',
+      body: JSON.stringify({
+        name: user.name,
+        email: user.email,
+        phone: user.phone
+      })
+    });
+
+    if (result) {
+      setProfileSuccess('Profile updated successfully!');
+      setUser(result);
+      localStorage.setItem('user', JSON.stringify(result));
+      setTimeout(() => setProfileSuccess(''), 3000);
+    } else {
+      setProfileError('Failed to update profile');
+    }
+
     setProfileLoading(false);
   };
 
   const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString();
+  const formatDateTime = (dateString: string) => new Date(dateString).toLocaleString();
   const formatPrice = (price: number) => `Rs. ${price.toLocaleString()}`;
 
-  // ✅ FIXED: Updated quickActions to use /search instead of /book
   const quickActions = [
-    { name: 'Book Ticket', href: '/search', color: '#F59E0B' },
-    { name: 'Track Bus', href: '/track', color: '#10B981' },
-    { name: 'View Routes', href: '/routes', color: '#3B82F6' },
-    { name: 'Payment History', href: '/payments', color: '#8B5CF6' }
+    { name: 'Search Routes', href: '/search', color: '#F59E0B', icon: '🔍' },
+    { name: 'My Bookings', href: '/bookings', color: '#10B981', icon: '🎫' },
+    { name: 'Track Vehicle', href: '/track', color: '#3B82F6', icon: '📍' },
+    { name: 'Payment History', href: '/payments', color: '#8B5CF6', icon: '💳' }
   ];
 
   if (loading) {
@@ -107,111 +286,232 @@ export default function DashboardPage() {
 
   const renderOverview = () => (
     <div>
+      {/* API Errors */}
+      {apiErrors.length > 0 && (
+        <div style={{ backgroundColor: '#fee2e2', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1rem', border: '1px solid #fecaca' }}>
+          <h4 style={{ color: '#b91c1c', margin: '0 0 0.5rem 0', fontSize: '0.9rem' }}>Connection Issues:</h4>
+          {apiErrors.map((error, index) => (
+            <div key={index} style={{ color: '#b91c1c', fontSize: '0.8rem' }}>• {error}</div>
+          ))}
+        </div>
+      )}
+
+      {/* Refresh Status */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        <div style={{ fontSize: '0.9rem', color: '#6B7280' }}>
+          Last updated: {formatDateTime(lastRefresh.toString())}
+        </div>
+        <button 
+          onClick={() => loadDashboardData(true)} 
+          disabled={refreshing}
+          style={{ 
+            backgroundColor: refreshing ? '#9CA3AF' : '#F59E0B', 
+            color: 'white', 
+            padding: '0.5rem 1rem', 
+            border: 'none', 
+            borderRadius: '0.5rem', 
+            cursor: refreshing ? 'not-allowed' : 'pointer',
+            fontSize: '0.8rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}
+        >
+          {refreshing ? '🔄 Refreshing...' : '🔄 Refresh'}
+        </button>
+      </div>
+
       {/* Enhanced Stats Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
         <div style={{ backgroundColor: 'white', padding: '1.5rem', borderRadius: '0.5rem', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)' }}>
-          <h3 style={{ color: '#F59E0B', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>{stats?.totalTrips || stats?.totalBookings || 0}</h3>
-          <p style={{ color: '#6B7280', margin: '0.5rem 0 0 0' }}>{stats?.totalBookings ? 'Total Bookings' : 'Total Trips'}</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+            <span style={{ fontSize: '1.5rem' }}>🎫</span>
+            <h3 style={{ color: '#F59E0B', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>
+              {stats?.totalBookings || stats?.totalTrips || 0}
+            </h3>
+          </div>
+          <p style={{ color: '#6B7280', margin: 0 }}>Total Bookings</p>
         </div>
+        
         <div style={{ backgroundColor: 'white', padding: '1.5rem', borderRadius: '0.5rem', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)' }}>
-          <h3 style={{ color: '#10B981', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>{formatPrice(stats?.totalSpent || 0)}</h3>
-          <p style={{ color: '#6B7280', margin: '0.5rem 0 0 0' }}>Total Spent</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+            <span style={{ fontSize: '1.5rem' }}>💰</span>
+            <h3 style={{ color: '#10B981', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>
+              {formatPrice(stats?.totalSpent || 0)}
+            </h3>
+          </div>
+          <p style={{ color: '#6B7280', margin: 0 }}>Total Spent</p>
         </div>
+        
         <div style={{ backgroundColor: 'white', padding: '1.5rem', borderRadius: '0.5rem', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)' }}>
-          <h3 style={{ color: '#3B82F6', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>{stats?.upcomingTrips || 0}</h3>
-          <p style={{ color: '#6B7280', margin: '0.5rem 0 0 0' }}>Upcoming Trips</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+            <span style={{ fontSize: '1.5rem' }}>🚌</span>
+            <h3 style={{ color: '#3B82F6', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>
+              {stats?.upcomingTrips || 0}
+            </h3>
+          </div>
+          <p style={{ color: '#6B7280', margin: 0 }}>Upcoming Trips</p>
         </div>
+        
         <div style={{ backgroundColor: 'white', padding: '1.5rem', borderRadius: '0.5rem', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)' }}>
-          <h3 style={{ color: '#8B5CF6', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>{stats?.onTimeRate || 0}%</h3>
-          <p style={{ color: '#6B7280', margin: '0.5rem 0 0 0' }}>On-Time Rate</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+            <span style={{ fontSize: '1.5rem' }}>⏰</span>
+            <h3 style={{ color: '#8B5CF6', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>
+              {stats?.onTimeRate || 0}%
+            </h3>
+          </div>
+          <p style={{ color: '#6B7280', margin: 0 }}>On-Time Rate</p>
         </div>
       </div>
 
       {/* Quick Actions */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
         {quickActions.map(action => (
-          <Link key={action.name} href={action.href} style={{ backgroundColor: action.color, color: 'white', padding: '1rem', borderRadius: '0.5rem', textDecoration: 'none', textAlign: 'center', fontWeight: '600', transition: 'all 0.3s ease', boxShadow: '0 2px 4px 0 rgba(0, 0, 0, 0.1)' }} onMouseOver={(e) => { e.currentTarget.style.opacity = '0.9'; e.currentTarget.style.transform = 'translateY(-2px)'; }} onMouseOut={(e) => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'translateY(0)'; }}>
+          <Link 
+            key={action.name} 
+            href={action.href}
+            style={{ 
+              backgroundColor: action.color, 
+              color: 'white', 
+              padding: '1rem', 
+              borderRadius: '0.5rem', 
+              textDecoration: 'none', 
+              textAlign: 'center', 
+              fontWeight: '600', 
+              transition: 'all 0.3s ease', 
+              boxShadow: '0 2px 4px 0 rgba(0, 0, 0, 0.1)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.opacity = '0.9';
+              e.currentTarget.style.transform = 'translateY(-2px)';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.opacity = '1';
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
+          >
+            <span style={{ fontSize: '1.5rem' }}>{action.icon}</span>
             {action.name}
           </Link>
         ))}
       </div>
 
-      {/* Demo Data Section */}
-      {(!stats || (stats.totalTrips === 0 && !stats.totalBookings)) && (
-        <div style={{ backgroundColor: '#FEF3C7', padding: '1rem', borderRadius: '0.5rem', border: '1px solid #FCD34D', marginBottom: '2rem' }}>
-          <p style={{ margin: 0, color: '#92400E' }}>No trip data found. Click here to create some demo trips for testing:</p>
-          <button onClick={createDemoData} style={{ backgroundColor: '#F59E0B', color: 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: '0.5rem', marginTop: '0.5rem', cursor: 'pointer', fontWeight: '600' }}>Create Demo Data</button>
-        </div>
-      )}
-
-      {/* System Status */}
-      <div style={{ backgroundColor: 'white', padding: '1.5rem', borderRadius: '0.5rem', border: '1px solid #e5e7eb', marginBottom: '2rem', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)' }}>
-        <h3 style={{ marginBottom: '1rem', fontSize: '1.2rem', fontWeight: '600' }}>System Status</h3>
-        <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <div style={{ width: '8px', height: '8px', backgroundColor: '#10B981', borderRadius: '50%' }}></div>
-            <span style={{ color: '#6B7280', fontSize: '0.9rem' }}>API Connected</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <div style={{ width: '8px', height: '8px', backgroundColor: '#10B981', borderRadius: '50%' }}></div>
-            <span style={{ color: '#6B7280', fontSize: '0.9rem' }}>Real-time Updates</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <div style={{ width: '8px', height: '8px', backgroundColor: '#F59E0B', borderRadius: '50%' }}></div>
-            <span style={{ color: '#6B7280', fontSize: '0.9rem' }}>Enhanced Features Available</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Upcoming Trips */}
-      <div style={{ backgroundColor: 'white', padding: '1.5rem', borderRadius: '0.5rem', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)' }}>
-        <h3 style={{ marginBottom: '1rem', fontSize: '1.2rem', fontWeight: '600' }}>Upcoming Trips</h3>
-        {upcomingTrips.length > 0 ? (
-          upcomingTrips.map(trip => (
-            <div key={trip._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', border: '1px solid #f3f4f6', borderRadius: '0.5rem', marginBottom: '0.5rem', backgroundColor: '#f9fafb' }}>
-              <div>
-                <div style={{ fontWeight: '600', color: '#1F2937' }}>{trip.route}</div>
-                <div style={{ color: '#6B7280', fontSize: '0.9rem' }}>{formatDate(trip.date)} {trip.time && `at ${trip.time}`} {trip.seat && `• Seat: ${trip.seat}`}</div>
+      {/* Recent Activity */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
+        {/* Recent Bookings */}
+        <div style={{ backgroundColor: 'white', padding: '1.5rem', borderRadius: '0.5rem', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)' }}>
+          <h3 style={{ marginBottom: '1rem', fontSize: '1.2rem', fontWeight: '600' }}>Recent Bookings</h3>
+          {recentBookings.length > 0 ? (
+            recentBookings.slice(0, 3).map(booking => (
+              <div key={booking._id} style={{ padding: '0.75rem', border: '1px solid #f3f4f6', borderRadius: '0.5rem', marginBottom: '0.5rem', backgroundColor: '#f9fafb' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <div style={{ fontWeight: '600', color: '#1F2937', fontSize: '0.9rem' }}>Booking #{booking.bookingId}</div>
+                    <div style={{ color: '#6B7280', fontSize: '0.8rem' }}>{formatDate(booking.travelDate)}</div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ color: '#F59E0B', fontWeight: '600', fontSize: '0.9rem' }}>{formatPrice(booking.pricing.totalAmount)}</div>
+                    <div style={{ fontSize: '0.7rem', color: booking.status === 'confirmed' ? '#10B981' : '#6B7280', textTransform: 'capitalize' }}>{booking.status}</div>
+                  </div>
+                </div>
               </div>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ color: '#F59E0B', fontWeight: '600' }}>{formatPrice(trip.price)}</div>
-                <div style={{ fontSize: '0.8rem', color: '#10B981', textTransform: 'capitalize' }}>{trip.status}</div>
+            ))
+          ) : (
+            <div style={{ textAlign: 'center', padding: '1rem', color: '#6B7280', fontSize: '0.9rem' }}>No recent bookings</div>
+          )}
+          {recentBookings.length > 0 && (
+            <Link href="/bookings" style={{ color: '#F59E0B', textDecoration: 'none', fontSize: '0.9rem', fontWeight: '600' }}>View all bookings →</Link>
+          )}
+        </div>
+
+        {/* Recent Payments */}
+        <div style={{ backgroundColor: 'white', padding: '1.5rem', borderRadius: '0.5rem', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)' }}>
+          <h3 style={{ marginBottom: '1rem', fontSize: '1.2rem', fontWeight: '600' }}>Recent Payments</h3>
+          {recentPayments.length > 0 ? (
+            recentPayments.slice(0, 3).map(payment => (
+              <div key={payment._id} style={{ padding: '0.75rem', border: '1px solid #f3f4f6', borderRadius: '0.5rem', marginBottom: '0.5rem', backgroundColor: '#f9fafb' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <div style={{ fontWeight: '600', color: '#1F2937', fontSize: '0.9rem' }}>Payment #{payment.paymentId}</div>
+                    <div style={{ color: '#6B7280', fontSize: '0.8rem' }}>{formatDate(payment.createdAt)}</div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ color: '#10B981', fontWeight: '600', fontSize: '0.9rem' }}>{formatPrice(payment.amount.total)}</div>
+                    <div style={{ fontSize: '0.7rem', color: payment.status === 'completed' ? '#10B981' : '#6B7280', textTransform: 'capitalize' }}>{payment.status}</div>
+                  </div>
+                </div>
               </div>
-            </div>
-          ))
-        ) : (
-          <div style={{ textAlign: 'center', padding: '2rem', color: '#6B7280', backgroundColor: '#f9fafb', borderRadius: '0.5rem' }}>
-            <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🚌</div>
-            <p style={{ margin: 0 }}>No upcoming trips</p>
-            <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem' }}>Book your next journey!</p>
-          </div>
-        )}
+            ))
+          ) : (
+            <div style={{ textAlign: 'center', padding: '1rem', color: '#6B7280', fontSize: '0.9rem' }}>No recent payments</div>
+          )}
+          {recentPayments.length > 0 && (
+            <Link href="/payments" style={{ color: '#F59E0B', textDecoration: 'none', fontSize: '0.9rem', fontWeight: '600' }}>View all payments →</Link>
+          )}
+        </div>
       </div>
     </div>
   );
 
   const renderTrips = () => (
     <div style={{ backgroundColor: 'white', padding: '1.5rem', borderRadius: '0.5rem', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)' }}>
-      <h3 style={{ marginBottom: '1rem', fontSize: '1.2rem', fontWeight: '600' }}>Recent Trips</h3>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '600' }}>My Trips</h3>
+        <Link href="/bookings" style={{ color: '#F59E0B', textDecoration: 'none', fontSize: '0.9rem', fontWeight: '600' }}>
+          View all bookings →
+        </Link>
+      </div>
+      
+      {/* Upcoming Trips */}
+      {upcomingTrips.length > 0 && (
+        <div style={{ marginBottom: '2rem' }}>
+          <h4 style={{ color: '#1F2937', fontSize: '1rem', fontWeight: '600', marginBottom: '1rem' }}>Upcoming Trips</h4>
+          {upcomingTrips.map(trip => (
+            <div key={trip._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', border: '1px solid #f3f4f6', borderRadius: '0.5rem', marginBottom: '0.5rem', backgroundColor: '#f0f9ff' }}>
+              <div>
+                <div style={{ fontWeight: '600', color: '#1F2937' }}>{trip.route}</div>
+                <div style={{ color: '#6B7280', fontSize: '0.9rem' }}>{trip.fromLocation} → {trip.toLocation}</div>
+                <div style={{ color: '#6B7280', fontSize: '0.8rem' }}>{formatDate(trip.date)} {trip.time && `at ${trip.time}`} {trip.seat && `• Seat: ${trip.seat}`}</div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ color: '#F59E0B', fontWeight: '600' }}>{formatPrice(trip.price)}</div>
+                <div style={{ fontSize: '0.8rem', color: '#3B82F6', textTransform: 'capitalize' }}>{trip.status}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Recent Trips */}
       {recentTrips.length > 0 ? (
-        recentTrips.map(trip => (
-          <div key={trip._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', border: '1px solid #f3f4f6', borderRadius: '0.5rem', marginBottom: '0.5rem', backgroundColor: '#f9fafb' }}>
-            <div>
-              <div style={{ fontWeight: '600', color: '#1F2937' }}>{trip.route}</div>
-              <div style={{ color: '#6B7280', fontSize: '0.9rem' }}>{trip.fromLocation} → {trip.toLocation}</div>
-              <div style={{ color: '#6B7280', fontSize: '0.8rem' }}>{formatDate(trip.date)}</div>
+        <div>
+          <h4 style={{ color: '#1F2937', fontSize: '1rem', fontWeight: '600', marginBottom: '1rem' }}>Recent Trips</h4>
+          {recentTrips.map(trip => (
+            <div key={trip._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', border: '1px solid #f3f4f6', borderRadius: '0.5rem', marginBottom: '0.5rem', backgroundColor: '#f9fafb' }}>
+              <div>
+                <div style={{ fontWeight: '600', color: '#1F2937' }}>{trip.route}</div>
+                <div style={{ color: '#6B7280', fontSize: '0.9rem' }}>{trip.fromLocation} → {trip.toLocation}</div>
+                <div style={{ color: '#6B7280', fontSize: '0.8rem' }}>{formatDate(trip.date)}</div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ color: trip.status === 'completed' ? '#10B981' : trip.status === 'cancelled' ? '#EF4444' : '#F59E0B', fontWeight: '600', fontSize: '0.9rem', textTransform: 'capitalize', marginBottom: '0.25rem' }}>{trip.status}</div>
+                <div style={{ color: '#1F2937', fontWeight: '600' }}>{formatPrice(trip.price)}</div>
+              </div>
             </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ color: trip.status === 'completed' ? '#10B981' : trip.status === 'cancelled' ? '#EF4444' : '#F59E0B', fontWeight: '600', fontSize: '0.9rem', textTransform: 'capitalize', marginBottom: '0.25rem' }}>{trip.status}</div>
-              <div style={{ color: '#1F2937', fontWeight: '600' }}>{formatPrice(trip.price)}</div>
-            </div>
-          </div>
-        ))
+          ))}
+        </div>
       ) : (
         <div style={{ textAlign: 'center', padding: '2rem', color: '#6B7280', backgroundColor: '#f9fafb', borderRadius: '0.5rem' }}>
-          <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📝</div>
-          <p style={{ margin: 0 }}>No recent trips</p>
-          <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem' }}>Your trip history will appear here</p>
+          <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🚌</div>
+          <p style={{ margin: 0 }}>No trips yet</p>
+          <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem' }}>Book your first journey!</p>
+          <Link href="/search" style={{ display: 'inline-block', marginTop: '1rem', backgroundColor: '#F59E0B', color: 'white', padding: '0.5rem 1rem', borderRadius: '0.5rem', textDecoration: 'none', fontWeight: '600' }}>
+            Search Routes
+          </Link>
         </div>
       )}
     </div>
@@ -221,23 +521,63 @@ export default function DashboardPage() {
     <div style={{ backgroundColor: 'white', padding: '1.5rem', borderRadius: '0.5rem', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)' }}>
       <h3 style={{ marginBottom: '1.5rem', fontSize: '1.2rem', fontWeight: '600' }}>Profile Information</h3>
       
-      {profileError && ( <div style={{ padding: '1rem', backgroundColor: '#fee2e2', color: '#b91c1c', borderRadius: '0.5rem', marginBottom: '1rem', border: '1px solid #fecaca' }}>{profileError}</div> )}
-      {profileSuccess && ( <div style={{ padding: '1rem', backgroundColor: '#d1fae5', color: '#065f46', borderRadius: '0.5rem', marginBottom: '1rem', border: '1px solid #a7f3d0' }}>{profileSuccess}</div> )}
+      {profileError && (
+        <div style={{ padding: '1rem', backgroundColor: '#fee2e2', color: '#b91c1c', borderRadius: '0.5rem', marginBottom: '1rem', border: '1px solid #fecaca' }}>
+          {profileError}
+        </div>
+      )}
+      {profileSuccess && (
+        <div style={{ padding: '1rem', backgroundColor: '#d1fae5', color: '#065f46', borderRadius: '0.5rem', marginBottom: '1rem', border: '1px solid #a7f3d0' }}>
+          {profileSuccess}
+        </div>
+      )}
 
       <form onSubmit={handleProfileUpdate}>
         <div style={{ marginBottom: '1rem' }}>
           <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151' }}>Full Name</label>
-          <input type="text" value={user?.name || ''} onChange={(e) => setUser(user ? {...user, name: e.target.value} : null)} style={{ width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', boxSizing: 'border-box', fontSize: '1rem' }} placeholder="Enter your full name" />
+          <input 
+            type="text" 
+            value={user?.name || ''} 
+            onChange={(e) => setUser(user ? {...user, name: e.target.value} : null)} 
+            style={{ width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', boxSizing: 'border-box', fontSize: '1rem' }} 
+            placeholder="Enter your full name" 
+          />
         </div>
         <div style={{ marginBottom: '1rem' }}>
           <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151' }}>Email Address</label>
-          <input type="email" value={user?.email || ''} onChange={(e) => setUser(user ? {...user, email: e.target.value} : null)} style={{ width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', boxSizing: 'border-box', fontSize: '1rem' }} placeholder="Enter your email address" />
+          <input 
+            type="email" 
+            value={user?.email || ''} 
+            onChange={(e) => setUser(user ? {...user, email: e.target.value} : null)} 
+            style={{ width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', boxSizing: 'border-box', fontSize: '1rem' }} 
+            placeholder="Enter your email address" 
+          />
         </div>
         <div style={{ marginBottom: '1.5rem' }}>
           <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151' }}>Phone Number</label>
-          <input type="tel" value={user?.phone || ''} onChange={(e) => setUser(user ? {...user, phone: e.target.value} : null)} style={{ width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', boxSizing: 'border-box', fontSize: '1rem' }} placeholder="Enter your phone number" />
+          <input 
+            type="tel" 
+            value={user?.phone || ''} 
+            onChange={(e) => setUser(user ? {...user, phone: e.target.value} : null)} 
+            style={{ width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', boxSizing: 'border-box', fontSize: '1rem' }} 
+            placeholder="Enter your phone number" 
+          />
         </div>
-        <button type="submit" disabled={profileLoading} style={{ backgroundColor: profileLoading ? '#9CA3AF' : '#F59E0B', color: 'white', padding: '0.75rem 1.5rem', border: 'none', borderRadius: '0.5rem', fontWeight: '600', cursor: profileLoading ? 'not-allowed' : 'pointer', fontSize: '1rem', transition: 'all 0.3s ease' }}>
+        <button 
+          type="submit" 
+          disabled={profileLoading}
+          style={{ 
+            backgroundColor: profileLoading ? '#9CA3AF' : '#F59E0B', 
+            color: 'white', 
+            padding: '0.75rem 1.5rem', 
+            border: 'none', 
+            borderRadius: '0.5rem', 
+            fontWeight: '600', 
+            cursor: profileLoading ? 'not-allowed' : 'pointer', 
+            fontSize: '1rem', 
+            transition: 'all 0.3s ease' 
+          }}
+        >
           {profileLoading ? 'Updating...' : 'Update Profile'}
         </button>
       </form>
@@ -254,7 +594,14 @@ export default function DashboardPage() {
           </Link>
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
             <span style={{ color: '#6B7280' }}>Welcome, {user?.name || 'User'}</span>
-            <button onClick={handleLogout} style={{ backgroundColor: '#EF4444', color: 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', fontWeight: '600', transition: 'all 0.3s ease' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#DC2626'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#EF4444'}>Logout</button>
+            <button 
+              onClick={handleLogout} 
+              style={{ backgroundColor: '#EF4444', color: 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', fontWeight: '600', transition: 'all 0.3s ease' }} 
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#DC2626'} 
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#EF4444'}
+            >
+              Logout
+            </button>
           </div>
         </div>
       </nav>
@@ -273,7 +620,25 @@ export default function DashboardPage() {
             { id: 'trips', name: 'My Trips', icon: '🚌' },
             { id: 'profile', name: 'Profile', icon: '👤' }
           ].map(tab => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ padding: '1rem 1.5rem', border: 'none', backgroundColor: activeTab === tab.id ? '#F59E0B' : 'transparent', cursor: 'pointer', fontWeight: '600', color: activeTab === tab.id ? 'white' : '#6B7280', borderRadius: 0, transition: 'all 0.3s ease', display: 'flex', alignItems: 'center', gap: '0.5rem' }} onMouseOver={(e) => { if (activeTab !== tab.id) { e.currentTarget.style.backgroundColor = '#f9fafb'; } }} onMouseOut={(e) => { if (activeTab !== tab.id) { e.currentTarget.style.backgroundColor = 'transparent'; } }}>
+            <button 
+              key={tab.id} 
+              onClick={() => setActiveTab(tab.id)} 
+              style={{ 
+                padding: '1rem 1.5rem', 
+                border: 'none', 
+                backgroundColor: activeTab === tab.id ? '#F59E0B' : 'transparent', 
+                cursor: 'pointer', 
+                fontWeight: '600', 
+                color: activeTab === tab.id ? 'white' : '#6B7280', 
+                borderRadius: 0, 
+                transition: 'all 0.3s ease', 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '0.5rem' 
+              }} 
+              onMouseOver={(e) => { if (activeTab !== tab.id) { e.currentTarget.style.backgroundColor = '#f9fafb'; } }} 
+              onMouseOut={(e) => { if (activeTab !== tab.id) { e.currentTarget.style.backgroundColor = 'transparent'; } }}
+            >
               <span>{tab.icon}</span>{tab.name}
             </button>
           ))}

@@ -1,3 +1,4 @@
+// src/app/login/page.tsx - FIXED VERSION WITH CORRECT API URL
 "use client";
 
 import { useState } from 'react';
@@ -30,22 +31,40 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+      // ✅ FIXED: Correct API URL with /api prefix
+      const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiURL = `${baseURL}/api/auth/login`;
+      
+      console.log('🔐 Login API Call:', apiURL);
+      console.log('📦 Login Data:', formData);
+
+      const response = await fetch(apiURL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(formData),
       });
+      
+      console.log('📡 Login Response Status:', response.status);
+      
       const data = await response.json();
+      console.log('📋 Login Response Data:', data);
 
       if (!response.ok) {
         throw new Error(data.message || 'Login failed');
       }
 
+      // Store token and user info
       localStorage.setItem('token', data.token);
+      if (data.user) {
+        localStorage.setItem('user', JSON.stringify(data.user));
+      }
+
+      console.log('✅ Login successful, redirecting to dashboard...');
       router.push('/dashboard');
     } catch (err: unknown) {
+      console.error('❌ Login error:', err);
       if (err instanceof Error) {
         setError(err.message);
       } else {
@@ -84,7 +103,7 @@ export default function LoginPage() {
             fontWeight: 'bold' as const,
             color: '#111827',
           }}>
-            <span>ශ්‍රී</span> E<span style={{ color: '#DC2626' }}>x</span>press
+            <span style={{ color: '#F59E0B' }}>ශ්‍රී</span> E<span style={{ color: '#DC2626' }}>x</span>press
           </h1>
           <p style={{
             marginTop: '0.5rem',
@@ -101,7 +120,7 @@ export default function LoginPage() {
             marginBottom: '1rem',
             border: '1px solid #fecaca',
           }}>
-            {error}
+            <strong>Error:</strong> {error}
           </div>
         )}
         
@@ -116,7 +135,7 @@ export default function LoginPage() {
               fontWeight: '600' as const,
               color: '#374151',
               marginBottom: '0.5rem',
-            }}>Email</label>
+            }}>Email *</label>
             <div style={{
               position: 'relative' as const,
             }}>
@@ -158,7 +177,7 @@ export default function LoginPage() {
               fontWeight: '600' as const,
               color: '#374151',
               marginBottom: '0.5rem',
-            }}>Password</label>
+            }}>Password *</label>
             <div style={{
               position: 'relative' as const,
             }}>
@@ -240,17 +259,17 @@ export default function LoginPage() {
 
           <button type="submit" disabled={loading} style={{
             width: '100%',
-            backgroundColor: '#F59E0B',
+            backgroundColor: loading ? '#9CA3AF' : '#F59E0B',
             color: 'white',
             fontWeight: '700' as const,
             padding: '0.75rem',
             borderRadius: '0.5rem',
             border: 'none',
-            cursor: 'pointer' as const,
+            cursor: loading ? 'not-allowed' : 'pointer' as const,
             fontSize: '1rem',
-            opacity: loading ? 0.7 : 1,
+            transition: 'background-color 0.2s',
           }}>
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? '🔄 Signing in...' : '🔐 Sign In'}
           </button>
         </form>
         
@@ -269,6 +288,19 @@ export default function LoginPage() {
               Register here
             </Link>
           </p>
+        </div>
+        
+        {/* Debug info (remove in production) */}
+        <div style={{
+          marginTop: '1rem',
+          padding: '0.5rem',
+          backgroundColor: '#f9fafb',
+          borderRadius: '0.25rem',
+          fontSize: '0.75rem',
+          color: '#6b7280',
+          textAlign: 'center' as const,
+        }}>
+          API URL: {process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/auth/login
         </div>
         
       </div>

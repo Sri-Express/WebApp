@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { ThemeProvider } from "./context/ThemeContext"; // Correct import based on your folder structure
 import "./globals.css";
 import "./landing_styles.css";
 
@@ -14,11 +15,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <head>
-        <link href="https://cdn.jsdelivr.net/npm/tailwindcss@4.1.7/dist/tailwind.min.css" rel="stylesheet" />
-      </head>
+      {/* It's better practice to import Tailwind in globals.css rather than linking it here */}
+      <head /> 
       <body>
-        {children}
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );
