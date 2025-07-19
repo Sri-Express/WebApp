@@ -22,6 +22,8 @@ interface VehicleLocation {
   environmentalData: { weather: string; temperature: number; trafficCondition: string; }; timestamp: string;
 }
 interface Route { _id: string; name: string; startLocation: { name: string; address: string; }; endLocation: { name: string; address: string; }; waypoints: Array<{ name: string; coordinates: [number, number]; order: number; }>; }
+interface SimulationStatus { isRunning: boolean; speedMultiplier: number; }
+type ViewMode = 'map' | 'list' | 'both';
 
 // --- MAIN COMPONENT ---
 export default function AdvancedTrackingPage() {
@@ -31,12 +33,12 @@ export default function AdvancedTrackingPage() {
   const [routes, setRoutes] = useState<Route[]>([]);
   const [selectedRoute, setSelectedRoute] = useState<string>('all');
   const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'map' | 'list' | 'both'>('both');
+  const [viewMode, setViewMode] = useState<ViewMode>('both');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [autoRefresh, setAutoRefresh] = useState(true);
-  const [simulationStatus, setSimulationStatus] = useState<any>(null);
+  const [simulationStatus, setSimulationStatus] = useState<SimulationStatus | null>(null);
   
   // --- CONSISTENT THEME STYLING ---
   const lightTheme = {
@@ -132,9 +134,9 @@ export default function AdvancedTrackingPage() {
   }, [apiCall]);
 
   useEffect(() => {
-    const loadData = async () => { setLoading(true); await Promise.all([loadVehicleLocations(), loadRoutes()]); await loadSimulationStatus(); setLoading(false); };
+    const loadData = async () => { setLoading(true); await Promise.all([loadVehicleLocations(), loadRoutes(), loadSimulationStatus()]); setLoading(false); };
     loadData();
-  }, []);
+  }, [loadVehicleLocations, loadRoutes, loadSimulationStatus]);
 
   useEffect(() => {
     if (!autoRefresh) return;
@@ -227,7 +229,7 @@ export default function AdvancedTrackingPage() {
             </div>
             <div style={{ display: 'flex', gap: '0.5rem', backgroundColor: currentThemeStyles.buttonBg, padding: '0.25rem', borderRadius: '0.6rem' }}>
               {['map', 'list', 'both'].map((mode) => (
-                <button key={mode} onClick={() => setViewMode(mode as any)} style={{ backgroundColor: viewMode === mode ? '#3B82F6' : 'transparent', color: viewMode === mode ? 'white' : currentThemeStyles.textSecondary, padding: '0.5rem 1rem', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', fontSize: '0.875rem', fontWeight: '500', textTransform: 'capitalize' }}>{mode}</button>
+                <button key={mode} onClick={() => setViewMode(mode as ViewMode)} style={{ backgroundColor: viewMode === mode ? '#3B82F6' : 'transparent', color: viewMode === mode ? 'white' : currentThemeStyles.textSecondary, padding: '0.5rem 1rem', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', fontSize: '0.875rem', fontWeight: '500', textTransform: 'capitalize' }}>{mode}</button>
               ))}
             </div>
           </div>

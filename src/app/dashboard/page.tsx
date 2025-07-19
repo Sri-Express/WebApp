@@ -132,16 +132,23 @@ export default function ClientDashboardPage() {
       if (recentTripsData && Array.isArray(recentTripsData)) setRecentTrips(recentTripsData);
       if (upcomingTripsData && Array.isArray(upcomingTripsData)) setUpcomingTrips(upcomingTripsData);
 
-      const extractArray = (response: any, key: string) => {
+      const extractArray = <T>(response: unknown, key: string): T[] => {
         if (!response) return [];
-        if (Array.isArray(response)) return response;
-        if (response[key] && Array.isArray(response[key])) return response[key];
-        if (response.data && Array.isArray(response.data)) return response.data;
+        if (Array.isArray(response)) return response as T[];
+        if (typeof response === 'object' && response !== null) {
+          const res = response as Record<string, unknown>;
+          if (res[key] && Array.isArray(res[key])) {
+            return res[key] as T[];
+          }
+          if (res.data && Array.isArray(res.data)) {
+            return res.data as T[];
+          }
+        }
         return [];
       };
 
-      setRecentBookings(extractArray(bookingsResponse, 'bookings'));
-      setRecentPayments(extractArray(paymentsResponse, 'payments'));
+      setRecentBookings(extractArray<Booking>(bookingsResponse, 'bookings'));
+      setRecentPayments(extractArray<Payment>(paymentsResponse, 'payments'));
   
       setLastRefresh(new Date());
     } catch (error) {
