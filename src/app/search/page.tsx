@@ -217,7 +217,8 @@ export default function RouteSearchPage() {
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: currentThemeStyles.textSecondary }}>Vehicle Type</label>
-                  <select value={filters.vehicleType} onChange={(e) => setFilters(prev => ({ ...prev, vehicleType: e.target.value as any }))} className="form-select" style={{ backgroundColor: currentThemeStyles.alertBg, color: currentThemeStyles.textPrimary, border: `1px solid ${currentThemeStyles.quickActionBorder}` }}>
+                  {/* ✅ FIXED: Cast to the specific union type instead of any */}
+                  <select value={filters.vehicleType} onChange={(e) => setFilters(prev => ({ ...prev, vehicleType: e.target.value as SearchFilters['vehicleType'] }))} className="form-select" style={{ backgroundColor: currentThemeStyles.alertBg, color: currentThemeStyles.textPrimary, border: `1px solid ${currentThemeStyles.quickActionBorder}` }}>
                     <option value="all">All Vehicles</option>
                     <option value="bus">Bus</option>
                     <option value="train">Train</option>
@@ -231,7 +232,8 @@ export default function RouteSearchPage() {
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: currentThemeStyles.textSecondary }}>Sort By</label>
-                  <select value={filters.sortBy} onChange={(e) => setFilters(prev => ({ ...prev, sortBy: e.target.value as any }))} className="form-select" style={{ backgroundColor: currentThemeStyles.alertBg, color: currentThemeStyles.textPrimary, border: `1px solid ${currentThemeStyles.quickActionBorder}` }}>
+                  {/* ✅ FIXED: Cast to the specific union type instead of any */}
+                  <select value={filters.sortBy} onChange={(e) => setFilters(prev => ({ ...prev, sortBy: e.target.value as SearchFilters['sortBy'] }))} className="form-select" style={{ backgroundColor: currentThemeStyles.alertBg, color: currentThemeStyles.textPrimary, border: `1px solid ${currentThemeStyles.quickActionBorder}` }}>
                     <option value="departure">Departure Time</option>
                     <option value="price">Price</option>
                     <option value="duration">Duration</option>

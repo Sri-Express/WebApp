@@ -30,16 +30,19 @@ export default function SystemAdminLoginPage() {
     setLoading(true);
     setError('');
 
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-      const data = await response.json();
-
+ try {
+  // ✅ FIXED: Add /api prefix to match your backend API structure
+  const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+  const apiURL = `${baseURL}/api/auth/login`;
+  
+  const response = await fetch(apiURL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(formData),
+  });
+  const data = await response.json();
       if (!response.ok) {
         // Check if MFA is required
         if (data.requiresMfa && !mfaRequired) {

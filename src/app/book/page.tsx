@@ -274,13 +274,13 @@ export default function BookingPage() {
       } else {
         throw new Error('Invalid response from booking API');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('💥 Booking error:', error);
       
       // ✅ FIXED: Proper error message handling
       let errorMessage = 'Failed to create booking. Please try again.';
       
-      if (error.message) {
+      if (error instanceof Error && error.message) {
         // Extract readable error message
         if (error.message.includes('validation')) {
           errorMessage = 'Please check all required fields and try again.';
@@ -520,7 +520,7 @@ export default function BookingPage() {
             value={bookingData.passengerInfo.passengerType}
             onChange={(e) => setBookingData(prev => ({ 
               ...prev, 
-              passengerInfo: { ...prev.passengerInfo, passengerType: e.target.value as any }
+              passengerInfo: { ...prev.passengerInfo, passengerType: e.target.value as BookingData['passengerInfo']['passengerType'] }
             }))}
             style={{
               width: '100%',
@@ -556,7 +556,7 @@ export default function BookingPage() {
             value={bookingData.seatInfo.seatType}
             onChange={(e) => setBookingData(prev => ({ 
               ...prev, 
-              seatInfo: { ...prev.seatInfo, seatType: e.target.value as any }
+              seatInfo: { ...prev.seatInfo, seatType: e.target.value as BookingData['seatInfo']['seatType'] }
             }))}
             style={{
               width: '100%',
@@ -581,7 +581,7 @@ export default function BookingPage() {
             value={bookingData.paymentMethod}
             onChange={(e) => setBookingData(prev => ({ 
               ...prev, 
-              paymentMethod: e.target.value as any
+              paymentMethod: e.target.value as BookingData['paymentMethod']
             }))}
             style={{
               width: '100%',

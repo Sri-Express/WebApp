@@ -22,12 +22,167 @@ export default function AddDevicePage() {
   const [loadingUsers, setLoadingUsers] = useState(false);
 
   const getToken = () => localStorage.getItem('token');
-  const apiCall = useCallback(async (endpoint: string, options: RequestInit = {}) => { const token = getToken(); if (!token) { router.push('/sysadmin/login'); return null; } try { const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${endpoint}`, { ...options, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, ...options.headers, }, }); if (!response.ok) { if (response.status === 401) { localStorage.removeItem('token'); router.push('/sysadmin/login'); return null; } throw new Error(`API Error: ${response.status}`); } return await response.json(); } catch (error) { console.error('API call error:', error); return null; } }, [router]);
+
+  // Enhanced apiCall function to capture backend error details
+  const apiCall = useCallback(async (endpoint: string, options: RequestInit = {}) => {
+    const token = getToken();
+    if (!token) {
+      router.push('/sysadmin/login');
+      return null;
+    }
+  
+    try {
+      const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const fullURL = `${baseURL}/api${endpoint}`;
+      console.log('API Call URL:', fullURL);
+      
+      const response = await fetch(fullURL, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+          ...options.headers,
+        },
+      });
+  
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+  
+      if (!response.ok) {
+        // ✅ CAPTURE ERROR RESPONSE: Get the actual error message from backend
+        let errorData;
+        try {
+          errorData = await response.json();
+          console.log('=== BACKEND ERROR RESPONSE ===');
+          console.log(JSON.stringify(errorData, null, 2));
+        } catch (parseError) {
+          console.log('Could not parse error response as JSON');
+          const errorText = await response.text();
+          console.log('Error response text:', errorText);
+        }
+  
+        if (response.status === 401) {
+          localStorage.removeItem('token');
+          router.push('/sysadmin/login');
+          return null;
+        }
+        
+        throw new Error(`API Error: ${response.status} - ${errorData?.message || response.statusText}`);
+      }
+  
+      return await response.json();
+    } catch (error) {
+      console.error('API call error:', error);
+      // Re-throw the error so it can be caught by the calling function (handleSubmit)
+      throw error;
+    }
+  }, [router]);
+
   useEffect(() => { const loadUsers = async () => { setLoadingUsers(true); try { const response = await apiCall('/admin/users?limit=100&role=route_admin,company_admin'); if (response?.users) { setAvailableUsers(response.users); } } catch (error) { console.error('Error loading users:', error); } finally { setLoadingUsers(false); } }; loadUsers(); }, [apiCall]);
+  
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => { const { name, value } = e.target; if (name.includes('.')) { const [parent, child] = name.split('.'); setFormData(prev => ({ ...prev, [parent]: { ...prev[parent as keyof CreateDeviceForm] as Record<string, string | number>, [child]: value } })); } else { setFormData(prev => ({ ...prev, [name]: value })); } if (errors[name]) { setErrors(prev => ({ ...prev, [name]: '' })); } };
+  
   const handleAssignmentChange = (e: React.ChangeEvent<HTMLSelectElement>) => { const { name, value } = e.target; if (name === 'assignedTo.type') { if (value === 'system') { setFormData(prev => ({ ...prev, assignedTo: { type: 'system', userId: '', name: 'System Control' } })); } else { setFormData(prev => ({ ...prev, assignedTo: { ...prev.assignedTo, type: value as 'route_admin' | 'company_admin', userId: '', name: '' } })); } } else if (name === 'assignedTo.userId') { const selectedUser = availableUsers.find(user => user._id === value); setFormData(prev => ({ ...prev, assignedTo: { ...prev.assignedTo, userId: value, name: selectedUser?.name || '' } })); } };
-  const validateForm = () => { const newErrors: Record<string, string> = {}; if (!formData.deviceId.trim()) { newErrors.deviceId = 'Device ID is required'; } if (!formData.vehicleNumber.trim()) { newErrors.vehicleNumber = 'Vehicle number is required'; } if (!formData.firmwareVersion.trim()) { newErrors.firmwareVersion = 'Firmware version is required'; } if (!formData.installDate) { newErrors.installDate = 'Install date is required'; } if (!formData.location.address.trim()) { newErrors['location.address'] = 'Address is required'; } if (formData.assignedTo.type !== 'system' && !formData.assignedTo.userId) { newErrors['assignedTo.userId'] = 'Please select a user for assignment'; } setErrors(newErrors); return Object.keys(newErrors).length === 0; };
-  const handleSubmit = async (e: React.FormEvent) => { e.preventDefault(); if (!validateForm()) { return; } setLoading(true); try { const response = await apiCall('/admin/devices', { method: 'POST', body: JSON.stringify(formData), }); if (response) { router.push('/sysadmin/devices'); } } catch (error) { console.error('Error creating device:', error); setErrors({ submit: error instanceof Error ? error.message : 'Failed to create device' }); } finally { setLoading(false); } };
+  
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.deviceId.trim()) newErrors.deviceId = 'Device ID is required';
+    if (!formData.vehicleNumber.trim()) newErrors.vehicleNumber = 'Vehicle number is required';
+    if (!formData.firmwareVersion.trim()) newErrors.firmwareVersion = 'Firmware version is required';
+    if (!formData.installDate) newErrors.installDate = 'Install date is required';
+    if (!formData.location.address.trim()) newErrors['location.address'] = 'Address is required';
+
+    if (formData.assignedTo.type !== 'system' && !formData.assignedTo.userId) {
+      newErrors['assignedTo.userId'] = 'Please select a user for assignment';
+    }
+
+    if (formData.deviceId.trim() && !/^[A-Za-z0-9\-_]+$/.test(formData.deviceId.trim())) {
+      newErrors.deviceId = 'Device ID can only contain letters, numbers, hyphens, and underscores';
+    }
+
+    if (formData.vehicleNumber.trim() && formData.vehicleNumber.trim().length < 2) {
+      newErrors.vehicleNumber = 'Vehicle number must be at least 2 characters';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Fixed device data preparation - updated handleSubmit function
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateForm()) {
+      return;
+    }
+  
+    setLoading(true);
+    try {
+      // ✅ FIXED: Proper data structure matching backend expectations
+      const deviceData: any = { // Use 'any' temporarily to build the object
+        deviceId: formData.deviceId.trim(),
+        vehicleNumber: formData.vehicleNumber.trim(),
+        vehicleType: formData.vehicleType,
+        firmwareVersion: formData.firmwareVersion.trim(),
+        installDate: formData.installDate,
+        
+        // ✅ FIXED: Ensure location object is complete
+        location: {
+          latitude: Number(formData.location.latitude) || 6.9271,
+          longitude: Number(formData.location.longitude) || 79.8612,
+          address: formData.location.address.trim() || 'No address provided'
+        },
+        
+        // ✅ FIXED: Ensure assignedTo object structure is correct
+        assignedTo: (() => {
+          if (formData.assignedTo.type === 'system') {
+            return {
+              type: 'system',
+              name: 'System Control'
+              // No userId for system type
+            };
+          } else {
+            return {
+              type: formData.assignedTo.type,
+              userId: formData.assignedTo.userId,
+              name: formData.assignedTo.name
+            };
+          }
+        })()
+      };
+  
+      // Only add route if both fields exist
+      if (formData.route?.routeId && formData.route?.name) {
+        deviceData.route = {
+          routeId: formData.route.routeId,
+          name: formData.route.name
+        };
+      }
+  
+      console.log('=== SENDING DEVICE DATA ===');
+      console.log(JSON.stringify(deviceData, null, 2));
+  
+      const response = await apiCall('/admin/devices', {
+        method: 'POST',
+        body: JSON.stringify(deviceData),
+      });
+  
+      if (response) {
+        console.log('✅ Device created successfully:', response);
+        router.push('/sysadmin/devices');
+      } else {
+        // The error is now thrown from apiCall, so this part might not be reached
+        // but it's good to have a fallback.
+        setErrors({ submit: 'Failed to create device. Check console for details.' });
+      }
+    } catch (error) {
+      console.error('❌ Error creating device:', error);
+      setErrors({ submit: error instanceof Error ? error.message : 'Failed to create device' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const filteredUsers = availableUsers.filter(user => formData.assignedTo.type === 'route_admin' ? user.role === 'route_admin' : formData.assignedTo.type === 'company_admin' ? user.role === 'company_admin' : false);
 
   const lightTheme = { mainBg: '#fffbeb', bgGradient: 'linear-gradient(to bottom right, #fffbeb, #fef3c7, #fde68a)', glassPanelBg: 'rgba(255, 255, 255, 0.92)', glassPanelBorder: '1px solid rgba(251, 191, 36, 0.3)', glassPanelShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 10px 20px -5px rgba(0, 0, 0, 0.1)', textPrimary: '#1f2937', textSecondary: '#4B5563', textMuted: '#6B7280', inputBg: '#ffffff', inputBorder: '#d1d5db', infoBoxBg: 'rgba(243, 244, 246, 0.9)' };

@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
+// ✅ TYPE for the clean, reliable data structure used throughout the component
 interface Payment {
   _id: string; 
   paymentId: string; 
@@ -21,6 +22,32 @@ interface Payment {
   createdAt: string; 
   updatedAt: string;
 }
+
+// ✅ TYPE for the raw status history object from the API
+interface ApiStatusHistory {
+  status?: unknown;
+  timestamp?: unknown;
+  reason?: unknown;
+}
+
+// ✅ TYPE for the raw payment object from the API, allowing for flexible/messy data
+interface ApiPayment {
+  _id?: unknown;
+  paymentId?: unknown;
+  userId?: unknown;
+  bookingId?: unknown | { bookingId?: string; _id?: string; id?: string };
+  amount?: { subtotal?: unknown; taxes?: unknown; fees?: unknown; discounts?: unknown; total?: unknown; currency?: unknown; };
+  paymentMethod?: { type?: unknown; provider?: unknown; lastFourDigits?: unknown; walletType?: unknown; };
+  transactionInfo?: { transactionId?: unknown; gatewayTransactionId?: unknown; gatewayProvider?: unknown; authorizationCode?: unknown; };
+  status?: unknown;
+  statusHistory?: unknown[];
+  billingInfo?: { name?: unknown; email?: unknown; phone?: unknown; };
+  refundInfo?: { refundId?: unknown; refundAmount?: unknown; refundReason?: unknown; refundMethod?: unknown; refundDate?: unknown; };
+  timestamps?: { initiatedAt?: unknown; processedAt?: unknown; completedAt?: unknown; failedAt?: unknown; refundedAt?: unknown; };
+  createdAt?: unknown;
+  updatedAt?: unknown;
+}
+
 
 interface PaymentStats {
   totalPayments: number; 
@@ -91,7 +118,7 @@ export default function PaymentsPage() {
       const response = await apiCall(`/payments/history?${params.toString()}`);
       
       if (response) {
-        let paymentsArray = [];
+        let paymentsArray: ApiPayment[] = [];
         
         if (Array.isArray(response)) {
           paymentsArray = response;
@@ -102,24 +129,27 @@ export default function PaymentsPage() {
         }
         
         // ✅ CLEAN AND SAFE DATA EXTRACTION
-        const cleanPayments = paymentsArray.map((payment: any, index: number): Payment => {
-          const safeString = (value: any): string => {
+        const cleanPayments = paymentsArray.map((payment: ApiPayment, index: number): Payment => {
+          // ✅ FIXED: Use `unknown` for safer type checking
+          const safeString = (value: unknown): string => {
             if (typeof value === 'string') return value;
             if (typeof value === 'number') return value.toString();
             return '';
           };
           
-          const safeNumber = (value: any): number => {
+          // ✅ FIXED: Use `unknown` for safer type checking
+          const safeNumber = (value: unknown): number => {
             if (typeof value === 'number') return value;
             if (typeof value === 'string') return parseFloat(value) || 0;
             return 0;
           };
 
-          // ✅ EXTRACT JUST THE BOOKING ID, NOT THE ENTIRE OBJECT
-          const extractBookingId = (bookingData: any): string => {
+          // ✅ FIXED: Use a specific type for booking data
+          const extractBookingId = (bookingData: ApiPayment['bookingId']): string => {
             if (typeof bookingData === 'string') return bookingData;
             if (bookingData && typeof bookingData === 'object') {
-              return bookingData.bookingId || bookingData._id || bookingData.id || '';
+              const bookingObj = bookingData as { bookingId?: string; _id?: string; id?: string };
+              return bookingObj.bookingId || bookingObj._id || bookingObj.id || '';
             }
             return '';
           };
@@ -155,8 +185,9 @@ export default function PaymentsPage() {
             
             status: safeString(payment?.status) || 'pending',
             
+            // ✅ FIXED: Use `ApiStatusHistory` type
             statusHistory: Array.isArray(payment?.statusHistory) ? 
-              payment.statusHistory.map((s: any) => ({
+              payment.statusHistory.map((s: ApiStatusHistory) => ({
                 status: safeString(s?.status),
                 timestamp: safeString(s?.timestamp),
                 reason: safeString(s?.reason)
