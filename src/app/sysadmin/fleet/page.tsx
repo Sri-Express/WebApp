@@ -1,4 +1,4 @@
-// src/app/sysadmin/fleet/page.tsx - FIXED VERSION
+// src/app/sysadmin/fleet/page.tsx - UPDATED VERSION
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -12,14 +12,14 @@ import {
   ExclamationTriangleIcon,
   InformationCircleIcon,
   BuildingOfficeIcon,
-  // FIX: Removed unused imports: MapPinIcon, DocumentTextIcon, CalendarIcon
   PhoneIcon,
   EnvelopeIcon,
   UsersIcon
 } from '@heroicons/react/24/outline';
 
+// UPDATE 4: Interface updated to use _id
 interface FleetCompany {
-  id: string;
+  _id: string; // Changed from 'id' to '_id' to match backend
   companyName: string;
   registrationNumber: string;
   contactPerson: string;
@@ -64,97 +64,46 @@ export default function FleetManagementPage() {
   const [showRejectionModal, setShowRejectionModal] = useState<FleetCompany | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
 
+  // UPDATE 1: Replaced useEffect to fetch data from API
   // Load fleet data
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
       
       try {
-        // For now, we'll use mock data since the API isn't fully implemented
-        const mockFleets: FleetCompany[] = [
-          {
-            id: 'fleet-001',
-            companyName: 'Colombo Express Transport',
-            registrationNumber: 'REG-2024-001',
-            contactPerson: 'Samantha Perera',
-            email: 'samantha@colomboexpress.lk',
-            phone: '+94 11 234 5678',
-            address: 'No. 123, Galle Road, Colombo 03',
-            status: 'pending',
-            applicationDate: '2025-01-15T09:30:00Z',
-            totalVehicles: 25,
-            activeVehicles: 0,
-            operatingRoutes: ['Colombo - Kandy', 'Colombo - Galle'],
-            documents: {
-              businessLicense: true,
-              insuranceCertificate: true,
-              vehicleRegistrations: false,
-              driverLicenses: true
-            },
-            complianceScore: 85,
-            notes: 'Strong application, missing some vehicle registrations'
-          },
-          {
-            id: 'fleet-002',
-            companyName: 'Southern Transport Co.',
-            registrationNumber: 'REG-2024-002',
-            contactPerson: 'Kamal Silva',
-            email: 'kamal@southerntrans.lk',
-            phone: '+94 91 234 5678',
-            address: 'No. 45, Main Street, Matara',
-            status: 'approved',
-            applicationDate: '2025-01-10T14:20:00Z',
-            approvalDate: '2025-01-12T10:15:00Z',
-            totalVehicles: 18,
-            activeVehicles: 16,
-            operatingRoutes: ['Matara - Colombo', 'Matara - Tangalle'],
-            documents: {
-              businessLicense: true,
-              insuranceCertificate: true,
-              vehicleRegistrations: true,
-              driverLicenses: true
-            },
-            complianceScore: 95,
-            lastInspection: '2025-01-14T11:00:00Z'
-          },
-          {
-            id: 'fleet-003',
-            companyName: 'Hill Country Buses',
-            registrationNumber: 'REG-2024-003',
-            contactPerson: 'Priya Wickramasinghe',
-            email: 'priya@hillcountry.lk',
-            phone: '+94 81 234 5678',
-            address: 'No. 67, Temple Road, Kandy',
-            status: 'rejected',
-            applicationDate: '2025-01-08T16:45:00Z',
-            totalVehicles: 12,
-            activeVehicles: 0,
-            operatingRoutes: ['Kandy - Nuwara Eliya'],
-            documents: {
-              businessLicense: false,
-              insuranceCertificate: true,
-              vehicleRegistrations: true,
-              driverLicenses: false
-            },
-            complianceScore: 45,
-            notes: 'Incomplete documentation, safety concerns'
-          }
-        ];
-
-        const mockStats: FleetStats = {
-          totalApplications: 15,
-          pendingApprovals: 3,
-          approvedFleets: 8,
-          rejectedApplications: 4,
-          activeVehicles: 245,
-          totalVehicles: 312,
-          complianceIssues: 2
+        const token = localStorage.getItem('token');
+        const headers = {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         };
 
-        setFleets(mockFleets);
-        setStats(mockStats);
+        // Get fleet applications
+        const fleetsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/fleet`, {
+          headers
+        });
+        
+        if (!fleetsResponse.ok) {
+          throw new Error('Failed to fetch fleets');
+        }
+        
+        const fleetsData = await fleetsResponse.json();
+
+        // Get fleet statistics
+        const statsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/fleet/stats`, {
+          headers
+        });
+        
+        if (!statsResponse.ok) {
+          throw new Error('Failed to fetch stats');
+        }
+        
+        const statsData = await statsResponse.json();
+
+        setFleets(fleetsData.fleets || []);
+        setStats(statsData);
       } catch (error) {
         console.error('Error loading fleet data:', error);
+        // You can add toast notification here
       } finally {
         setLoading(false);
       }
@@ -193,16 +142,33 @@ export default function FleetManagementPage() {
     }
   };
 
+  // UPDATE 2: Replaced handleApproveFleet function
   const handleApproveFleet = async (fleetId: string) => {
     setActionLoading(`approve-${fleetId}`);
     
     try {
-      // Mock API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/fleet/${fleetId}/approve`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          notes: 'Approved via admin panel'
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to approve fleet');
+      }
+
+      const data = await response.json();
       
-      // Update fleet status
+      // Update fleet status in state
       setFleets(prev => prev.map(fleet => {
-        if (fleet.id === fleetId) {
+        // UPDATE 5: Use _id
+        if (fleet._id === fleetId) {
           return { 
             ...fleet, 
             status: 'approved',
@@ -213,23 +179,42 @@ export default function FleetManagementPage() {
       }));
       
       setShowApprovalModal(null);
+      // You can add success toast here
     } catch (error) {
       console.error(`Error approving fleet ${fleetId}:`, error);
+      // You can add error toast here
     } finally {
       setActionLoading(null);
     }
   };
 
+  // UPDATE 3: Replaced handleRejectFleet function
   const handleRejectFleet = async (fleetId: string, reason: string) => {
     setActionLoading(`reject-${fleetId}`);
     
     try {
-      // Mock API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/fleet/${fleetId}/reject`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          reason: reason
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to reject fleet');
+      }
+
+      const data = await response.json();
       
-      // Update fleet status
+      // Update fleet status in state
       setFleets(prev => prev.map(fleet => {
-        if (fleet.id === fleetId) {
+        // UPDATE 5: Use _id
+        if (fleet._id === fleetId) {
           return { 
             ...fleet, 
             status: 'rejected',
@@ -241,8 +226,10 @@ export default function FleetManagementPage() {
       
       setShowRejectionModal(null);
       setRejectionReason('');
+      // You can add success toast here
     } catch (error) {
       console.error(`Error rejecting fleet ${fleetId}:`, error);
+      // You can add error toast here
     } finally {
       setActionLoading(null);
     }
@@ -464,8 +451,9 @@ export default function FleetManagementPage() {
             gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))',
             gap: '1.5rem'
           }}>
+            {/* UPDATE 5: Use _id for key */}
             {filteredFleets.map((fleet) => (
-              <div key={fleet.id} style={{
+              <div key={fleet._id} style={{
                 backgroundColor: '#334155',
                 padding: '1.5rem',
                 borderRadius: '0.75rem',
@@ -626,9 +614,10 @@ export default function FleetManagementPage() {
                 }}>
                   {fleet.status === 'pending' && (
                     <>
+                      {/* UPDATE 5: Use _id */}
                       <button
                         onClick={() => setShowApprovalModal(fleet)}
-                        disabled={actionLoading === `approve-${fleet.id}`}
+                        disabled={actionLoading === `approve-${fleet._id}`}
                         style={{
                           backgroundColor: '#10b981',
                           color: 'white',
@@ -640,16 +629,16 @@ export default function FleetManagementPage() {
                           display: 'flex',
                           alignItems: 'center',
                           gap: '0.5rem',
-                          opacity: actionLoading === `approve-${fleet.id}` ? 0.7 : 1
+                          opacity: actionLoading === `approve-${fleet._id}` ? 0.7 : 1
                         }}
                       >
                         <CheckCircleIcon width={14} height={14} />
-                        {actionLoading === `approve-${fleet.id}` ? 'Approving...' : 'Approve'}
+                        {actionLoading === `approve-${fleet._id}` ? 'Approving...' : 'Approve'}
                       </button>
                       
                       <button
                         onClick={() => setShowRejectionModal(fleet)}
-                        disabled={actionLoading === `reject-${fleet.id}`}
+                        disabled={actionLoading === `reject-${fleet._id}`}
                         style={{
                           backgroundColor: '#ef4444',
                           color: 'white',
@@ -661,11 +650,11 @@ export default function FleetManagementPage() {
                           display: 'flex',
                           alignItems: 'center',
                           gap: '0.5rem',
-                          opacity: actionLoading === `reject-${fleet.id}` ? 0.7 : 1
+                          opacity: actionLoading === `reject-${fleet._id}` ? 0.7 : 1
                         }}
                       >
                         <XCircleIcon width={14} height={14} />
-                        {actionLoading === `reject-${fleet.id}` ? 'Rejecting...' : 'Reject'}
+                        {actionLoading === `reject-${fleet._id}` ? 'Rejecting...' : 'Reject'}
                       </button>
                     </>
                   )}
@@ -942,9 +931,10 @@ export default function FleetManagementPage() {
               >
                 Cancel
               </button>
+              {/* UPDATE 5: Use _id */}
               <button
-                onClick={() => handleApproveFleet(showApprovalModal.id)}
-                disabled={actionLoading === `approve-${showApprovalModal.id}`}
+                onClick={() => handleApproveFleet(showApprovalModal._id)}
+                disabled={actionLoading === `approve-${showApprovalModal._id}`}
                 style={{
                   backgroundColor: '#10b981',
                   color: 'white',
@@ -952,10 +942,10 @@ export default function FleetManagementPage() {
                   border: 'none',
                   borderRadius: '0.5rem',
                   cursor: 'pointer',
-                  opacity: actionLoading === `approve-${showApprovalModal.id}` ? 0.7 : 1
+                  opacity: actionLoading === `approve-${showApprovalModal._id}` ? 0.7 : 1
                 }}
               >
-                {actionLoading === `approve-${showApprovalModal.id}` ? 'Approving...' : 'Approve'}
+                {actionLoading === `approve-${showApprovalModal._id}` ? 'Approving...' : 'Approve'}
               </button>
             </div>
           </div>
@@ -993,7 +983,7 @@ export default function FleetManagementPage() {
               Reject Fleet Application
             </h3>
             <p style={{ color: '#94a3b8', marginBottom: '1rem' }}>
-              Please provide a reason for rejecting <strong>{showRejectionModal.companyName}</strong>&apos;s application:
+              Please provide a reason for rejecting <strong>{showRejectionModal.companyName}</strong>'s application:
             </p>
             <textarea
               value={rejectionReason}
@@ -1032,9 +1022,10 @@ export default function FleetManagementPage() {
               >
                 Cancel
               </button>
+              {/* UPDATE 5: Use _id */}
               <button
-                onClick={() => handleRejectFleet(showRejectionModal.id, rejectionReason)}
-                disabled={!rejectionReason.trim() || actionLoading === `reject-${showRejectionModal.id}`}
+                onClick={() => handleRejectFleet(showRejectionModal._id, rejectionReason)}
+                disabled={!rejectionReason.trim() || actionLoading === `reject-${showRejectionModal._id}`}
                 style={{
                   backgroundColor: '#ef4444',
                   color: 'white',
@@ -1042,10 +1033,10 @@ export default function FleetManagementPage() {
                   border: 'none',
                   borderRadius: '0.5rem',
                   cursor: !rejectionReason.trim() ? 'not-allowed' : 'pointer',
-                  opacity: (!rejectionReason.trim() || actionLoading === `reject-${showRejectionModal.id}`) ? 0.7 : 1
+                  opacity: (!rejectionReason.trim() || actionLoading === `reject-${showRejectionModal._id}`) ? 0.7 : 1
                 }}
               >
-                {actionLoading === `reject-${showRejectionModal.id}` ? 'Rejecting...' : 'Reject'}
+                {actionLoading === `reject-${showRejectionModal._id}` ? 'Rejecting...' : 'Reject'}
               </button>
             </div>
           </div>

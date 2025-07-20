@@ -185,7 +185,7 @@ export default function PaymentsPage() {
             
             status: safeString(payment?.status) || 'pending',
             
-            // ✅ FIXED: Use type assertion to cast the array
+            // ✅ FIXED: Use `ApiStatusHistory` type
             statusHistory: Array.isArray(payment?.statusHistory) ? 
               (payment.statusHistory as ApiStatusHistory[]).map((s: ApiStatusHistory) => ({
                 status: safeString(s?.status),
@@ -365,15 +365,26 @@ export default function PaymentsPage() {
             <span style={{ color: '#1f2937' }}>Express</span>
           </Link>
           <div style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
-            <Link href="/dashboard" style={{ 
-              color: '#64748b', 
-              textDecoration: 'none', 
-              fontWeight: '500',
-              transition: 'color 0.2s',
-              padding: '0.5rem 1rem',
-              borderRadius: '0.5rem',
-              ':hover': { color: '#f59e0b', backgroundColor: '#fef3c7' }
-            }}>
+            {/* ✅ FIX: Replaced `:hover` with `onMouseEnter` and `onMouseLeave` event handlers */}
+            <Link 
+              href="/dashboard" 
+              style={{ 
+                color: '#64748b', 
+                textDecoration: 'none', 
+                fontWeight: '500',
+                transition: 'color 0.2s, background-color 0.2s',
+                padding: '0.5rem 1rem',
+                borderRadius: '0.5rem'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = '#f59e0b';
+                e.currentTarget.style.backgroundColor = '#fef3c7';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = '#64748b';
+                e.currentTarget.style.backgroundColor = 'transparent';
+              }}
+            >
               Dashboard
             </Link>
             <Link href="/bookings" style={{ 

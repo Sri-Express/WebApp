@@ -1,27 +1,143 @@
 //src\app\sysadmin\dashboard\page.tsx
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { UsersIcon, DevicePhoneMobileIcon, TruckIcon, CpuChipIcon, ChartBarIcon, ExclamationTriangleIcon, ShieldCheckIcon, GlobeAltIcon, ServerIcon, CheckCircleIcon, BellIcon } from '@heroicons/react/24/outline';
 import { useTheme } from '@/app/context/ThemeContext';
 import ThemeSwitcher from '@/app/components/ThemeSwitcher';
 
-const mockStats = { totalUsers: 2847, activeUsers: 1923, totalDevices: 156, activeDevices: 134, offlineDevices: 18, maintenanceDevices: 4, totalAlerts: 12, totalTrips: 8945, todayTrips: 127, systemUptime: 99.7, apiRequests: 45230, errorRate: 0.3, recentActivity: { newUsers: 23, newTrips: 89 }, usersByRole: { system_admin: 3, route_admin: 15, client: 2829 }, devicesByStatus: { online: 134, offline: 18, maintenance: 4 } };
-const mockFleetStats = { total: 47, approved: 41, pending: 4, rejected: 1, suspended: 1 };
-const mockAlerts = [ { id: '1', type: 'warning', category: 'Device', title: 'Low Battery Alert', message: 'Bus LB-2847 battery at 15%', timestamp: new Date().toISOString(), priority: 'medium' }, { id: '2', type: 'error', category: 'System', title: 'API Rate Limit', message: 'High API usage detected', timestamp: new Date().toISOString(), priority: 'high' }, { id: '3', type: 'info', category: 'Fleet', title: 'New Registration', message: 'Ceylon Express submitted application', timestamp: new Date().toISOString(), priority: 'low' } ];
+// API Base URL
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
+// API utility functions
+const fetchAPI = async (endpoint: string) => {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_BASE_URL}/api${endpoint}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+  
+  if (!response.ok) {
+    throw new Error(`API Error: ${response.status}`);
+  }
+  
+  return response.json();
+};
+
+// Interfaces for API responses
+interface SystemStats {
+  totalUsers: number;
+  activeUsers: number;
+  totalDevices: number;
+  activeDevices: number;
+  offlineDevices: number;
+  maintenanceDevices: number;
+  totalAlerts: number;
+  totalTrips: number;
+  todayTrips: number;
+  systemUptime: number;
+  apiRequests: number;
+  errorRate: number;
+  recentActivity: {
+    newUsers: number;
+    newTrips: number;
+  };
+  usersByRole: {
+    system_admin: number;
+    route_admin: number;
+    client: number;
+  };
+  devicesByStatus: {
+    online: number;
+    offline: number;
+    maintenance: number;
+  };
+}
+
+interface FleetStats {
+  total: number;
+  approved: number;
+  pending: number;
+  rejected: number;
+  suspended: number;
+}
+
+interface Alert {
+  id: string;
+  type: 'warning' | 'error' | 'info';
+  category: string;
+  title: string;
+  message: string;
+  timestamp: string;
+  priority: 'low' | 'medium' | 'high';
+}
+
 
 export default function SriExpressAdminDashboard() {
   const router = useRouter();
   const { theme } = useTheme();
+  
+  // State for real data
   const [user] = useState({ name: 'Mehara Rothila', email: 'admin@sriexpress.lk', role: 'system_admin' });
-  const [stats] = useState(mockStats);
-  const [fleetStats] = useState(mockFleetStats);
-  const [alerts] = useState(mockAlerts);
+  const [stats, setStats] = useState<SystemStats | null>(null);
+  const [fleetStats, setFleetStats] = useState<FleetStats | null>(null);
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
 
-  const quickActions = [ { name: 'User Management', href: '/sysadmin/users', icon: UsersIcon, count: stats.totalUsers, desc: 'Manage system users' }, { name: 'Fleet Control', href: '/sysadmin/fleet', icon: TruckIcon, count: fleetStats.pending, desc: 'Fleet approvals', urgent: fleetStats.pending > 0 }, { name: 'Live Tracking', href: '/sysadmin/devices/monitor', icon: GlobeAltIcon, count: stats.activeDevices, desc: 'Vehicle monitoring' }, { name: 'AI Systems', href: '/sysadmin/ai', icon: CpuChipIcon, desc: 'Neural networks' }, { name: 'Analytics', href: '/sysadmin/analytics', icon: ChartBarIcon, desc: 'Data insights' }, { name: 'Emergency', href: '/sysadmin/emergency', icon: ExclamationTriangleIcon, count: alerts.length, desc: 'Crisis response' } ];
+  // Fetch dashboard data
+  const fetchDashboardData = async () => {
+    try {
+      // Don't set loading to true on auto-refresh to avoid UI flicker
+      if (!stats) setLoading(true);
+      setError(null);
+      
+      // Fetch all dashboard data in parallel
+      const [systemStatsData, fleetStatsData, alertsData] = await Promise.all([
+        fetchAPI('/admin/system/stats'),
+        fetchAPI('/admin/fleet/stats'),
+        fetchAPI('/admin/system/alerts'),
+      ]);
+      
+      setStats(systemStatsData);
+      setFleetStats(fleetStatsData);
+      setAlerts(alertsData.alerts || []);
+      
+    } catch (err) {
+      console.error('Error fetching dashboard data:', err);
+      setError('Failed to load dashboard data. Please check if the backend server is running.');
+      
+      // Fallback to mock data if API fails
+      setStats({ totalUsers: 2847, activeUsers: 1923, totalDevices: 156, activeDevices: 134, offlineDevices: 18, maintenanceDevices: 4, totalAlerts: 12, totalTrips: 8945, todayTrips: 127, systemUptime: 99.7, apiRequests: 45230, errorRate: 0.3, recentActivity: { newUsers: 23, newTrips: 89 }, usersByRole: { system_admin: 3, route_admin: 15, client: 2829 }, devicesByStatus: { online: 134, offline: 18, maintenance: 4 } });
+      setFleetStats({ total: 47, approved: 41, pending: 4, rejected: 1, suspended: 1 });
+      setAlerts([ { id: '1', type: 'warning', category: 'Device', title: 'Low Battery Alert', message: 'Bus LB-2847 battery at 15%', timestamp: new Date().toISOString(), priority: 'medium' }, { id: '2', type: 'error', category: 'System', title: 'API Rate Limit', message: 'High API usage detected', timestamp: new Date().toISOString(), priority: 'high' }, { id: '3', type: 'info', category: 'Fleet', title: 'New Registration', message: 'Ceylon Express submitted application', timestamp: new Date().toISOString(), priority: 'low' } ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initial data load
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  // Auto-refresh every 30 seconds
+  useEffect(() => {
+    if (!autoRefresh) return;
+    
+    const interval = setInterval(() => {
+      fetchDashboardData();
+    }, 30000);
+    
+    return () => clearInterval(interval);
+  }, [autoRefresh]);
+
+  const quickActions = stats && fleetStats ? [ { name: 'User Management', href: '/sysadmin/users', icon: UsersIcon, count: stats.totalUsers, desc: 'Manage system users' }, { name: 'Fleet Control', href: '/sysadmin/fleet', icon: TruckIcon, count: fleetStats.pending, desc: 'Fleet approvals', urgent: fleetStats.pending > 0 }, { name: 'Live Tracking', href: '/sysadmin/devices/monitor', icon: GlobeAltIcon, count: stats.activeDevices, desc: 'Vehicle monitoring' }, { name: 'AI Systems', href: '/sysadmin/ai', icon: CpuChipIcon, desc: 'Neural networks' }, { name: 'Analytics', href: '/sysadmin/analytics', icon: ChartBarIcon, desc: 'Data insights' }, { name: 'Emergency', href: '/sysadmin/emergency', icon: ExclamationTriangleIcon, count: alerts.length, desc: 'Crisis response' } ] : [];
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -61,6 +177,25 @@ export default function SriExpressAdminDashboard() {
 
   const animationStyles = ` @keyframes road-marking { 0% { transform: translateX(-200%); } 100% { transform: translateX(500%); } } .animate-road-marking { animation: road-marking 10s linear infinite; } @keyframes car-right { 0% { transform: translateX(-100%); } 100% { transform: translateX(100vw); } } .animate-car-right { animation: car-right 15s linear infinite; } @keyframes car-left { 0% { transform: translateX(100vw) scaleX(-1); } 100% { transform: translateX(-200px) scaleX(-1); } } .animate-car-left { animation: car-left 16s linear infinite; } @keyframes light-blink { 0%, 100% { opacity: 1; box-shadow: 0 0 15px #fcd34d; } 50% { opacity: 0.6; box-shadow: 0 0 5px #fcd34d; } } .animate-light-blink { animation: light-blink 1s infinite; } @keyframes fade-in-down { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } } .animate-fade-in-down { animation: fade-in-down 0.8s ease-out forwards; } @keyframes fade-in-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } } .animate-fade-in-up { animation: fade-in-up 0.8s ease-out forwards; } @keyframes trainMove { from { left: 100%; } to { left: -300px; } } @keyframes slight-bounce { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-1px); } } .animate-slight-bounce { animation: slight-bounce 2s ease-in-out infinite; } @keyframes steam { 0% { opacity: 0.8; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-20px) scale(2.5); } } .animate-steam { animation: steam 2s ease-out infinite; } @keyframes wheels { 0% { transform: rotate(0deg); } 100% { transform: rotate(-360deg); } } .animate-wheels { animation: wheels 2s linear infinite; } @keyframes connecting-rod { 0% { transform: translateX(-1px) rotate(0deg); } 50% { transform: translateX(1px) rotate(180deg); } 100% { transform: translateX(-1px) rotate(360deg); } } .animate-connecting-rod { animation: connecting-rod 2s linear infinite; } @keyframes piston-move { 0% { transform: translateX(-2px); } 50% { transform: translateX(2px); } 100% { transform: translateX(-2px); } } .animate-piston { animation: piston-move 2s linear infinite; } .animation-delay-100 { animation-delay: 0.1s; } .animation-delay-200 { animation-delay: 0.2s; } .animation-delay-300 { animation-delay: 0.3s; } .animation-delay-400 { animation-delay: 0.4s; } .animation-delay-500 { animation-delay: 0.5s; } .animation-delay-600 { animation-delay: 0.6s; } .animation-delay-700 { animation-delay: 0.7s; } .animation-delay-800 { animation-delay: 0.8s; } .animation-delay-1000 { animation-delay: 1s; } .animation-delay-1200 { animation-delay: 1.2s; } .animation-delay-1500 { animation-delay: 1.5s; } .animation-delay-2000 { animation-delay: 2s; } .animation-delay-2500 { animation-delay: 2.5s; } .animation-delay-3000 { animation-delay: 3s; } `;
 
+  // Loading state
+  if (loading && !stats) {
+    return (
+      <div style={{ backgroundColor: currentThemeStyles.mainBg, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center', color: currentThemeStyles.textPrimary }}>
+          <div style={{ width: '40px', height: '40px', border: '4px solid #f3f4f6', borderTop: '4px solid #3b82f6', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 1rem' }}></div>
+          <p>Loading dashboard data...</p>
+          {error && <p style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '1rem' }}>{error}</p>}
+        </div>
+        <style jsx>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
   return (
     <div style={{ backgroundColor: currentThemeStyles.mainBg, minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
       <style jsx>{animationStyles}</style>
@@ -84,7 +219,7 @@ export default function SriExpressAdminDashboard() {
             <ShieldCheckIcon width={32} height={32} color="#dc2626" />
             <div>
               <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ffffff', margin: 0, textShadow: '0 4px 8px rgba(0, 0, 0, 0.7)' }}><span style={{ fontSize: '2rem', marginRight: '0.5rem', textShadow: '0 4px 8px rgba(0, 0, 0, 0.7), 0 0 30px rgba(250, 204, 21, 0.4)' }}>ශ්‍රී</span> E<span style={{ color: '#DC2626' }}>x</span>press Control</h1>
-              <p style={{ fontSize: '0.875rem', color: '#94a3b8', margin: 0 }}>System Administration Console</p>
+              <p style={{ fontSize: '0.875rem', color: '#94a3b8', margin: 0 }}>System Administration Console {error && <span style={{ color: '#f59e0b' }}>⚠ Using fallback data</span>}</p>
             </div>
           </div>
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
@@ -101,8 +236,20 @@ export default function SriExpressAdminDashboard() {
       <div style={{ width: '100%', minHeight: 'calc(100vh - 100px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem', position: 'relative', zIndex: 10 }}>
         <div className="animate-fade-in-up" style={{ width: '100%', maxWidth: '1600px', margin: '0 auto' }}>
           
+          {error && (
+            <div style={{ backgroundColor: '#fef3c7', border: '1px solid #f59e0b', borderRadius: '0.5rem', padding: '1rem', marginBottom: '2rem', color: '#92400e' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <ExclamationTriangleIcon width={20} height={20} color="#f59e0b" />
+                <strong>Warning:</strong> {error}
+              </div>
+              <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.875rem' }}>
+                Displaying fallback data. Please check your backend server at <code>http://localhost:5000</code>
+              </p>
+            </div>
+          )}
+
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem', marginBottom: '2rem' }}>
-            {[ { label: 'Total Users', value: stats.totalUsers.toLocaleString(), icon: UsersIcon, color: '#3b82f6' }, { label: 'Active Devices', value: stats.activeDevices, icon: DevicePhoneMobileIcon, color: '#10b981' }, { label: 'Fleet Companies', value: fleetStats.total, icon: TruckIcon, color: '#f59e0b' }, { label: 'System Uptime', value: `${stats.systemUptime}%`, icon: ServerIcon, color: '#8b5cf6' } ].map((metric, index) => (
+            {stats && [ { label: 'Total Users', value: stats.totalUsers.toLocaleString(), icon: UsersIcon, color: '#3b82f6' }, { label: 'Active Devices', value: stats.activeDevices, icon: DevicePhoneMobileIcon, color: '#10b981' }, { label: 'Fleet Companies', value: fleetStats?.total || 0, icon: TruckIcon, color: '#f59e0b' }, { label: 'System Uptime', value: `${stats.systemUptime}%`, icon: ServerIcon, color: '#8b5cf6' } ].map((metric, index) => (
               <div key={metric.label} style={{ backgroundColor: currentThemeStyles.glassPanelBg, padding: '2rem', borderRadius: '1rem', boxShadow: currentThemeStyles.glassPanelShadow, backdropFilter: 'blur(12px)', border: currentThemeStyles.glassPanelBorder, animation: `fade-in-up 0.8s ease-out ${index * 0.1}s both` }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   <metric.icon width={32} height={32} color={metric.color} />
@@ -139,7 +286,11 @@ export default function SriExpressAdminDashboard() {
           <div style={{ backgroundColor: currentThemeStyles.glassPanelBg, padding: '2rem', borderRadius: '1rem', boxShadow: currentThemeStyles.glassPanelShadow, backdropFilter: 'blur(12px)', border: currentThemeStyles.glassPanelBorder }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
               <h2 style={{ color: currentThemeStyles.textPrimary, fontSize: '1.5rem', fontWeight: 'bold', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}><ExclamationTriangleIcon width={24} height={24} color="#f59e0b" />System Alerts</h2>
-              <div style={{ display: 'flex', gap: '1rem', fontSize: '0.875rem' }}><span style={{ color: '#ef4444' }}>1 High</span><span style={{ color: '#f59e0b' }}>1 Medium</span><span style={{ color: '#3b82f6' }}>1 Low</span></div>
+              <div style={{ display: 'flex', gap: '1rem', fontSize: '0.875rem' }}>
+                <span style={{ color: '#ef4444' }}>{alerts.filter(a => a.priority === 'high').length} High</span>
+                <span style={{ color: '#f59e0b' }}>{alerts.filter(a => a.priority === 'medium').length} Medium</span>
+                <span style={{ color: '#3b82f6' }}>{alerts.filter(a => a.priority === 'low').length} Low</span>
+              </div>
             </div>
             {alerts.length > 0 ? (
               <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
