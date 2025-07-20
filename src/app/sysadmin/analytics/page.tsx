@@ -61,93 +61,11 @@ export default function SystemAnalyticsPage() {
     try {
       // Mock data - replace with real API call
       const mockData: AnalyticsData = {
-        overview: {
-          totalUsers: 1547,
-          activeUsers: 1432,
-          totalDevices: 89,
-          activeDevices: 67,
-          totalTrips: 12749,
-          totalRevenue: 2847650,
-          systemUptime: 99.8,
-          avgResponseTime: 145
-        },
-        trends: {
-          userGrowth: 12.3,
-          deviceGrowth: 8.7,
-          tripGrowth: 15.4,
-          revenueGrowth: 18.9
-        },
-        chartData: {
-          userRegistrations: [
-            { date: '2025-01-10', count: 23 },
-            { date: '2025-01-11', count: 45 },
-            { date: '2025-01-12', count: 32 },
-            { date: '2025-01-13', count: 67 },
-            { date: '2025-01-14', count: 54 },
-            { date: '2025-01-15', count: 78 },
-            { date: '2025-01-16', count: 89 },
-            { date: '2025-01-17', count: 92 }
-          ],
-          deviceActivity: [
-            { date: '2025-01-10', online: 56, offline: 33 },
-            { date: '2025-01-11', online: 61, offline: 28 },
-            { date: '2025-01-12', online: 58, offline: 31 },
-            { date: '2025-01-13', online: 64, offline: 25 },
-            { date: '2025-01-14', online: 67, offline: 22 },
-            { date: '2025-01-15', online: 63, offline: 26 },
-            { date: '2025-01-16', online: 69, offline: 20 },
-            { date: '2025-01-17', online: 67, offline: 22 }
-          ],
-          tripVolume: [
-            { date: '2025-01-10', trips: 145, revenue: 65400 },
-            { date: '2025-01-11', trips: 189, revenue: 84200 },
-            { date: '2025-01-12', trips: 167, revenue: 74800 },
-            { date: '2025-01-13', trips: 203, revenue: 91350 },
-            { date: '2025-01-14', trips: 178, revenue: 79900 },
-            { date: '2025-01-15', trips: 234, revenue: 105300 },
-            { date: '2025-01-16', trips: 198, revenue: 89100 },
-            { date: '2025-01-17', trips: 156, revenue: 70200 }
-          ],
-          systemPerformance: [
-            { date: '2025-01-10', uptime: 99.9, responseTime: 134 },
-            { date: '2025-01-11', uptime: 99.8, responseTime: 156 },
-            { date: '2025-01-12', uptime: 99.7, responseTime: 142 },
-            { date: '2025-01-13', uptime: 99.9, responseTime: 128 },
-            { date: '2025-01-14', uptime: 99.8, responseTime: 167 },
-            { date: '2025-01-15', uptime: 99.6, responseTime: 189 },
-            { date: '2025-01-16', uptime: 99.9, responseTime: 145 },
-            { date: '2025-01-17', uptime: 99.8, responseTime: 152 }
-          ]
-        },
-        topMetrics: {
-          topRoutes: [
-            { name: 'Colombo - Kandy', trips: 2847, revenue: 1278300 },
-            { name: 'Galle - Colombo', trips: 2156, revenue: 969400 },
-            { name: 'Kandy - Jaffna', trips: 1789, revenue: 804050 },
-            { name: 'Colombo - Negombo', trips: 1543, revenue: 693850 },
-            { name: 'Anuradhapura - Colombo', trips: 1234, revenue: 555300 }
-          ],
-          deviceTypes: [
-            { type: 'Bus', count: 67, percentage: 75.3 },
-            { type: 'Train', count: 22, percentage: 24.7 }
-          ],
-          userActivity: [
-            { role: 'Client', count: 1398, percentage: 90.4 },
-            { role: 'Route Admin', count: 45, percentage: 2.9 },
-            { role: 'Company Admin', count: 8, percentage: 0.5 },
-            { role: 'Customer Service', count: 12, percentage: 0.8 },
-            { role: 'System Admin', count: 3, percentage: 0.2 }
-          ],
-          alerts: [
-            { type: 'Device Offline', count: 15, severity: 'high' },
-            { type: 'High Response Time', count: 8, severity: 'medium' },
-            { type: 'Low Battery', count: 23, severity: 'medium' },
-            { type: 'Maintenance Due', count: 7, severity: 'low' },
-            { type: 'Route Delay', count: 12, severity: 'medium' }
-          ]
-        }
+        overview: { totalUsers: 1547, activeUsers: 1432, totalDevices: 89, activeDevices: 67, totalTrips: 12749, totalRevenue: 2847650, systemUptime: 99.8, avgResponseTime: 145 },
+        trends: { userGrowth: 12.3, deviceGrowth: 8.7, tripGrowth: 15.4, revenueGrowth: 18.9 },
+        chartData: { userRegistrations: [ { date: '2025-01-10', count: 23 }, { date: '2025-01-11', count: 45 }, { date: '2025-01-12', count: 32 }, { date: '2025-01-13', count: 67 }, { date: '2025-01-14', count: 54 }, { date: '2025-01-15', count: 78 }, { date: '2025-01-16', count: 89 }, { date: '2025-01-17', count: 92 } ], deviceActivity: [ { date: '2025-01-10', online: 56, offline: 33 }, { date: '2025-01-11', online: 61, offline: 28 }, { date: '2025-01-12', online: 58, offline: 31 }, { date: '2025-01-13', online: 64, offline: 25 }, { date: '2025-01-14', online: 67, offline: 22 }, { date: '2025-01-15', online: 63, offline: 26 }, { date: '2025-01-16', online: 69, offline: 20 }, { date: '2025-01-17', online: 67, offline: 22 } ], tripVolume: [ { date: '2025-01-10', trips: 145, revenue: 65400 }, { date: '2025-01-11', trips: 189, revenue: 84200 }, { date: '2025-01-12', trips: 167, revenue: 74800 }, { date: '2025-01-13', trips: 203, revenue: 91350 }, { date: '2025-01-14', trips: 178, revenue: 79900 }, { date: '2025-01-15', trips: 234, revenue: 105300 }, { date: '2025-01-16', trips: 198, revenue: 89100 }, { date: '2025-01-17', trips: 156, revenue: 70200 } ], systemPerformance: [ { date: '2025-01-10', uptime: 99.9, responseTime: 134 }, { date: '2025-01-11', uptime: 99.8, responseTime: 156 }, { date: '2025-01-12', uptime: 99.7, responseTime: 142 }, { date: '2025-01-13', uptime: 99.9, responseTime: 128 }, { date: '2025-01-14', uptime: 99.8, responseTime: 167 }, { date: '2025-01-15', uptime: 99.6, responseTime: 189 }, { date: '2025-01-16', uptime: 99.9, responseTime: 145 }, { date: '2025-01-17', uptime: 99.8, responseTime: 152 } ] },
+        topMetrics: { topRoutes: [ { name: 'Colombo - Kandy', trips: 2847, revenue: 1278300 }, { name: 'Galle - Colombo', trips: 2156, revenue: 969400 }, { name: 'Kandy - Jaffna', trips: 1789, revenue: 804050 }, { name: 'Colombo - Negombo', trips: 1543, revenue: 693850 }, { name: 'Anuradhapura - Colombo', trips: 1234, revenue: 555300 } ], deviceTypes: [ { type: 'Bus', count: 67, percentage: 75.3 }, { type: 'Train', count: 22, percentage: 24.7 } ], userActivity: [ { role: 'Client', count: 1398, percentage: 90.4 }, { role: 'Route Admin', count: 45, percentage: 2.9 }, { role: 'Company Admin', count: 8, percentage: 0.5 }, { role: 'Customer Service', count: 12, percentage: 0.8 }, { role: 'System Admin', count: 3, percentage: 0.2 } ], alerts: [ { type: 'Device Offline', count: 15, severity: 'high' }, { type: 'High Response Time', count: 8, severity: 'medium' }, { type: 'Low Battery', count: 23, severity: 'medium' }, { type: 'Maintenance Due', count: 7, severity: 'low' }, { type: 'Route Delay', count: 12, severity: 'medium' } ] }
       };
-
       setAnalyticsData(mockData);
     } catch (error) {
       console.error('Error loading analytics:', error);
@@ -161,391 +79,160 @@ export default function SystemAnalyticsPage() {
       await loadAnalyticsData();
       setLoading(false);
     };
-
     initialLoad();
   }, [selectedPeriod]);
 
   // Auto refresh
   useEffect(() => {
     if (!autoRefresh) return;
-
     const interval = setInterval(() => {
       loadAnalyticsData();
     }, 300000); // 5 minutes
-
     return () => clearInterval(interval);
   }, [autoRefresh, selectedPeriod]);
 
   const formatNumber = (num: number) => {
-    if (num >= 1000000) {
-      return `${(num / 1000000).toFixed(1)}M`;
-    }
-    if (num >= 1000) {
-      return `${(num / 1000).toFixed(1)}K`;
-    }
+    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
+    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
     return num.toLocaleString();
   };
 
-  const formatCurrency = (amount: number) => {
-    return `LKR ${(amount / 1000).toFixed(0)}K`;
-  };
-
-  const getTrendColor = (value: number) => {
-    return value >= 0 ? '#10b981' : '#ef4444';
-  };
-
-  const getTrendIcon = (value: number) => {
-    return value >= 0 ? 
-      <ArrowUpIcon width={16} height={16} /> : 
-      <ArrowDownIcon width={16} height={16} />;
-  };
-
+  const formatCurrency = (amount: number) => `LKR ${(amount / 1000).toFixed(0)}K`;
+  const getTrendColor = (value: number) => value >= 0 ? '#10b981' : '#ef4444';
+  const getTrendIcon = (value: number) => value >= 0 ? <ArrowUpIcon width={16} height={16} /> : <ArrowDownIcon width={16} height={16} />;
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case 'high':
-        return '#ef4444';
-      case 'medium':
-        return '#f59e0b';
-      case 'low':
-        return '#3b82f6';
-      default:
-        return '#6b7280';
+      case 'high': return '#ef4444';
+      case 'medium': return '#f59e0b';
+      case 'low': return '#3b82f6';
+      default: return '#6b7280';
     }
   };
 
-  const handleExportData = () => {
-    // Mock export functionality
-    alert('Export functionality would download analytics data as CSV/PDF');
-  };
+  const handleExportData = () => alert('Export functionality would download analytics data as CSV/PDF');
+  const handleRefresh = async () => { setLoading(true); await loadAnalyticsData(); setLoading(false); };
 
-  const handleRefresh = async () => {
-    setLoading(true);
-    await loadAnalyticsData();
-    setLoading(false);
-  };
+  const animationStyles = ` @keyframes road-marking { 0% { transform: translateX(-200%); } 100% { transform: translateX(500%); } } .animate-road-marking { animation: road-marking 10s linear infinite; } @keyframes car-right { 0% { transform: translateX(-100%); } 100% { transform: translateX(100vw); } } .animate-car-right { animation: car-right 15s linear infinite; } @keyframes car-left { 0% { transform: translateX(100vw) scaleX(-1); } 100% { transform: translateX(-200px) scaleX(-1); } } .animate-car-left { animation: car-left 16s linear infinite; } @keyframes light-blink { 0%, 100% { opacity: 1; box-shadow: 0 0 15px #fcd34d; } 50% { opacity: 0.6; box-shadow: 0 0 5px #fcd34d; } } .animate-light-blink { animation: light-blink 1s infinite; } @keyframes fade-in-down { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } } .animate-fade-in-down { animation: fade-in-down 0.8s ease-out forwards; } @keyframes fade-in-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } } .animate-fade-in-up { animation: fade-in-up 0.8s ease-out forwards; } @keyframes trainMove { from { left: 100%; } to { left: -300px; } } @keyframes slight-bounce { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-1px); } } .animate-slight-bounce { animation: slight-bounce 2s ease-in-out infinite; } @keyframes steam { 0% { opacity: 0.8; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-20px) scale(2.5); } } .animate-steam { animation: steam 2s ease-out infinite; } @keyframes wheels { 0% { transform: rotate(0deg); } 100% { transform: rotate(-360deg); } } .animate-wheels { animation: wheels 2s linear infinite; } @keyframes connecting-rod { 0% { transform: translateX(-1px) rotate(0deg); } 50% { transform: translateX(1px) rotate(180deg); } 100% { transform: translateX(-1px) rotate(360deg); } } .animate-connecting-rod { animation: connecting-rod 2s linear infinite; } @keyframes piston-move { 0% { transform: translateX(-2px); } 50% { transform: translateX(2px); } 100% { transform: translateX(-2px); } } .animate-piston { animation: piston-move 2s linear infinite; } .animation-delay-100 { animation-delay: 0.1s; } .animation-delay-200 { animation-delay: 0.2s; } .animation-delay-300 { animation-delay: 0.3s; } .animation-delay-400 { animation-delay: 0.4s; } .animation-delay-500 { animation-delay: 0.5s; } .animation-delay-600 { animation-delay: 0.6s; } .animation-delay-700 { animation-delay: 0.7s; } .animation-delay-800 { animation-delay: 0.8s; } .animation-delay-1000 { animation-delay: 1s; } .animation-delay-1200 { animation-delay: 1.2s; } .animation-delay-1500 { animation-delay: 1.5s; } .animation-delay-2000 { animation-delay: 2s; } .animation-delay-2500 { animation-delay: 2.5s; } .animation-delay-3000 { animation-delay: 3s; } `;
 
   if (loading && !analyticsData) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        minHeight: '100vh',
-        backgroundColor: '#0f172a',
-        color: '#f1f5f9'
-      }}>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', backgroundColor: '#0f172a', color: '#f1f5f9' }}>
         <div>Loading analytics...</div>
       </div>
     );
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#0f172a' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: '#0f172a', position: 'relative', overflow: 'hidden' }}>
+      <style jsx>{animationStyles}</style>
+      
+      {/* START: Animated Background */}
+      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom right, #0f172a, #1e293b, #334155)' }}>
+        <div style={{ position: 'absolute', top: '15%', left: 0, right: 0, height: '100px', backgroundColor: '#1f2937', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)', zIndex: 2 }}></div><div style={{ position: 'absolute', top: '15%', left: 0, right: 0, height: '100px', zIndex: 3, display: 'flex', justifyContent: 'center', alignItems: 'center' }}><div style={{ width: '100%', height: '5px', background: 'repeating-linear-gradient(to right, #fcd34d, #fcd34d 30px, transparent 30px, transparent 60px)', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2)' }}></div></div><div style={{ position: 'absolute', top: '15%', left: 0, right: 0, height: '100px', overflow: 'hidden', zIndex: 3 }}><div style={{ position: 'absolute', top: '25%', left: 0, right: 0, height: '8px', display: 'flex', transform: 'translateY(-50%)' }}><div className="animate-road-marking" style={{ position: 'absolute', width: '80px', backgroundColor: '#fbbf24', left: '10%' }}></div><div className="animate-road-marking animation-delay-200" style={{ position: 'absolute', width: '80px', backgroundColor: '#fbbf24', left: '30%' }}></div><div className="animate-road-marking animation-delay-500" style={{ position: 'absolute', width: '80px', backgroundColor: '#fbbf24', left: '50%' }}></div><div className="animate-road-marking animation-delay-700" style={{ position: 'absolute', width: '80px', backgroundColor: '#fbbf24', left: '70%' }}></div></div><div style={{ position: 'absolute', top: '75%', left: 0, right: 0, height: '8px', display: 'flex', transform: 'translateY(-50%)' }}><div className="animate-road-marking animation-delay-300" style={{ position: 'absolute', width: '80px', backgroundColor: '#fbbf24', left: '20%' }}></div><div className="animate-road-marking animation-delay-400" style={{ position: 'absolute', width: '80px', backgroundColor: '#fbbf24', left: '40%' }}></div><div className="animate-road-marking animation-delay-600" style={{ position: 'absolute', width: '80px', backgroundColor: '#fbbf24', left: '60%' }}></div><div className="animate-road-marking animation-delay-800" style={{ position: 'absolute', width: '80px', backgroundColor: '#fbbf24', left: '80%' }}></div></div></div>
+        <div style={{ position: 'absolute', top: '60%', left: 0, right: 0, height: '80px', backgroundColor: '#1f2937', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.2)', zIndex: 2 }}></div><div style={{ position: 'absolute', top: '60%', left: 0, right: 0, height: '80px', zIndex: 3, display: 'flex', justifyContent: 'center', alignItems: 'center' }}><div style={{ width: '100%', height: '4px', background: 'repeating-linear-gradient(to right, #fcd34d, #fcd34d 20px, transparent 20px, transparent 40px)', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2)' }}></div></div>
+        <div style={{ position: 'absolute', top: '85%', left: 0, right: 0, height: '50px', background: 'linear-gradient(to bottom, #4b5563 0%, #374151 100%)', boxShadow: '0 5px 10px -3px rgba(0, 0, 0, 0.3)', zIndex: 2 }}></div><div style={{ position: 'absolute', top: '85%', left: 0, right: 0, height: '50px', overflow: 'visible', zIndex: 3 }}><div style={{ position: 'absolute', top: '35%', left: 0, right: 0, height: '6px', background: 'linear-gradient(to bottom, #94a3b8 0%, #64748b 100%)', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3)', zIndex: 4 }}></div><div style={{ position: 'absolute', top: '65%', left: 0, right: 0, height: '6px', background: 'linear-gradient(to bottom, #94a3b8 0%, #64748b 100%)', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3)', zIndex: 4 }}></div><div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '100%', display: 'flex', gap: '15px', zIndex: 3 }}>{Array(30).fill(0).map((_, i) => (<div key={i} style={{ width: '20px', height: '100%', background: 'linear-gradient(to bottom, #92400e 0%, #7c2d12 70%, #713f12 100%)', marginLeft: `${i * 30}px`, boxShadow: 'inset 0 0 2px rgba(0, 0, 0, 0.5)', border: '1px solid #78350f' }}></div>))}</div></div>
+        <div className="animate-slight-bounce" style={{ position: 'absolute', top: '85%', marginTop: '-15px', left: '100%', height: '70px', width: '300px', zIndex: 6, pointerEvents: 'none', display: 'flex', animation: 'trainMove 15s linear infinite', filter: 'drop-shadow(0 4px 3px rgba(0, 0, 0, 0.2))' }}><div style={{ display: 'flex', width: '100%', height: '100%' }}><div style={{ position: 'relative', width: '110px', height: '60px', marginRight: '5px' }}><div style={{ position: 'absolute', bottom: '12px', left: '8px', width: '85%', height: '30px', background: 'linear-gradient(to bottom, #b91c1c 0%, #9f1239 60%, #7f1d1d 100%)', borderRadius: '8px 5px 5px 5px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)', border: '1px solid #7f1d1d' }}></div><div style={{ position: 'absolute', bottom: '42px', right: '10px', width: '60px', height: '30px', background: 'linear-gradient(to bottom, #7f1d1d 0%, #681e1e 100%)', borderRadius: '6px 6px 0 0', border: '1px solid #601414', boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.1)' }}></div><div style={{ position: 'absolute', bottom: '72px', right: '8px', width: '65px', height: '5px', background: '#4c1d95', borderRadius: '2px', boxShadow: '0 -1px 2px rgba(0, 0, 0, 0.3)' }}></div><div style={{ position: 'absolute', bottom: '5px', left: '0', width: '15px', height: '18px', background: 'linear-gradient(135deg, #9f1239 0%, #7f1d1d 100%)', clipPath: 'polygon(0 0, 100% 0, 100% 35%, 50% 100%, 0 35%)', borderRadius: '2px' }}></div><div style={{ position: 'absolute', bottom: '15px', left: '3px', width: '10px', height: '4px', backgroundColor: '#64748b', borderRadius: '1px', border: '1px solid #475569' }}></div><div style={{ position: 'absolute', top: '3px', left: '40px', padding: '3px 5px', backgroundColor: '#fef3c7', borderRadius: '3px', border: '1px solid #7f1d1d', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)', fontSize: '9px', fontWeight: 'bold', color: '#7f1d1d', whiteSpace: 'nowrap', fontFamily: "'Noto Sans Sinhala', 'Iskoola Pota', sans-serif", zIndex: 10, transform: 'rotate(-2deg)' }}>දුම්රිය සේවය</div><div style={{ position: 'absolute', bottom: '42px', left: '22px', width: '14px', height: '18px', background: 'linear-gradient(to bottom, #27272a 0%, #18181b 100%)', borderRadius: '4px 4px 0 0', border: '1px solid #111', boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.1)' }}><div style={{ position: 'absolute', top: '-2px', left: '-2px', width: '16px', height: '4px', background: 'linear-gradient(to bottom, #cbd5e1 0%, #94a3b8 100%)', borderRadius: '4px 4px 0 0', border: '1px solid #64748b' }}></div><div className="animate-steam" style={{ position: 'absolute', top: '-15px', left: '-2px', width: '18px', height: '15px', background: 'radial-gradient(circle, rgba(255, 255, 255, 0.95) 30%, rgba(255, 255, 255, 0.6) 80%)', borderRadius: '50%', opacity: 0.9 }}></div><div className="animate-steam animation-delay-200" style={{ position: 'absolute', top: '-12px', left: '4px', width: '16px', height: '14px', background: 'radial-gradient(circle, rgba(255, 255, 255, 0.95) 30%, rgba(255, 255, 255, 0.6) 80%)', borderRadius: '50%', opacity: 0.85 }}></div><div className="animate-steam animation-delay-400" style={{ position: 'absolute', top: '-18px', left: '2px', width: '20px', height: '18px', background: 'radial-gradient(circle, rgba(255, 255, 255, 0.95) 30%, rgba(255, 255, 255, 0.6) 80%)', borderRadius: '50%', opacity: 0.9 }}></div><div className="animate-steam animation-delay-600" style={{ position: 'absolute', top: '-14px', left: '-4px', width: '17px', height: '15px', background: 'radial-gradient(circle, rgba(255, 255, 255, 0.95) 30%, rgba(255, 255, 255, 0.6) 80%)', borderRadius: '50%', opacity: 0.8 }}></div><div className="animate-steam animation-delay-800" style={{ position: 'absolute', top: '-22px', left: '1px', width: '22px', height: '20px', background: 'radial-gradient(circle, rgba(255, 255, 255, 0.95) 30%, rgba(255, 255, 255, 0.6) 80%)', borderRadius: '50%', opacity: 0.7 }}></div></div><div style={{ position: 'absolute', bottom: '42px', left: '45px', width: '8px', height: '10px', background: 'linear-gradient(to bottom, #fbbf24 0%, #d97706 100%)', borderRadius: '4px 4px 8px 8px', border: '1px solid #b45309' }}></div><div style={{ position: 'absolute', bottom: '42px', left: '60px', width: '6px', height: '8px', background: 'linear-gradient(to bottom, #94a3b8 0%, #64748b 100%)', borderRadius: '3px 3px 0 0', border: '1px solid #475569' }}></div><div className="animate-wheels" style={{ position: 'absolute', bottom: '0', left: '15px', width: '24px', height: '24px', background: 'linear-gradient(135deg, #64748b 0%, #334155 100%)', borderRadius: '50%', border: '3px solid #cbd5e1', boxSizing: 'border-box', boxShadow: '0 3px 6px rgba(0, 0, 0, 0.4)' }}><div style={{ position: 'absolute', top: '1px', left: '1px', right: '1px', bottom: '1px', borderRadius: '50%', border: '2px solid #94a3b8' }}></div><div style={{ position: 'absolute', top: 'calc(50% - 1px)', left: '0', width: '100%', height: '2px', backgroundColor: '#cbd5e1' }}></div><div style={{ position: 'absolute', top: '0', left: 'calc(50% - 1px)', width: '2px', height: '100%', backgroundColor: '#cbd5e1' }}></div><div style={{ position: 'absolute', top: '0', left: '0', width: '100%', height: '100%', background: 'conic-gradient(from 0deg, transparent 0deg, transparent 10deg, #cbd5e1 10deg, #cbd5e1 15deg, transparent 15deg, transparent 55deg, #cbd5e1 55deg, #cbd5e1 60deg, transparent 60deg, transparent 100deg, #cbd5e1 100deg, #cbd5e1 105deg, transparent 105deg, transparent 145deg, #cbd5e1 145deg, #cbd5e1 150deg, transparent 150deg, transparent 190deg, #cbd5e1 190deg, #cbd5e1 195deg, transparent 195deg, transparent 235deg, #cbd5e1 235deg, #cbd5e1 240deg, transparent 240deg, transparent 280deg, #cbd5e1 280deg, #cbd5e1 285deg, transparent 285deg, transparent 325deg, #cbd5e1 325deg, #cbd5e1 330deg, transparent 330deg)', borderRadius: '50%' }}></div><div style={{ position: 'absolute', top: 'calc(50% - 4px)', left: 'calc(50% - 4px)', width: '8px', height: '8px', background: 'radial-gradient(circle, #f8fafc 0%, #cbd5e1 100%)', borderRadius: '50%', border: '1px solid #64748b', boxShadow: 'inset 0 0 2px rgba(0, 0, 0, 0.2)' }}></div></div><div className="animate-wheels" style={{ position: 'absolute', bottom: '0', right: '25px', width: '24px', height: '24px', background: 'linear-gradient(135deg, #64748b 0%, #334155 100%)', borderRadius: '50%', border: '3px solid #cbd5e1', boxSizing: 'border-box', boxShadow: '0 3px 6px rgba(0, 0, 0, 0.4)' }}><div style={{ position: 'absolute', top: '1px', left: '1px', right: '1px', bottom: '1px', borderRadius: '50%', border: '2px solid #94a3b8' }}></div><div style={{ position: 'absolute', top: 'calc(50% - 1px)', left: '0', width: '100%', height: '2px', backgroundColor: '#cbd5e1' }}></div><div style={{ position: 'absolute', top: '0', left: 'calc(50% - 1px)', width: '2px', height: '100%', backgroundColor: '#cbd5e1' }}></div><div style={{ position: 'absolute', top: '0', left: '0', width: '100%', height: '100%', background: 'conic-gradient(from 0deg, transparent 0deg, transparent 10deg, #cbd5e1 10deg, #cbd5e1 15deg, transparent 15deg, transparent 55deg, #cbd5e1 55deg, #cbd5e1 60deg, transparent 60deg, transparent 100deg, #cbd5e1 100deg, #cbd5e1 105deg, transparent 105deg, transparent 145deg, #cbd5e1 145deg, #cbd5e1 150deg, transparent 150deg, transparent 190deg, #cbd5e1 190deg, #cbd5e1 195deg, transparent 195deg, transparent 235deg, #cbd5e1 235deg, #cbd5e1 240deg, transparent 240deg, transparent 280deg, #cbd5e1 280deg, #cbd5e1 285deg, transparent 285deg, transparent 325deg, #cbd5e1 325deg, #cbd5e1 330deg, transparent 330deg)', borderRadius: '50%' }}></div><div style={{ position: 'absolute', top: 'calc(50% - 4px)', left: 'calc(50% - 4px)', width: '8px', height: '8px', background: 'radial-gradient(circle, #f8fafc 0%, #cbd5e1 100%)', borderRadius: '50%', border: '1px solid #64748b', boxShadow: 'inset 0 0 2px rgba(0, 0, 0, 0.2)' }}></div></div><div className="animate-wheels" style={{ position: 'absolute', bottom: '0', right: '60px', width: '24px', height: '24px', background: 'linear-gradient(135deg, #64748b 0%, #334155 100%)', borderRadius: '50%', border: '3px solid #cbd5e1', boxSizing: 'border-box', boxShadow: '0 3px 6px rgba(0, 0, 0, 0.4)' }}><div style={{ position: 'absolute', top: '1px', left: '1px', right: '1px', bottom: '1px', borderRadius: '50%', border: '2px solid #94a3b8' }}></div><div style={{ position: 'absolute', top: 'calc(50% - 1px)', left: '0', width: '100%', height: '2px', backgroundColor: '#cbd5e1' }}></div><div style={{ position: 'absolute', top: '0', left: 'calc(50% - 1px)', width: '2px', height: '100%', backgroundColor: '#cbd5e1' }}></div><div style={{ position: 'absolute', top: '0', left: '0', width: '100%', height: '100%', background: 'conic-gradient(from 0deg, transparent 0deg, transparent 10deg, #cbd5e1 10deg, #cbd5e1 15deg, transparent 15deg, transparent 55deg, #cbd5e1 55deg, #cbd5e1 60deg, transparent 60deg, transparent 100deg, #cbd5e1 100deg, #cbd5e1 105deg, transparent 105deg, transparent 145deg, #cbd5e1 145deg, #cbd5e1 150deg, transparent 150deg, transparent 190deg, #cbd5e1 190deg, #cbd5e1 195deg, transparent 195deg, transparent 235deg, #cbd5e1 235deg, #cbd5e1 240deg, transparent 240deg, transparent 280deg, #cbd5e1 280deg, #cbd5e1 285deg, transparent 285deg, transparent 325deg, #cbd5e1 325deg, #cbd5e1 330deg, transparent 330deg)', borderRadius: '50%' }}></div><div style={{ position: 'absolute', top: 'calc(50% - 4px)', left: 'calc(50% - 4px)', width: '8px', height: '8px', background: 'radial-gradient(circle, #f8fafc 0%, #cbd5e1 100%)', borderRadius: '50%', border: '1px solid #64748b', boxShadow: 'inset 0 0 2px rgba(0, 0, 0, 0.2)' }}></div></div><div style={{ position: 'absolute', bottom: '24px', left: '22px', width: '30px', height: '8px', backgroundColor: '#64748b', borderRadius: '4px', border: '1px solid #475569', zIndex: 3 }}><div className="animate-piston" style={{ position: 'absolute', top: '2px', left: '3px', width: '22px', height: '2px', backgroundColor: '#94a3b8', borderRadius: '1px' }}></div></div><div style={{ position: 'absolute', bottom: '47px', right: '15px', width: '15px', height: '12px', background: 'linear-gradient(135deg, #93c5fd 0%, #bfdbfe 50%, #93c5fd 100%)', borderRadius: '2px', border: '2px solid #7f1d1d', boxShadow: 'inset 0 0 4px rgba(255, 255, 255, 0.5)' }}></div><div style={{ position: 'absolute', bottom: '47px', right: '40px', width: '15px', height: '12px', background: 'linear-gradient(135deg, #93c5fd 0%, #bfdbfe 50%, #93c5fd 100%)', borderRadius: '2px', border: '2px solid #7f1d1d', boxShadow: 'inset 0 0 4px rgba(255, 255, 255, 0.5)' }}></div><div className="animate-light-blink" style={{ position: 'absolute', bottom: '22px', left: '3px', width: '10px', height: '10px', background: 'radial-gradient(circle, #fef3c7 0%, #fcd34d 100%)', borderRadius: '50%', boxShadow: '0 0 15px #fcd34d, 0 0 5px #fef3c7', border: '1px solid #b45309' }}></div></div><div style={{ position: 'relative', width: '90px', height: '40px', marginTop: '15px', marginRight: '5px' }}><div style={{ position: 'absolute', bottom: '5px', width: '100%', height: '28px', background: 'linear-gradient(to bottom, #dc2626 0%, #be123c 60%, #9f1239 100%)', borderRadius: '4px', boxSizing: 'border-box', border: '1px solid #881337', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)' }}><div style={{ position: 'absolute', top: '18px', left: '0', width: '100%', height: '3px', backgroundColor: '#fbbf24', opacity: 0.8 }}></div></div><div style={{ position: 'absolute', bottom: '33px', left: '2px', width: '96%', height: '4px', background: 'linear-gradient(to bottom, #7f1d1d 0%, #881337 100%)', borderRadius: '40% 40% 0 0 / 100% 100% 0 0', boxShadow: '0 -1px 2px rgba(0, 0, 0, 0.3)' }}></div><div style={{ position: 'absolute', top: '5px', left: '10px', width: '15px', height: '10px', background: 'linear-gradient(135deg, #93c5fd 0%, #bfdbfe 50%, #93c5fd 100%)', borderRadius: '2px', border: '1px solid #881337', boxShadow: 'inset 0 0 3px rgba(255, 255, 255, 0.5)' }}></div><div style={{ position: 'absolute', top: '5px', left: '35px', width: '15px', height: '10px', background: 'linear-gradient(135deg, #93c5fd 0%, #bfdbfe 50%, #93c5fd 100%)', borderRadius: '2px', border: '1px solid #881337', boxShadow: 'inset 0 0 3px rgba(255, 255, 255, 0.5)' }}></div><div style={{ position: 'absolute', top: '5px', left: '60px', width: '15px', height: '10px', background: 'linear-gradient(135deg, #93c5fd 0%, #bfdbfe 50%, #93c5fd 100%)', borderRadius: '2px', border: '1px solid #881337', boxShadow: 'inset 0 0 3px rgba(255, 255, 255, 0.5)' }}></div><div className="animate-wheels" style={{ position: 'absolute', bottom: '0', left: '20px', width: '20px', height: '20px', background: 'linear-gradient(135deg, #64748b 0%, #334155 100%)', borderRadius: '50%', border: '3px solid #cbd5e1', boxSizing: 'border-box', boxShadow: '0 3px 6px rgba(0, 0, 0, 0.4)' }}><div style={{ position: 'absolute', top: '1px', left: '1px', right: '1px', bottom: '1px', borderRadius: '50%', border: '2px solid #94a3b8' }}></div><div style={{ position: 'absolute', top: 'calc(50% - 1px)', left: '0', width: '100%', height: '2px', backgroundColor: '#cbd5e1' }}></div><div style={{ position: 'absolute', top: '0', left: 'calc(50% - 1px)', width: '2px', height: '100%', backgroundColor: '#cbd5e1' }}></div><div style={{ position: 'absolute', top: 'calc(50% - 3px)', left: 'calc(50% - 3px)', width: '6px', height: '6px', background: 'radial-gradient(circle, #f8fafc 0%, #cbd5e1 100%)', borderRadius: '50%', border: '1px solid #64748b', boxShadow: 'inset 0 0 2px rgba(0, 0, 0, 0.2)' }}></div></div><div className="animate-wheels" style={{ position: 'absolute', bottom: '0', right: '20px', width: '20px', height: '20px', background: 'linear-gradient(135deg, #64748b 0%, #334155 100%)', borderRadius: '50%', border: '3px solid #cbd5e1', boxSizing: 'border-box', boxShadow: '0 3px 6px rgba(0, 0, 0, 0.4)' }}><div style={{ position: 'absolute', top: '1px', left: '1px', right: '1px', bottom: '1px', borderRadius: '50%', border: '2px solid #94a3b8' }}></div><div style={{ position: 'absolute', top: 'calc(50% - 1px)', left: '0', width: '100%', height: '2px', backgroundColor: '#cbd5e1' }}></div><div style={{ position: 'absolute', top: '0', left: 'calc(50% - 1px)', width: '2px', height: '100%', backgroundColor: '#cbd5e1' }}></div><div style={{ position: 'absolute', top: 'calc(50% - 3px)', left: 'calc(50% - 3px)', width: '6px', height: '6px', background: 'radial-gradient(circle, #f8fafc 0%, #cbd5e1 100%)', borderRadius: '50%', border: '1px solid #64748b', boxShadow: 'inset 0 0 2px rgba(0, 0, 0, 0.2)' }}></div></div></div><div style={{ position: 'relative', width: '90px', height: '40px', marginTop: '15px' }}><div style={{ position: 'absolute', bottom: '5px', width: '100%', height: '28px', background: 'linear-gradient(to bottom, #c026d3 0%, #a21caf 60%, #86198f 100%)', borderRadius: '4px', boxSizing: 'border-box', border: '1px solid #701a75', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)' }}><div style={{ position: 'absolute', top: '18px', left: '0', width: '100%', height: '3px', backgroundColor: '#fbbf24', opacity: 0.8 }}></div></div><div style={{ position: 'absolute', bottom: '33px', left: '2px', width: '96%', height: '4px', background: 'linear-gradient(to bottom, #701a75 0%, #86198f 100%)', borderRadius: '40% 40% 0 0 / 100% 100% 0 0', boxShadow: '0 -1px 2px rgba(0, 0, 0, 0.3)' }}></div><div style={{ position: 'absolute', top: '5px', left: '10px', width: '15px', height: '10px', background: 'linear-gradient(135deg, #93c5fd 0%, #bfdbfe 50%, #93c5fd 100%)', borderRadius: '2px', border: '1px solid #701a75', boxShadow: 'inset 0 0 3px rgba(255, 255, 255, 0.5)' }}></div><div style={{ position: 'absolute', top: '5px', left: '35px', width: '15px', height: '10px', background: 'linear-gradient(135deg, #93c5fd 0%, #bfdbfe 50%, #93c5fd 100%)', borderRadius: '2px', border: '1px solid #701a75', boxShadow: 'inset 0 0 3px rgba(255, 255, 255, 0.5)' }}></div><div style={{ position: 'absolute', top: '5px', left: '60px', width: '15px', height: '10px', background: 'linear-gradient(135deg, #93c5fd 0%, #bfdbfe 50%, #93c5fd 100%)', borderRadius: '2px', border: '1px solid #701a75', boxShadow: 'inset 0 0 3px rgba(255, 255, 255, 0.5)' }}></div><div className="animate-light-blink animation-delay-500" style={{ position: 'absolute', bottom: '15px', right: '3px', width: '6px', height: '6px', background: 'radial-gradient(circle, #fef3c7 0%, #f87171 100%)', borderRadius: '50%', boxShadow: '0 0 8px #f87171', border: '1px solid #7f1d1d' }}></div><div className="animate-wheels" style={{ position: 'absolute', bottom: '0', left: '20px', width: '20px', height: '20px', background: 'linear-gradient(135deg, #64748b 0%, #334155 100%)', borderRadius: '50%', border: '3px solid #cbd5e1', boxSizing: 'border-box', boxShadow: '0 3px 6px rgba(0, 0, 0, 0.4)' }}><div style={{ position: 'absolute', top: '1px', left: '1px', right: '1px', bottom: '1px', borderRadius: '50%', border: '2px solid #94a3b8' }}></div><div style={{ position: 'absolute', top: 'calc(50% - 1px)', left: '0', width: '100%', height: '2px', backgroundColor: '#cbd5e1' }}></div><div style={{ position: 'absolute', top: '0', left: 'calc(50% - 1px)', width: '2px', height: '100%', backgroundColor: '#cbd5e1' }}></div><div style={{ position: 'absolute', top: 'calc(50% - 3px)', left: 'calc(50% - 3px)', width: '6px', height: '6px', background: 'radial-gradient(circle, #f8fafc 0%, #cbd5e1 100%)', borderRadius: '50%', border: '1px solid #64748b', boxShadow: 'inset 0 0 2px rgba(0, 0, 0, 0.2)' }}></div></div><div className="animate-wheels" style={{ position: 'absolute', bottom: '0', right: '20px', width: '20px', height: '20px', background: 'linear-gradient(135deg, #64748b 0%, #334155 100%)', borderRadius: '50%', border: '3px solid #cbd5e1', boxSizing: 'border-box', boxShadow: '0 3px 6px rgba(0, 0, 0, 0.4)' }}><div style={{ position: 'absolute', top: '1px', left: '1px', right: '1px', bottom: '1px', borderRadius: '50%', border: '2px solid #94a3b8' }}></div><div style={{ position: 'absolute', top: 'calc(50% - 1px)', left: '0', width: '100%', height: '2px', backgroundColor: '#cbd5e1' }}></div><div style={{ position: 'absolute', top: '0', left: 'calc(50% - 1px)', width: '2px', height: '100%', backgroundColor: '#cbd5e1' }}></div><div style={{ position: 'absolute', top: 'calc(50% - 3px)', left: 'calc(50% - 3px)', width: '6px', height: '6px', background: 'radial-gradient(circle, #f8fafc 0%, #cbd5e1 100%)', borderRadius: '50%', border: '1px solid #64748b', boxShadow: 'inset 0 0 2px rgba(0, 0, 0, 0.2)' }}></div></div><div style={{ position: 'absolute', bottom: '15px', left: '-8px', width: '10px', height: '4px', backgroundColor: '#64748b', borderRadius: '1px', zIndex: 1 }}></div></div></div></div>
+        <div className="animate-car-left animation-delay-1000" style={{ position: 'absolute', top: '15%', marginTop: '10px', right: '-150px', width: '150px', height: '70px', zIndex: 5, filter: 'drop-shadow(0 4px 3px rgba(0, 0, 0, 0.3))' }}><div style={{ position: 'relative', width: '100%', height: '100%' }}><div style={{ position: 'absolute', bottom: 0, right: 0, width: '50px', height: '45px', background: 'linear-gradient(to bottom, #059669 0%, #047857 70%, #065f46 100%)', borderRadius: '3px 8px 3px 3px', border: '1px solid #064e3b', boxShadow: 'inset 0 -3px 8px rgba(0, 0, 0, 0.2), inset -2px 0 6px rgba(255, 255, 255, 0.3)' }}></div><div style={{ position: 'absolute', bottom: 0, left: 0, width: '100px', height: '40px', background: 'linear-gradient(to bottom, #f3f4f6 0%, #e5e7eb 70%, #d1d5db 100%)', borderRadius: '3px', border: '1px solid #9ca3af', boxShadow: 'inset 0 -3px 8px rgba(0, 0, 0, 0.1)' }}></div><div style={{ position: 'absolute', top: '8px', right: '5px', width: '35px', height: '20px', background: 'linear-gradient(to bottom right, rgba(219, 234, 254, 0.8) 0%, rgba(147, 197, 253, 0.8) 100%)', borderRadius: '3px', border: '2px solid #047857', boxShadow: 'inset 0 0 8px rgba(255, 255, 255, 0.6)' }}><div style={{ position: 'absolute', top: '3px', left: '5px', width: '20px', height: '2px', background: 'linear-gradient(to bottom, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.2) 100%)', borderRadius: '50%' }}></div></div><div style={{ position: 'absolute', top: '15px', right: '8px', width: '15px', height: '15px', background: 'linear-gradient(to bottom, rgba(219, 234, 254, 0.7) 0%, rgba(147, 197, 253, 0.7) 100%)', borderRadius: '2px', border: '2px solid #047857' }}><div style={{ position: 'absolute', bottom: '3px', left: '50%', transform: 'translateX(-50%)', width: '6px', height: '8px', backgroundColor: 'rgba(0,0,0,0.8)', borderRadius: '3px 3px 0 0' }}></div></div><div style={{ position: 'absolute', top: '10px', left: '40px', width: '30px', height: '15px', backgroundColor: 'rgba(255, 255, 255, 0.9)', border: '1px solid #047857', borderRadius: '3px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)' }}><div style={{ fontSize: '6px', fontWeight: 'bold', color: '#047857', fontFamily: "'Noto Sans Sinhala', 'Iskoola Pota', sans-serif" }}>බෙදාහැරීම්</div></div><div style={{ position: 'absolute', bottom: '8px', right: '3px', width: '8px', height: '6px', background: 'linear-gradient(to left, #fef3c7 0%, #fcd34d 100%)', borderRadius: '30%', border: '1px solid #064e3b', boxShadow: '0 0 8px rgba(252, 211, 77, 0.7)' }}><div style={{ position: 'absolute', top: '1px', right: '1px', width: '3px', height: '3px', background: 'radial-gradient(circle, #fef9c3 0%, #fef3c7 100%)', borderRadius: '50%' }}></div></div><div style={{ position: 'absolute', bottom: '15px', right: '3px', width: '8px', height: '12px', background: 'linear-gradient(to bottom, #374151 0%, #1f2937 100%)', borderRadius: '2px' }}><div style={{ position: 'absolute', top: '2px', left: '1px', right: '1px', height: '1px', backgroundColor: '#6b7280' }}></div><div style={{ position: 'absolute', top: '5px', left: '1px', right: '1px', height: '1px', backgroundColor: '#6b7280' }}></div><div style={{ position: 'absolute', top: '8px', left: '1px', right: '1px', height: '1px', backgroundColor: '#6b7280' }}></div></div><div className="animate-light-blink animation-delay-300" style={{ position: 'absolute', bottom: '20px', right: '5px', width: '5px', height: '5px', background: 'radial-gradient(circle, #fef3c7 0%, #fcd34d 100%)', borderRadius: '50%', border: '1px solid #064e3b', boxShadow: '0 0 6px rgba(252, 211, 77, 0.6)' }}></div><div className="animate-light-blink animation-delay-700" style={{ position: 'absolute', bottom: '18px', left: '5px', width: '10px', height: '6px', background: 'radial-gradient(circle, #f87171 50%, #ef4444 100%)', borderRadius: '2px', border: '1px solid #064e3b', boxShadow: '0 0 8px rgba(239, 68, 68, 0.6)' }}></div><div style={{ position: 'absolute', bottom: '-8px', right: '15px', width: '20px', height: '20px', backgroundColor: '#0f172a', borderRadius: '50%', border: '3px solid #94a3b8', boxSizing: 'border-box', boxShadow: '0 3px 5px rgba(0, 0, 0, 0.5)', overflow: 'hidden' }}><div className="animate-wheels" style={{ position: 'absolute', inset: '1px', borderRadius: '50%', border: '2px solid #64748b', background: 'radial-gradient(circle at center, #e2e8f0 15%, transparent 15%), conic-gradient(#cbd5e1 0deg, #cbd5e1 30deg, transparent 30deg, transparent 60deg, #cbd5e1 60deg, #cbd5e1 90deg, transparent 90deg, transparent 120deg, #cbd5e1 120deg, #cbd5e1 150deg, transparent 150deg, transparent 180deg, #cbd5e1 180deg, #cbd5e1 210deg, transparent 210deg, transparent 240deg, #cbd5e1 240deg, #cbd5e1 270deg, transparent 270deg, transparent 300deg, #cbd5e1 300deg, #cbd5e1 330deg, transparent 330deg, transparent 360deg)' }}></div></div><div style={{ position: 'absolute', bottom: '-8px', left: '15px', width: '20px', height: '20px', backgroundColor: '#0f172a', borderRadius: '50%', border: '3px solid #94a3b8', boxSizing: 'border-box', boxShadow: '0 3px 5px rgba(0, 0, 0, 0.5)', overflow: 'hidden' }}><div className="animate-wheels" style={{ position: 'absolute', inset: '1px', borderRadius: '50%', border: '2px solid #64748b', background: 'radial-gradient(circle at center, #e2e8f0 15%, transparent 15%), conic-gradient(#cbd5e1 0deg, #cbd5e1 30deg, transparent 30deg, transparent 60deg, #cbd5e1 60deg, #cbd5e1 90deg, transparent 90deg, transparent 120deg, #cbd5e1 120deg, #cbd5e1 150deg, transparent 150deg, transparent 180deg, #cbd5e1 180deg, #cbd5e1 210deg, transparent 210deg, transparent 240deg, #cbd5e1 240deg, #cbd5e1 270deg, transparent 270deg, transparent 300deg, #cbd5e1 300deg, #cbd5e1 330deg, transparent 330deg, transparent 360deg)' }}></div></div><div style={{ position: 'absolute', bottom: '3px', left: '50%', transform: 'translateX(-50%)', width: '25px', height: '8px', backgroundColor: 'white', borderRadius: '2px', border: '1px solid #047857', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)' }}><div style={{ fontSize: '4px', fontWeight: 'bold', color: '#1f2937' }}>DL-9876</div></div><div style={{ position: 'absolute', bottom: '5px', left: '5px', width: '6px', height: '3px', background: 'linear-gradient(to bottom, #9ca3af 0%, #6b7280 100%)', borderRadius: '2px 0 0 2px', boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.4)' }}></div><div style={{ position: 'absolute', bottom: '5px', left: '-8px', width: '8px', height: '8px', background: 'radial-gradient(circle, rgba(209, 213, 219, 0.8) 0%, rgba(209, 213, 219, 0) 70%)', borderRadius: '50%', opacity: 0.6, animation: 'steam 1.2s ease-out infinite' }}></div></div></div>
+        <div className="animate-car-right animation-delay-2500" style={{ position: 'absolute', top: '15%', marginTop: '15px', left: '-140px', width: '140px', height: '65px', zIndex: 5, filter: 'drop-shadow(0 4px 3px rgba(0, 0, 0, 0.3))' }}><div style={{ position: 'relative', width: '100%', height: '100%' }}><div style={{ position: 'absolute', bottom: 0, width: '100%', height: '40px', background: 'linear-gradient(to bottom, #f97316 0%, #ea580c 70%, #c2410c 100%)', borderRadius: '10px 12px 6px 6px', border: '1px solid #9a3412', boxShadow: 'inset 0 -3px 8px rgba(0, 0, 0, 0.2), inset 2px 0 6px rgba(255, 255, 255, 0.3)' }}></div><div style={{ position: 'absolute', bottom: '5px', left: '0', width: '35px', height: '35px', background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)', borderRadius: '10px 4px 0 6px', boxShadow: 'inset 1px 1px 5px rgba(255, 255, 255, 0.4)' }}></div><div style={{ position: 'absolute', top: '8px', left: '40px', right: '8px', height: '25px', background: 'linear-gradient(to bottom, rgba(219, 234, 254, 0.7) 0%, rgba(147, 197, 253, 0.7) 100%)', borderRadius: '4px', border: '2px solid #c2410c', boxShadow: 'inset 0 0 8px rgba(255, 255, 255, 0.6)', overflow: 'hidden' }}><div style={{ display: 'flex', height: '100%', width: '100%' }}>{[...Array(4)].map((_, i) => (<div key={i} style={{ flex: '1', height: '100%', borderRight: i < 3 ? '2px solid #c2410c' : 'none', position: 'relative' }}>{i % 2 === 1 && (<div style={{ position: 'absolute', bottom: '4px', left: '50%', transform: 'translateX(-50%)', width: '6px', height: '8px', backgroundColor: 'rgba(0,0,0,0.7)', borderRadius: '3px 3px 0 0' }}></div>)}</div>))}</div></div><div style={{ position: 'absolute', top: '8px', left: '8px', width: '25px', height: '25px', background: 'linear-gradient(to bottom right, rgba(219, 234, 254, 0.8) 0%, rgba(147, 197, 253, 0.8) 100%)', borderRadius: '4px', border: '2px solid #c2410c', boxShadow: 'inset 0 0 6px rgba(255, 255, 255, 0.6)' }}><div style={{ position: 'absolute', top: '3px', left: '3px', width: '15px', height: '2px', background: 'linear-gradient(to bottom, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.2) 100%)', borderRadius: '50%' }}></div></div><div style={{ position: 'absolute', top: '35px', left: '50%', transform: 'translateX(-50%)', width: '40px', height: '8px', backgroundColor: 'rgba(255, 255, 255, 0.9)', border: '1px solid #c2410c', borderRadius: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)' }}><div style={{ fontSize: '4px', fontWeight: 'bold', color: '#c2410c' }}>SCHOOL BUS</div></div><div style={{ position: 'absolute', bottom: '25px', left: '18px', width: '8px', height: '10px', backgroundColor: 'rgba(0,0,0,0.8)', borderRadius: '4px 4px 0 0' }}><div style={{ position: 'absolute', top: '2px', left: '1px', width: '2px', height: '1px', backgroundColor: '#f8fafc', borderRadius: '50%' }}></div><div style={{ position: 'absolute', top: '2px', right: '1px', width: '2px', height: '1px', backgroundColor: '#f8fafc', borderRadius: '50%' }}></div></div><div style={{ position: 'absolute', bottom: '8px', left: '3px', width: '8px', height: '6px', background: 'linear-gradient(to right, #fef3c7 0%, #fcd34d 100%)', borderRadius: '40%', border: '1px solid #9a3412', boxShadow: '0 0 8px rgba(252, 211, 77, 0.7)' }}><div style={{ position: 'absolute', top: '1px', left: '1px', width: '3px', height: '3px', background: 'radial-gradient(circle, #fef9c3 0%, #fef3c7 100%)', borderRadius: '50%' }}></div></div><div style={{ position: 'absolute', bottom: '20px', left: '40px', width: '15px', height: '8px', background: 'linear-gradient(to bottom, #dc2626 0%, #b91c1c 100%)', borderRadius: '2px', border: '1px solid #7f1d1d' }}><div style={{ position: 'absolute', top: '1px', left: '2px', fontSize: '3px', fontWeight: 'bold', color: 'white' }}>STOP</div></div><div style={{ position: 'absolute', bottom: '-7px', left: '18px', width: '18px', height: '18px', backgroundColor: '#0f172a', borderRadius: '50%', border: '3px solid #94a3b8', boxSizing: 'border-box', boxShadow: '0 3px 5px rgba(0, 0, 0, 0.5)', overflow: 'hidden' }}><div className="animate-wheels" style={{ position: 'absolute', inset: '1px', borderRadius: '50%', border: '2px solid #64748b', background: 'radial-gradient(circle at center, #e2e8f0 15%, transparent 15%), conic-gradient(#cbd5e1 0deg, #cbd5e1 30deg, transparent 30deg, transparent 60deg, #cbd5e1 60deg, #cbd5e1 90deg, transparent 90deg, transparent 120deg, #cbd5e1 120deg, #cbd5e1 150deg, transparent 150deg, transparent 180deg, #cbd5e1 180deg, #cbd5e1 210deg, transparent 210deg, transparent 240deg, #cbd5e1 240deg, #cbd5e1 270deg, transparent 270deg, transparent 300deg, #cbd5e1 300deg, #cbd5e1 330deg, transparent 330deg, transparent 360deg)' }}></div></div><div style={{ position: 'absolute', bottom: '-7px', right: '18px', width: '18px', height: '18px', backgroundColor: '#0f172a', borderRadius: '50%', border: '3px solid #94a3b8', boxSizing: 'border-box', boxShadow: '0 3px 5px rgba(0, 0, 0, 0.5)', overflow: 'hidden' }}><div className="animate-wheels" style={{ position: 'absolute', inset: '1px', borderRadius: '50%', border: '2px solid #64748b', background: 'radial-gradient(circle at center, #e2e8f0 15%, transparent 15%), conic-gradient(#cbd5e1 0deg, #cbd5e1 30deg, transparent 30deg, transparent 60deg, #cbd5e1 60deg, #cbd5e1 90deg, transparent 90deg, transparent 120deg, #cbd5e1 120deg, #cbd5e1 150deg, transparent 150deg, transparent 180deg, #cbd5e1 180deg, #cbd5e1 210deg, transparent 210deg, transparent 240deg, #cbd5e1 240deg, #cbd5e1 270deg, transparent 270deg, transparent 300deg, #cbd5e1 300deg, #cbd5e1 330deg, transparent 330deg, transparent 360deg)' }}></div></div><div style={{ position: 'absolute', bottom: '2px', left: '50%', transform: 'translateX(-50%)', width: '22px', height: '6px', backgroundColor: 'white', borderRadius: '2px', border: '1px solid #c2410c', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2)' }}><div style={{ fontSize: '3px', fontWeight: 'bold', color: '#1f2937' }}>SCH-321</div></div><div style={{ position: 'absolute', bottom: '4px', right: '8px', width: '5px', height: '3px', background: 'linear-gradient(to bottom, #9ca3af 0%, #6b7280 100%)', borderRadius: '0 2px 2px 0', boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.4)' }}></div><div className="animate-light-blink animation-delay-100" style={{ position: 'absolute', top: '3px', left: '5px', width: '6px', height: '6px', background: 'radial-gradient(circle, #fbbf24 0%, #f59e0b 100%)', borderRadius: '50%', border: '1px solid #9a3412', boxShadow: '0 0 8px rgba(251, 191, 36, 0.6)' }}></div><div className="animate-light-blink animation-delay-600" style={{ position: 'absolute', top: '3px', right: '5px', width: '6px', height: '6px', background: 'radial-gradient(circle, #fbbf24 0%, #f59e0b 100%)', borderRadius: '50%', border: '1px solid #9a3412', boxShadow: '0 0 8px rgba(251, 191, 36, 0.6)' }}></div></div></div>
+        <div className="animate-car-left animation-delay-2000" style={{ position: 'absolute', top: '60%', marginTop: '15px', right: '-100px', width: '100px', height: '45px', zIndex: 5, filter: 'drop-shadow(0 4px 3px rgba(0, 0, 0, 0.3))' }}><div style={{ position: 'relative', width: '100%', height: '100%' }}><div style={{ position: 'absolute', bottom: 0, width: '100%', height: '25px', background: 'linear-gradient(to bottom, #dc2626 0%, #b91c1c 70%, #991b1b 100%)', borderRadius: '15px 10px 5px 5px', border: '1px solid #7f1d1d', boxShadow: 'inset 0 -3px 8px rgba(0, 0, 0, 0.2), inset -2px 0 6px rgba(255, 255, 255, 0.3)' }}></div><div style={{ position: 'absolute', bottom: '25px', left: '15px', right: '20px', height: '15px', background: 'linear-gradient(to bottom, #7f1d1d 0%, #991b1b 100%)', borderRadius: '8px 8px 0 0', border: '1px solid #7f1d1d', borderBottom: 'none' }}></div><div style={{ position: 'absolute', top: '8px', right: '10px', width: '20px', height: '12px', background: 'linear-gradient(to bottom right, rgba(219, 234, 254, 0.8) 0%, rgba(147, 197, 253, 0.8) 100%)', borderRadius: '3px', border: '1px solid #7f1d1d', boxShadow: 'inset 0 0 5px rgba(255, 255, 255, 0.6)' }}><div style={{ position: 'absolute', top: '2px', left: '3px', width: '12px', height: '1px', background: 'linear-gradient(to bottom, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.2) 100%)', borderRadius: '50%' }}></div></div><div style={{ position: 'absolute', top: '8px', left: '25px', right: '35px', height: '12px', background: 'linear-gradient(to bottom, rgba(219, 234, 254, 0.7) 0%, rgba(147, 197, 253, 0.7) 100%)', borderRadius: '3px 0 0 0', border: '1px solid #7f1d1d', boxShadow: 'inset 0 0 5px rgba(255, 255, 255, 0.6)' }}><div style={{ position: 'absolute', bottom: '2px', left: '8px', width: '5px', height: '6px', backgroundColor: 'rgba(0,0,0,0.8)', borderRadius: '2px 2px 0 0' }}></div><div style={{ position: 'absolute', bottom: '2px', right: '8px', width: '5px', height: '6px', backgroundColor: 'rgba(0,0,0,0.8)', borderRadius: '2px 2px 0 0' }}></div></div><div style={{ position: 'absolute', bottom: '8px', right: '5px', width: '8px', height: '5px', background: 'linear-gradient(to left, #fef3c7 0%, #fcd34d 100%)', borderRadius: '50%', border: '1px solid #7f1d1d', boxShadow: '0 0 8px rgba(252, 211, 77, 0.6)' }}><div style={{ position: 'absolute', top: '1px', right: '1px', width: '3px', height: '2px', backgroundColor: 'rgba(255, 255, 255, 0.8)', borderRadius: '50%' }}></div></div><div style={{ position: 'absolute', bottom: '6px', right: '-15px', width: '20px', height: '10px', background: 'linear-gradient(to right, rgba(252, 211, 77, 0.2) 0%, rgba(252, 211, 77, 0) 100%)', borderRadius: '50%', transform: 'scaleX(2)' }}></div><div className="animate-light-blink animation-delay-400" style={{ position: 'absolute', bottom: '15px', right: '8px', width: '4px', height: '4px', background: 'radial-gradient(circle, #fef3c7 0%, #fcd34d 100%)', borderRadius: '50%', border: '1px solid #7f1d1d', boxShadow: '0 0 6px rgba(252, 211, 77, 0.6)' }}></div><div className="animate-light-blink animation-delay-500" style={{ position: 'absolute', bottom: '8px', left: '5px', width: '6px', height: '4px', background: 'radial-gradient(circle, #f87171 50%, #ef4444 100%)', borderRadius: '2px', border: '1px solid #7f1d1d', boxShadow: '0 0 6px rgba(239, 68, 68, 0.6)' }}></div><div style={{ position: 'absolute', bottom: '-5px', right: '20px', width: '16px', height: '16px', backgroundColor: '#0f172a', borderRadius: '50%', border: '3px solid #94a3b8', boxSizing: 'border-box', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.5)', overflow: 'hidden' }}><div className="animate-wheels" style={{ position: 'absolute', inset: '1px', borderRadius: '50%', border: '1px solid #64748b', background: 'radial-gradient(circle at center, #e2e8f0 15%, transparent 15%), conic-gradient(#cbd5e1 0deg, #cbd5e1 30deg, transparent 30deg, transparent 60deg, #cbd5e1 60deg, #cbd5e1 90deg, transparent 90deg, transparent 120deg, #cbd5e1 120deg, #cbd5e1 150deg, transparent 150deg, transparent 180deg, #cbd5e1 180deg, #cbd5e1 210deg, transparent 210deg, transparent 240deg, #cbd5e1 240deg, #cbd5e1 270deg, transparent 270deg, transparent 300deg, #cbd5e1 300deg, #cbd5e1 330deg, transparent 330deg, transparent 360deg)' }}></div></div><div style={{ position: 'absolute', bottom: '-5px', left: '20px', width: '16px', height: '16px', backgroundColor: '#0f172a', borderRadius: '50%', border: '3px solid #94a3b8', boxSizing: 'border-box', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.5)', overflow: 'hidden' }}><div className="animate-wheels" style={{ position: 'absolute', inset: '1px', borderRadius: '50%', border: '1px solid #64748b', background: 'radial-gradient(circle at center, #e2e8f0 15%, transparent 15%), conic-gradient(#cbd5e1 0deg, #cbd5e1 30deg, transparent 30deg, transparent 60deg, #cbd5e1 60deg, #cbd5e1 90deg, transparent 90deg, transparent 120deg, #cbd5e1 120deg, #cbd5e1 150deg, transparent 150deg, transparent 180deg, #cbd5e1 180deg, #cbd5e1 210deg, transparent 210deg, transparent 240deg, #cbd5e1 240deg, #cbd5e1 270deg, transparent 270deg, transparent 300deg, #cbd5e1 300deg, #cbd5e1 330deg, transparent 330deg, transparent 360deg)' }}></div></div><div style={{ position: 'absolute', bottom: '2px', left: '50%', transform: 'translateX(-50%)', width: '20px', height: '6px', backgroundColor: 'white', borderRadius: '2px', border: '1px solid #7f1d1d', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2)' }}><div style={{ fontSize: '3px', fontWeight: 'bold', color: '#1f2937' }}>CAR-456</div></div><div style={{ position: 'absolute', bottom: '3px', left: '8px', width: '5px', height: '2px', background: 'linear-gradient(to right, #9ca3af 0%, #6b7280 100%)', borderRadius: '1px 0 0 1px', boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.4)' }}></div><div style={{ position: 'absolute', bottom: '3px', left: '5px', width: '6px', height: '6px', background: 'radial-gradient(circle, rgba(209, 213, 219, 0.8) 0%, rgba(209, 213, 219, 0) 70%)', borderRadius: '50%', opacity: 0.6, animation: 'steam 1s ease-out infinite' }}></div></div></div>
+        <div className="animate-car-right animation-delay-1500" style={{ position: 'absolute', top: '60%', marginTop: '40px', left: '-60px', width: '60px', height: '35px', zIndex: 5, filter: 'drop-shadow(0 4px 3px rgba(0, 0, 0, 0.3))' }}><div style={{ position: 'relative', width: '100%', height: '100%' }}><div style={{ position: 'absolute', bottom: '8px', left: '15px', width: '30px', height: '3px', background: 'linear-gradient(to bottom, #059669 0%, #047857 100%)', borderRadius: '2px', transform: 'rotate(10deg)', transformOrigin: 'left center' }}></div><div style={{ position: 'absolute', bottom: '12px', left: '20px', width: '20px', height: '3px', background: 'linear-gradient(to bottom, #059669 0%, #047857 100%)', borderRadius: '2px', transform: 'rotate(-20deg)', transformOrigin: 'left center' }}></div><div style={{ position: 'absolute', bottom: '18px', left: '22px', width: '8px', height: '3px', background: 'linear-gradient(to bottom, #1f2937 0%, #111827 100%)', borderRadius: '2px' }}></div><div style={{ position: 'absolute', bottom: '20px', right: '15px', width: '10px', height: '2px', background: 'linear-gradient(to bottom, #6b7280 0%, #4b5563 100%)', borderRadius: '1px' }}></div><div style={{ position: 'absolute', bottom: '22px', right: '18px', width: '2px', height: '8px', background: 'linear-gradient(to bottom, #6b7280 0%, #4b5563 100%)', borderRadius: '1px' }}></div><div style={{ position: 'absolute', bottom: '0', right: '10px', width: '16px', height: '16px', backgroundColor: '#0f172a', borderRadius: '50%', border: '2px solid #94a3b8', boxSizing: 'border-box', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.5)', overflow: 'hidden' }}><div className="animate-wheels" style={{ position: 'absolute', inset: '1px', borderRadius: '50%', border: '1px solid #64748b', background: 'radial-gradient(circle at center, transparent 40%, #cbd5e1 40%, #cbd5e1 45%, transparent 45%), conic-gradient(#cbd5e1 0deg, #cbd5e1 10deg, transparent 10deg, transparent 80deg, #cbd5e1 80deg, #cbd5e1 90deg, transparent 90deg, transparent 170deg, #cbd5e1 170deg, #cbd5e1 180deg, transparent 180deg, transparent 260deg, #cbd5e1 260deg, #cbd5e1 270deg, transparent 270deg, transparent 350deg, #cbd5e1 350deg, #cbd5e1 360deg)' }}></div></div><div style={{ position: 'absolute', bottom: '0', left: '8px', width: '16px', height: '16px', backgroundColor: '#0f172a', borderRadius: '50%', border: '2px solid #94a3b8', boxSizing: 'border-box', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.5)', overflow: 'hidden' }}><div className="animate-wheels" style={{ position: 'absolute', inset: '1px', borderRadius: '50%', border: '1px solid #64748b', background: 'radial-gradient(circle at center, transparent 40%, #cbd5e1 40%, #cbd5e1 45%, transparent 45%), conic-gradient(#cbd5e1 0deg, #cbd5e1 10deg, transparent 10deg, transparent 80deg, #cbd5e1 80deg, #cbd5e1 90deg, transparent 90deg, transparent 170deg, #cbd5e1 170deg, #cbd5e1 180deg, transparent 180deg, transparent 260deg, #cbd5e1 260deg, #cbd5e1 270deg, transparent 270deg, transparent 350deg, #cbd5e1 350deg, #cbd5e1 360deg)' }}></div></div><div style={{ position: 'absolute', bottom: '16px', left: '18px', width: '8px', height: '12px', backgroundColor: '#3b82f6', borderRadius: '4px 4px 0 0' }}><div style={{ position: 'absolute', top: '-6px', left: '1px', width: '6px', height: '6px', background: 'linear-gradient(to bottom, #fbbf24 0%, #f59e0b 100%)', borderRadius: '50%' }}><div style={{ position: 'absolute', top: '2px', left: '1px', width: '1px', height: '1px', backgroundColor: '#111827', borderRadius: '50%' }}></div><div style={{ position: 'absolute', top: '2px', right: '1px', width: '1px', height: '1px', backgroundColor: '#111827', borderRadius: '50%' }}></div></div><div style={{ position: 'absolute', top: '2px', right: '-6px', width: '8px', height: '2px', backgroundColor: '#3b82f6', borderRadius: '1px', transform: 'rotate(-15deg)' }}></div></div><div style={{ position: 'absolute', bottom: '12px', right: '8px', width: '4px', height: '3px', background: 'linear-gradient(to left, #fef3c7 0%, #fcd34d 100%)', borderRadius: '50%', border: '1px solid #047857', boxShadow: '0 0 6px rgba(252, 211, 77, 0.6)' }}></div><div className="animate-light-blink animation-delay-800" style={{ position: 'absolute', bottom: '8px', left: '5px', width: '3px', height: '2px', background: 'radial-gradient(circle, #f87171 50%, #ef4444 100%)', borderRadius: '1px', border: '1px solid #047857', boxShadow: '0 0 4px rgba(239, 68, 68, 0.6)' }}></div></div></div>
+        <div className="animate-car-left animation-delay-3000" style={{ position: 'absolute', top: '60%', marginTop: '5px', right: '-90px', width: '90px', height: '40px', zIndex: 5, filter: 'drop-shadow(0 4px 3px rgba(0, 0, 0, 0.3))' }}><div style={{ position: 'relative', width: '100%', height: '100%' }}><div style={{ position: 'absolute', bottom: 0, width: '100%', height: '28px', background: 'linear-gradient(to bottom, #7c3aed 0%, #6d28d9 70%, #5b21b6 100%)', borderRadius: '8px 10px 4px 4px', border: '1px solid #581c87', boxShadow: 'inset 0 -3px 8px rgba(0, 0, 0, 0.2), inset -2px 0 6px rgba(255, 255, 255, 0.3)' }}></div><div style={{ position: 'absolute', top: '5px', right: '5px', width: '20px', height: '12px', background: 'linear-gradient(to bottom right, rgba(219, 234, 254, 0.8) 0%, rgba(147, 197, 253, 0.8) 100%)', borderRadius: '3px', border: '1px solid #581c87', boxShadow: 'inset 0 0 5px rgba(255, 255, 255, 0.6)' }}><div style={{ position: 'absolute', top: '2px', left: '3px', width: '12px', height: '1px', background: 'linear-gradient(to bottom, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.2) 100%)', borderRadius: '50%' }}></div></div><div style={{ position: 'absolute', top: '5px', left: '25px', right: '30px', height: '12px', background: 'linear-gradient(to bottom, rgba(219, 234, 254, 0.7) 0%, rgba(147, 197, 253, 0.7) 100%)', borderRadius: '3px 0 0 0', border: '1px solid #581c87', boxShadow: 'inset 0 0 5px rgba(255, 255, 255, 0.6)' }}><div style={{ position: 'absolute', bottom: '2px', left: '6px', width: '4px', height: '6px', backgroundColor: 'rgba(0,0,0,0.8)', borderRadius: '2px 2px 0 0' }}></div><div style={{ position: 'absolute', bottom: '2px', right: '6px', width: '4px', height: '6px', backgroundColor: 'rgba(0,0,0,0.8)', borderRadius: '2px 2px 0 0' }}></div></div><div style={{ position: 'absolute', bottom: '18px', right: '15px', width: '6px', height: '8px', backgroundColor: 'rgba(0,0,0,0.8)', borderRadius: '3px 3px 0 0' }}></div><div style={{ position: 'absolute', bottom: '8px', right: '3px', width: '6px', height: '4px', background: 'linear-gradient(to left, #fef3c7 0%, #fcd34d 100%)', borderRadius: '50%', border: '1px solid #581c87', boxShadow: '0 0 6px rgba(252, 211, 77, 0.6)' }}><div style={{ position: 'absolute', top: '1px', right: '1px', width: '2px', height: '1px', backgroundColor: 'rgba(255, 255, 255, 0.8)', borderRadius: '50%' }}></div></div><div className="animate-light-blink animation-delay-300" style={{ position: 'absolute', bottom: '14px', right: '6px', width: '4px', height: '4px', background: 'radial-gradient(circle, #fef3c7 0%, #fcd34d 100%)', borderRadius: '50%', border: '1px solid #581c87', boxShadow: '0 0 5px rgba(252, 211, 77, 0.6)' }}></div><div className="animate-light-blink animation-delay-600" style={{ position: 'absolute', bottom: '8px', left: '3px', width: '5px', height: '3px', background: 'radial-gradient(circle, #f87171 50%, #ef4444 100%)', borderRadius: '2px', border: '1px solid #581c87', boxShadow: '0 0 5px rgba(239, 68, 68, 0.6)' }}></div><div style={{ position: 'absolute', top: '18px', left: '50%', transform: 'translateX(-50%)', width: '25px', height: '6px', backgroundColor: 'rgba(255, 255, 255, 0.9)', border: '1px solid #581c87', borderRadius: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2)' }}><div style={{ fontSize: '3px', fontWeight: 'bold', color: '#581c87', fontFamily: "'Noto Sans Sinhala', 'Iskoola Pota', sans-serif" }}>පවුල</div></div><div style={{ position: 'absolute', bottom: '-5px', right: '15px', width: '14px', height: '14px', backgroundColor: '#0f172a', borderRadius: '50%', border: '2px solid #94a3b8', boxSizing: 'border-box', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.5)', overflow: 'hidden' }}><div className="animate-wheels" style={{ position: 'absolute', inset: '1px', borderRadius: '50%', border: '1px solid #64748b', background: 'radial-gradient(circle at center, #e2e8f0 15%, transparent 15%), conic-gradient(#cbd5e1 0deg, #cbd5e1 30deg, transparent 30deg, transparent 60deg, #cbd5e1 60deg, #cbd5e1 90deg, transparent 90deg, transparent 120deg, #cbd5e1 120deg, #cbd5e1 150deg, transparent 150deg, transparent 180deg, #cbd5e1 180deg, #cbd5e1 210deg, transparent 210deg, transparent 240deg, #cbd5e1 240deg, #cbd5e1 270deg, transparent 270deg, transparent 300deg, #cbd5e1 300deg, #cbd5e1 330deg, transparent 330deg, transparent 360deg)' }}></div></div><div style={{ position: 'absolute', bottom: '-5px', left: '15px', width: '14px', height: '14px', backgroundColor: '#0f172a', borderRadius: '50%', border: '2px solid #94a3b8', boxSizing: 'border-box', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.5)', overflow: 'hidden' }}><div className="animate-wheels" style={{ position: 'absolute', inset: '1px', borderRadius: '50%', border: '1px solid #64748b', background: 'radial-gradient(circle at center, #e2e8f0 15%, transparent 15%), conic-gradient(#cbd5e1 0deg, #cbd5e1 30deg, transparent 30deg, transparent 60deg, #cbd5e1 60deg, #cbd5e1 90deg, transparent 90deg, transparent 120deg, #cbd5e1 120deg, #cbd5e1 150deg, transparent 150deg, transparent 180deg, #cbd5e1 180deg, #cbd5e1 210deg, transparent 210deg, transparent 240deg, #cbd5e1 240deg, #cbd5e1 270deg, transparent 270deg, transparent 300deg, #cbd5e1 300deg, #cbd5e1 330deg, transparent 330deg, transparent 360deg)' }}></div></div><div style={{ position: 'absolute', bottom: '2px', left: '50%', transform: 'translateX(-50%)', width: '18px', height: '5px', backgroundColor: 'white', borderRadius: '1px', border: '1px solid #581c87', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2)' }}><div style={{ fontSize: '3px', fontWeight: 'bold', color: '#1f2937' }}>VAN-789</div></div><div style={{ position: 'absolute', bottom: '3px', left: '5px', width: '4px', height: '2px', background: 'linear-gradient(to right, #9ca3af 0%, #6b7280 100%)', borderRadius: '1px 0 0 1px', boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.4)' }}></div><div style={{ position: 'absolute', bottom: '3px', left: '2px', width: '5px', height: '5px', background: 'radial-gradient(circle, rgba(209, 213, 219, 0.8) 0%, rgba(209, 213, 219, 0) 70%)', borderRadius: '50%', opacity: 0.6, animation: 'steam 0.9s ease-out infinite' }}></div></div></div>
+        <div className="animate-car-left animation-delay-1200" style={{ position: 'absolute', top: '15%', marginTop: '25px', right: '-110px', width: '110px', height: '55px', zIndex: 5, filter: 'drop-shadow(0 4px 3px rgba(0, 0, 0, 0.3))' }}><div style={{ position: 'relative', width: '100%', height: '100%' }}><div style={{ position: 'absolute', bottom: 0, width: '100%', height: '35px', background: 'linear-gradient(to bottom, #1e40af 0%, #1d4ed8 70%, #1e3a8a 100%)', borderRadius: '8px 12px 5px 5px', border: '1px solid #1e3a8a', boxShadow: 'inset 0 -3px 8px rgba(0, 0, 0, 0.2), inset -2px 0 6px rgba(255, 255, 255, 0.3)' }}></div><div style={{ position: 'absolute', bottom: '35px', left: '15px', right: '5px', height: '15px', background: 'linear-gradient(to bottom, #1e3a8a 0%, #1e40af 100%)', borderRadius: '5px 8px 0 0', border: '1px solid #1e3a8a', borderBottom: 'none' }}></div><div style={{ position: 'absolute', top: '8px', right: '5px', width: '25px', height: '15px', background: 'linear-gradient(to bottom right, rgba(219, 234, 254, 0.8) 0%, rgba(147, 197, 253, 0.8) 100%)', borderRadius: '3px', border: '1px solid #1e3a8a', boxShadow: 'inset 0 0 6px rgba(255, 255, 255, 0.6)' }}><div style={{ position: 'absolute', top: '2px', left: '3px', width: '15px', height: '2px', background: 'linear-gradient(to bottom, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.2) 100%)', borderRadius: '50%' }}></div></div><div style={{ position: 'absolute', top: '8px', left: '35px', right: '35px', height: '15px', background: 'linear-gradient(to bottom, rgba(219, 234, 254, 0.7) 0%, rgba(147, 197, 253, 0.7) 100%)', borderRadius: '3px 0 0 0', border: '1px solid #1e3a8a', boxShadow: 'inset 0 0 6px rgba(255, 255, 255, 0.6)' }}><div style={{ position: 'absolute', bottom: '3px', left: '8px', width: '6px', height: '8px', backgroundColor: 'rgba(0,0,0,0.8)', borderRadius: '3px 3px 0 0' }}></div><div style={{ position: 'absolute', bottom: '3px', right: '8px', width: '6px', height: '8px', backgroundColor: 'rgba(0,0,0,0.8)', borderRadius: '3px 3px 0 0' }}></div></div><div style={{ position: 'absolute', bottom: '8px', left: '40px', width: '25px', height: '25px', background: 'linear-gradient(to bottom, rgba(219, 234, 254, 0.6) 0%, rgba(147, 197, 253, 0.6) 100%)', borderRadius: '3px', border: '2px solid #1e3a8a', boxShadow: 'inset 0 0 5px rgba(255, 255, 255, 0.4)' }}><div style={{ position: 'absolute', top: '12px', right: '2px', width: '3px', height: '5px', background: 'linear-gradient(to bottom, #94a3b8 0%, #64748b 100%)', borderRadius: '2px', border: '1px solid #475569' }}></div></div><div style={{ position: 'absolute', top: '20px', left: '50%', transform: 'translateX(-50%)', width: '35px', height: '10px', backgroundColor: 'rgba(255, 255, 255, 0.9)', border: '1px solid #1e3a8a', borderRadius: '3px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)' }}><div style={{ fontSize: '5px', fontWeight: 'bold', color: '#1e3a8a', fontFamily: "'Noto Sans Sinhala', 'Iskoola Pota', sans-serif" }}>ශ්‍රී සේවා</div></div><div style={{ position: 'absolute', bottom: '10px', right: '3px', width: '8px', height: '6px', background: 'linear-gradient(to left, #fef3c7 0%, #fcd34d 100%)', borderRadius: '50%', border: '1px solid #1e3a8a', boxShadow: '0 0 8px rgba(252, 211, 77, 0.6)' }}><div style={{ position: 'absolute', top: '1px', right: '1px', width: '3px', height: '2px', backgroundColor: 'rgba(255, 255, 255, 0.8)', borderRadius: '50%' }}></div></div><div style={{ position: 'absolute', bottom: '8px', right: '-20px', width: '25px', height: '12px', background: 'linear-gradient(to right, rgba(252, 211, 77, 0.2) 0%, rgba(252, 211, 77, 0) 100%)', borderRadius: '50%', transform: 'scaleX(2)' }}></div><div className="animate-light-blink animation-delay-200" style={{ position: 'absolute', bottom: '18px', right: '8px', width: '5px', height: '5px', background: 'radial-gradient(circle, #fef3c7 0%, #fcd34d 100%)', borderRadius: '50%', border: '1px solid #1e3a8a', boxShadow: '0 0 6px rgba(252, 211, 77, 0.6)' }}></div><div className="animate-light-blink animation-delay-400" style={{ position: 'absolute', bottom: '10px', left: '5px', width: '6px', height: '4px', background: 'radial-gradient(circle, #f87171 50%, #ef4444 100%)', borderRadius: '2px', border: '1px solid #1e3a8a', boxShadow: '0 0 6px rgba(239, 68, 68, 0.6)' }}></div><div style={{ position: 'absolute', bottom: '-6px', right: '20px', width: '18px', height: '18px', backgroundColor: '#0f172a', borderRadius: '50%', border: '3px solid #94a3b8', boxSizing: 'border-box', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.5)', overflow: 'hidden' }}><div className="animate-wheels" style={{ position: 'absolute', inset: '1px', borderRadius: '50%', border: '1px solid #64748b', background: 'radial-gradient(circle at center, #e2e8f0 15%, transparent 15%), conic-gradient(#cbd5e1 0deg, #cbd5e1 30deg, transparent 30deg, transparent 60deg, #cbd5e1 60deg, #cbd5e1 90deg, transparent 90deg, transparent 120deg, #cbd5e1 120deg, #cbd5e1 150deg, transparent 150deg, transparent 180deg, #cbd5e1 180deg, #cbd5e1 210deg, transparent 210deg, transparent 240deg, #cbd5e1 240deg, #cbd5e1 270deg, transparent 270deg, transparent 300deg, #cbd5e1 300deg, #cbd5e1 330deg, transparent 330deg, transparent 360deg)' }}></div></div><div style={{ position: 'absolute', bottom: '-6px', left: '20px', width: '18px', height: '18px', backgroundColor: '#0f172a', borderRadius: '50%', border: '3px solid #94a3b8', boxSizing: 'border-box', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.5)', overflow: 'hidden' }}><div className="animate-wheels" style={{ position: 'absolute', inset: '1px', borderRadius: '50%', border: '1px solid #64748b', background: 'radial-gradient(circle at center, #e2e8f0 15%, transparent 15%), conic-gradient(#cbd5e1 0deg, #cbd5e1 30deg, transparent 30deg, transparent 60deg, #cbd5e1 60deg, #cbd5e1 90deg, transparent 90deg, transparent 120deg, #cbd5e1 120deg, #cbd5e1 150deg, transparent 150deg, transparent 180deg, #cbd5e1 180deg, #cbd5e1 210deg, transparent 210deg, transparent 240deg, #cbd5e1 240deg, #cbd5e1 270deg, transparent 270deg, transparent 300deg, #cbd5e1 300deg, #cbd5e1 330deg, transparent 330deg, transparent 360deg)' }}></div></div><div style={{ position: 'absolute', bottom: '2px', left: '50%', transform: 'translateX(-50%)', width: '22px', height: '6px', backgroundColor: 'white', borderRadius: '2px', border: '1px solid #1e3a8a', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2)' }}><div style={{ fontSize: '3px', fontWeight: 'bold', color: '#1f2937' }}>VN-7890</div></div><div style={{ position: 'absolute', bottom: '4px', left: '8px', width: '6px', height: '3px', background: 'linear-gradient(to right, #9ca3af 0%, #6b7280 100%)', borderRadius: '1px 0 0 1px', boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.4)' }}></div><div style={{ position: 'absolute', bottom: '4px', left: '3px', width: '7px', height: '7px', background: 'radial-gradient(circle, rgba(209, 213, 219, 0.8) 0%, rgba(209, 213, 219, 0) 70%)', borderRadius: '50%', opacity: 0.6, animation: 'steam 1.1s ease-out infinite' }}></div></div></div>
+      </div>
+      {/* END: Animated Background */}
+
       {/* Navigation */}
-      <nav style={{
-        backgroundColor: '#1e293b',
-        borderBottom: '1px solid #334155',
-        padding: '1rem 0'
-      }}>
-        <div style={{
-          maxWidth: '1400px',
-          margin: '0 auto',
-          padding: '0 1.5rem',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '1rem'
-          }}>
-            <Link href="/sysadmin/dashboard" style={{
-              color: '#94a3b8',
-              textDecoration: 'none',
-              fontSize: '0.875rem'
-            }}>
-              ← Dashboard
-            </Link>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
-            }}>
+      <nav style={{ backgroundColor: 'rgba(30, 41, 59, 0.8)', backdropFilter: 'blur(8px)', borderBottom: '1px solid #334155', padding: '1rem 0', position: 'relative', zIndex: 10 }}>
+        <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <Link href="/sysadmin/dashboard" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: '0.875rem' }}>← Dashboard</Link>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <ChartBarIcon width={24} height={24} color="#ef4444" />
-              <h1 style={{
-                fontSize: '1.5rem',
-                fontWeight: 'bold',
-                color: '#f1f5f9',
-                margin: 0
-              }}>
-                System Analytics
-              </h1>
+              <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#f1f5f9', margin: 0 }}>System Analytics</h1>
             </div>
           </div>
-          
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            {/* Time Period */}
-            <select
-              value={selectedPeriod}
-              onChange={(e) => setSelectedPeriod(e.target.value as TimePeriod)}
-              style={{
-                backgroundColor: '#334155',
-                color: '#f1f5f9',
-                padding: '0.5rem 1rem',
-                borderRadius: '0.5rem',
-                border: '1px solid #475569',
-                outline: 'none'
-              }}
-            >
+            <select value={selectedPeriod} onChange={(e) => setSelectedPeriod(e.target.value as TimePeriod)} style={{ backgroundColor: '#334155', color: '#f1f5f9', padding: '0.5rem 1rem', borderRadius: '0.5rem', border: '1px solid #475569', outline: 'none' }}>
               <option value="24h">Last 24 Hours</option>
               <option value="7d">Last 7 Days</option>
               <option value="30d">Last 30 Days</option>
               <option value="90d">Last 90 Days</option>
             </select>
-
-            {/* Auto Refresh */}
-            <label style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              color: '#94a3b8',
-              fontSize: '0.875rem',
-              cursor: 'pointer'
-            }}>
-              <input
-                type="checkbox"
-                checked={autoRefresh}
-                onChange={(e) => setAutoRefresh(e.target.checked)}
-                style={{ accentColor: '#3b82f6' }}
-              />
-              Auto Refresh
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#94a3b8', fontSize: '0.875rem', cursor: 'pointer' }}>
+              <input type="checkbox" checked={autoRefresh} onChange={(e) => setAutoRefresh(e.target.checked)} style={{ accentColor: '#3b82f6' }} /> Auto Refresh
             </label>
-
-            {/* Export */}
-            <button
-              onClick={handleExportData}
-              style={{
-                backgroundColor: '#374151',
-                color: '#f9fafb',
-                padding: '0.5rem 1rem',
-                borderRadius: '0.5rem',
-                border: 'none',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                fontSize: '0.875rem'
-              }}
-            >
-              <DocumentArrowDownIcon width={16} height={16} />
-              Export
+            <button onClick={handleExportData} style={{ backgroundColor: '#374151', color: '#f9fafb', padding: '0.5rem 1rem', borderRadius: '0.5rem', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}>
+              <DocumentArrowDownIcon width={16} height={16} /> Export
             </button>
-
-            {/* Refresh */}
-            <button
-              onClick={handleRefresh}
-              disabled={loading}
-              style={{
-                backgroundColor: '#3b82f6',
-                color: 'white',
-                padding: '0.5rem 1rem',
-                borderRadius: '0.5rem',
-                border: 'none',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                opacity: loading ? 0.7 : 1
-              }}
-            >
-              <ArrowPathIcon width={16} height={16} />
-              Refresh
+            <button onClick={handleRefresh} disabled={loading} style={{ backgroundColor: '#3b82f6', color: 'white', padding: '0.5rem 1rem', borderRadius: '0.5rem', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', opacity: loading ? 0.7 : 1 }}>
+              <ArrowPathIcon width={16} height={16} /> Refresh
             </button>
           </div>
         </div>
       </nav>
 
-      <div style={{
-        maxWidth: '1400px',
-        margin: '0 auto',
-        padding: '2rem 1.5rem'
-      }}>
+      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '2rem 1.5rem', position: 'relative', zIndex: 10 }}>
         {/* Overview Cards */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-          gap: '1.5rem',
-          marginBottom: '2rem'
-        }}>
-          <div style={{
-            backgroundColor: '#1e293b',
-            padding: '1.5rem',
-            borderRadius: '0.75rem',
-            border: '1px solid #334155'
-          }}>
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
-              marginBottom: '0.5rem'
-            }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+          <div style={{ backgroundColor: 'rgba(30, 41, 59, 0.8)', backdropFilter: 'blur(8px)', padding: '1.5rem', borderRadius: '0.75rem', border: '1px solid #334155' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
               <div>
                 <h3 style={{ color: '#94a3b8', fontSize: '0.875rem', margin: 0 }}>Total Users</h3>
-                <div style={{ color: '#3b82f6', fontSize: '2rem', fontWeight: 'bold' }}>
-                  {analyticsData ? formatNumber(analyticsData.overview.totalUsers) : '0'}
-                </div>
+                <div style={{ color: '#3b82f6', fontSize: '2rem', fontWeight: 'bold' }}>{analyticsData ? formatNumber(analyticsData.overview.totalUsers) : '0'}</div>
               </div>
               <UsersIcon width={24} height={24} color="#3b82f6" />
             </div>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.25rem',
-              color: getTrendColor(analyticsData?.trends.userGrowth || 0)
-            }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: getTrendColor(analyticsData?.trends.userGrowth || 0) }}>
               {getTrendIcon(analyticsData?.trends.userGrowth || 0)}
-              <span style={{ fontSize: '0.875rem', fontWeight: '500' }}>
-                {analyticsData?.trends.userGrowth.toFixed(1)}% this period
-              </span>
+              <span style={{ fontSize: '0.875rem', fontWeight: '500' }}>{analyticsData?.trends.userGrowth.toFixed(1)}% this period</span>
             </div>
           </div>
-
-          <div style={{
-            backgroundColor: '#1e293b',
-            padding: '1.5rem',
-            borderRadius: '0.75rem',
-            border: '1px solid #334155'
-          }}>
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
-              marginBottom: '0.5rem'
-            }}>
+          <div style={{ backgroundColor: 'rgba(30, 41, 59, 0.8)', backdropFilter: 'blur(8px)', padding: '1.5rem', borderRadius: '0.75rem', border: '1px solid #334155' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
               <div>
                 <h3 style={{ color: '#94a3b8', fontSize: '0.875rem', margin: 0 }}>Active Devices</h3>
-                <div style={{ color: '#10b981', fontSize: '2rem', fontWeight: 'bold' }}>
-                  {analyticsData ? formatNumber(analyticsData.overview.activeDevices) : '0'}
-                </div>
+                <div style={{ color: '#10b981', fontSize: '2rem', fontWeight: 'bold' }}>{analyticsData ? formatNumber(analyticsData.overview.activeDevices) : '0'}</div>
               </div>
               <DevicePhoneMobileIcon width={24} height={24} color="#10b981" />
             </div>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.25rem',
-              color: getTrendColor(analyticsData?.trends.deviceGrowth || 0)
-            }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: getTrendColor(analyticsData?.trends.deviceGrowth || 0) }}>
               {getTrendIcon(analyticsData?.trends.deviceGrowth || 0)}
-              <span style={{ fontSize: '0.875rem', fontWeight: '500' }}>
-                {analyticsData?.trends.deviceGrowth.toFixed(1)}% this period
-              </span>
+              <span style={{ fontSize: '0.875rem', fontWeight: '500' }}>{analyticsData?.trends.deviceGrowth.toFixed(1)}% this period</span>
             </div>
           </div>
-
-          <div style={{
-            backgroundColor: '#1e293b',
-            padding: '1.5rem',
-            borderRadius: '0.75rem',
-            border: '1px solid #334155'
-          }}>
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
-              marginBottom: '0.5rem'
-            }}>
+          <div style={{ backgroundColor: 'rgba(30, 41, 59, 0.8)', backdropFilter: 'blur(8px)', padding: '1.5rem', borderRadius: '0.75rem', border: '1px solid #334155' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
               <div>
                 <h3 style={{ color: '#94a3b8', fontSize: '0.875rem', margin: 0 }}>Total Trips</h3>
-                <div style={{ color: '#f59e0b', fontSize: '2rem', fontWeight: 'bold' }}>
-                  {analyticsData ? formatNumber(analyticsData.overview.totalTrips) : '0'}
-                </div>
+                <div style={{ color: '#f59e0b', fontSize: '2rem', fontWeight: 'bold' }}>{analyticsData ? formatNumber(analyticsData.overview.totalTrips) : '0'}</div>
               </div>
               <TruckIcon width={24} height={24} color="#f59e0b" />
             </div>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.25rem',
-              color: getTrendColor(analyticsData?.trends.tripGrowth || 0)
-            }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: getTrendColor(analyticsData?.trends.tripGrowth || 0) }}>
               {getTrendIcon(analyticsData?.trends.tripGrowth || 0)}
-              <span style={{ fontSize: '0.875rem', fontWeight: '500' }}>
-                {analyticsData?.trends.tripGrowth.toFixed(1)}% this period
-              </span>
+              <span style={{ fontSize: '0.875rem', fontWeight: '500' }}>{analyticsData?.trends.tripGrowth.toFixed(1)}% this period</span>
             </div>
           </div>
-
-          <div style={{
-            backgroundColor: '#1e293b',
-            padding: '1.5rem',
-            borderRadius: '0.75rem',
-            border: '1px solid #334155'
-          }}>
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
-              marginBottom: '0.5rem'
-            }}>
+          <div style={{ backgroundColor: 'rgba(30, 41, 59, 0.8)', backdropFilter: 'blur(8px)', padding: '1.5rem', borderRadius: '0.75rem', border: '1px solid #334155' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
               <div>
                 <h3 style={{ color: '#94a3b8', fontSize: '0.875rem', margin: 0 }}>Total Revenue</h3>
-                <div style={{ color: '#8b5cf6', fontSize: '2rem', fontWeight: 'bold' }}>
-                  {analyticsData ? formatCurrency(analyticsData.overview.totalRevenue) : 'LKR 0'}
-                </div>
+                <div style={{ color: '#8b5cf6', fontSize: '2rem', fontWeight: 'bold' }}>{analyticsData ? formatCurrency(analyticsData.overview.totalRevenue) : 'LKR 0'}</div>
               </div>
               <ChartBarIcon width={24} height={24} color="#8b5cf6" />
             </div>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.25rem',
-              color: getTrendColor(analyticsData?.trends.revenueGrowth || 0)
-            }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: getTrendColor(analyticsData?.trends.revenueGrowth || 0) }}>
               {getTrendIcon(analyticsData?.trends.revenueGrowth || 0)}
-              <span style={{ fontSize: '0.875rem', fontWeight: '500' }}>
-                {analyticsData?.trends.revenueGrowth.toFixed(1)}% this period
-              </span>
+              <span style={{ fontSize: '0.875rem', fontWeight: '500' }}>{analyticsData?.trends.revenueGrowth.toFixed(1)}% this period</span>
             </div>
           </div>
         </div>
 
         {/* Charts Section */}
-        <div style={{
-          backgroundColor: '#1e293b',
-          padding: '2rem',
-          borderRadius: '0.75rem',
-          border: '1px solid #334155',
-          marginBottom: '2rem'
-        }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '1.5rem'
-          }}>
-            <h2 style={{
-              color: '#f1f5f9',
-              fontSize: '1.25rem',
-              fontWeight: 'bold',
-              margin: 0
-            }}>
-              Trend Analysis
-            </h2>
-            
-            <select
-              value={selectedMetric}
-              onChange={(e) => setSelectedMetric(e.target.value as MetricType)}
-              style={{
-                backgroundColor: '#334155',
-                color: '#f1f5f9',
-                padding: '0.5rem 1rem',
-                borderRadius: '0.5rem',
-                border: '1px solid #475569',
-                outline: 'none'
-              }}
-            >
+        <div style={{ backgroundColor: 'rgba(30, 41, 59, 0.8)', backdropFilter: 'blur(8px)', padding: '2rem', borderRadius: '0.75rem', border: '1px solid #334155', marginBottom: '2rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <h2 style={{ color: '#f1f5f9', fontSize: '1.25rem', fontWeight: 'bold', margin: 0 }}>Trend Analysis</h2>
+            <select value={selectedMetric} onChange={(e) => setSelectedMetric(e.target.value as MetricType)} style={{ backgroundColor: '#334155', color: '#f1f5f9', padding: '0.5rem 1rem', borderRadius: '0.5rem', border: '1px solid #475569', outline: 'none' }}>
               <option value="users">User Registrations</option>
               <option value="devices">Device Activity</option>
               <option value="trips">Trip Volume</option>
@@ -553,268 +240,80 @@ export default function SystemAnalyticsPage() {
               <option value="performance">System Performance</option>
             </select>
           </div>
-
-          {/* Mock Chart Area */}
-          <div style={{
-            backgroundColor: '#334155',
-            borderRadius: '0.5rem',
-            height: '300px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexDirection: 'column',
-            gap: '1rem'
-          }}>
+          <div style={{ backgroundColor: '#334155', borderRadius: '0.5rem', height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '1rem' }}>
             <ChartBarIcon width={64} height={64} color="#94a3b8" />
-            <div style={{
-              textAlign: 'center',
-              color: '#94a3b8'
-            }}>
-              <h3 style={{ color: '#f1f5f9', margin: '0 0 0.5rem 0' }}>
-                Interactive Charts
-              </h3>
-              <p style={{ margin: 0 }}>
-                Chart visualization for {selectedMetric} over {selectedPeriod}
-              </p>
-              <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.875rem' }}>
-                Integration with Chart.js or Recharts coming soon
-              </p>
+            <div style={{ textAlign: 'center', color: '#94a3b8' }}>
+              <h3 style={{ color: '#f1f5f9', margin: '0 0 0.5rem 0' }}>Interactive Charts</h3>
+              <p style={{ margin: 0 }}>Chart visualization for {selectedMetric} over {selectedPeriod}</p>
+              <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.875rem' }}>Integration with Chart.js or Recharts coming soon</p>
             </div>
           </div>
         </div>
 
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-          gap: '2rem'
-        }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '2rem' }}>
           {/* Top Routes */}
-          <div style={{
-            backgroundColor: '#1e293b',
-            padding: '2rem',
-            borderRadius: '0.75rem',
-            border: '1px solid #334155'
-          }}>
-            <h2 style={{
-              color: '#f1f5f9',
-              fontSize: '1.25rem',
-              fontWeight: 'bold',
-              marginBottom: '1.5rem'
-            }}>
-              Top Routes
-            </h2>
-
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '1rem'
-            }}>
+          <div style={{ backgroundColor: 'rgba(30, 41, 59, 0.8)', backdropFilter: 'blur(8px)', padding: '2rem', borderRadius: '0.75rem', border: '1px solid #334155' }}>
+            <h2 style={{ color: '#f1f5f9', fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1.5rem' }}>Top Routes</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {analyticsData?.topMetrics.topRoutes.map((route, index) => (
-                <div key={route.name} style={{
-                  backgroundColor: '#334155',
-                  padding: '1rem',
-                  borderRadius: '0.5rem',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center'
-                }}>
+                <div key={route.name} style={{ backgroundColor: '#334155', padding: '1rem', borderRadius: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
-                    <div style={{
-                      color: '#f1f5f9',
-                      fontWeight: '500',
-                      marginBottom: '0.25rem'
-                    }}>
-                      #{index + 1} {route.name}
-                    </div>
-                    <div style={{ color: '#94a3b8', fontSize: '0.875rem' }}>
-                      {route.trips.toLocaleString()} trips
-                    </div>
+                    <div style={{ color: '#f1f5f9', fontWeight: '500', marginBottom: '0.25rem' }}>#{index + 1} {route.name}</div>
+                    <div style={{ color: '#94a3b8', fontSize: '0.875rem' }}>{route.trips.toLocaleString()} trips</div>
                   </div>
-                  <div style={{
-                    color: '#10b981',
-                    fontWeight: 'bold',
-                    textAlign: 'right'
-                  }}>
-                    {formatCurrency(route.revenue)}
-                  </div>
+                  <div style={{ color: '#10b981', fontWeight: 'bold', textAlign: 'right' }}>{formatCurrency(route.revenue)}</div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Device Types */}
-          <div style={{
-            backgroundColor: '#1e293b',
-            padding: '2rem',
-            borderRadius: '0.75rem',
-            border: '1px solid #334155'
-          }}>
-            <h2 style={{
-              color: '#f1f5f9',
-              fontSize: '1.25rem',
-              fontWeight: 'bold',
-              marginBottom: '1.5rem'
-            }}>
-              Device Distribution
-            </h2>
-
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '1rem'
-            }}>
+          {/* Device Distribution */}
+          <div style={{ backgroundColor: 'rgba(30, 41, 59, 0.8)', backdropFilter: 'blur(8px)', padding: '2rem', borderRadius: '0.75rem', border: '1px solid #334155' }}>
+            <h2 style={{ color: '#f1f5f9', fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1.5rem' }}>Device Distribution</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {analyticsData?.topMetrics.deviceTypes.map((device) => (
-                <div key={device.type} style={{
-                  backgroundColor: '#334155',
-                  padding: '1rem',
-                  borderRadius: '0.5rem'
-                }}>
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '0.5rem'
-                  }}>
-                    <span style={{ color: '#f1f5f9', fontWeight: '500' }}>
-                      {device.type}
-                    </span>
-                    <span style={{ color: '#f1f5f9', fontWeight: 'bold' }}>
-                      {device.count} ({device.percentage}%)
-                    </span>
+                <div key={device.type} style={{ backgroundColor: '#334155', padding: '1rem', borderRadius: '0.5rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                    <span style={{ color: '#f1f5f9', fontWeight: '500' }}>{device.type}</span>
+                    <span style={{ color: '#f1f5f9', fontWeight: 'bold' }}>{device.count} ({device.percentage}%)</span>
                   </div>
-                  <div style={{
-                    backgroundColor: '#1e293b',
-                    borderRadius: '0.25rem',
-                    height: '6px',
-                    overflow: 'hidden'
-                  }}>
-                    <div style={{
-                      backgroundColor: device.type === 'Bus' ? '#f59e0b' : '#3b82f6',
-                      height: '100%',
-                      width: `${device.percentage}%`,
-                      borderRadius: '0.25rem'
-                    }} />
+                  <div style={{ backgroundColor: '#1e293b', borderRadius: '0.25rem', height: '6px', overflow: 'hidden' }}>
+                    <div style={{ backgroundColor: device.type === 'Bus' ? '#f59e0b' : '#3b82f6', height: '100%', width: `${device.percentage}%`, borderRadius: '0.25rem' }} />
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* User Activity */}
-          <div style={{
-            backgroundColor: '#1e293b',
-            padding: '2rem',
-            borderRadius: '0.75rem',
-            border: '1px solid #334155'
-          }}>
-            <h2 style={{
-              color: '#f1f5f9',
-              fontSize: '1.25rem',
-              fontWeight: 'bold',
-              marginBottom: '1.5rem'
-            }}>
-              User Roles
-            </h2>
-
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '1rem'
-            }}>
+          {/* User Roles */}
+          <div style={{ backgroundColor: 'rgba(30, 41, 59, 0.8)', backdropFilter: 'blur(8px)', padding: '2rem', borderRadius: '0.75rem', border: '1px solid #334155' }}>
+            <h2 style={{ color: '#f1f5f9', fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1.5rem' }}>User Roles</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {analyticsData?.topMetrics.userActivity.map((user) => (
-                <div key={user.role} style={{
-                  backgroundColor: '#334155',
-                  padding: '1rem',
-                  borderRadius: '0.5rem'
-                }}>
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '0.5rem'
-                  }}>
-                    <span style={{ color: '#f1f5f9', fontWeight: '500' }}>
-                      {user.role}
-                    </span>
-                    <span style={{ color: '#f1f5f9', fontWeight: 'bold' }}>
-                      {user.count.toLocaleString()} ({user.percentage}%)
-                    </span>
+                <div key={user.role} style={{ backgroundColor: '#334155', padding: '1rem', borderRadius: '0.5rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                    <span style={{ color: '#f1f5f9', fontWeight: '500' }}>{user.role}</span>
+                    <span style={{ color: '#f1f5f9', fontWeight: 'bold' }}>{user.count.toLocaleString()} ({user.percentage}%)</span>
                   </div>
-                  <div style={{
-                    backgroundColor: '#1e293b',
-                    borderRadius: '0.25rem',
-                    height: '6px',
-                    overflow: 'hidden'
-                  }}>
-                    <div style={{
-                      backgroundColor: '#10b981',
-                      height: '100%',
-                      width: `${user.percentage}%`,
-                      borderRadius: '0.25rem'
-                    }} />
+                  <div style={{ backgroundColor: '#1e293b', borderRadius: '0.25rem', height: '6px', overflow: 'hidden' }}>
+                    <div style={{ backgroundColor: '#10b981', height: '100%', width: `${user.percentage}%`, borderRadius: '0.25rem' }} />
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* System Alerts */}
-          <div style={{
-            backgroundColor: '#1e293b',
-            padding: '2rem',
-            borderRadius: '0.75rem',
-            border: '1px solid #334155'
-          }}>
-            <h2 style={{
-              color: '#f1f5f9',
-              fontSize: '1.25rem',
-              fontWeight: 'bold',
-              marginBottom: '1.5rem'
-            }}>
-              Alert Summary
-            </h2>
-
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '1rem'
-            }}>
+          {/* Alert Summary */}
+          <div style={{ backgroundColor: 'rgba(30, 41, 59, 0.8)', backdropFilter: 'blur(8px)', padding: '2rem', borderRadius: '0.75rem', border: '1px solid #334155' }}>
+            <h2 style={{ color: '#f1f5f9', fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1.5rem' }}>Alert Summary</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {analyticsData?.topMetrics.alerts.map((alert) => (
-                <div key={alert.type} style={{
-                  backgroundColor: '#334155',
-                  padding: '1rem',
-                  borderRadius: '0.5rem',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  border: `1px solid ${getSeverityColor(alert.severity)}`
-                }}>
+                <div key={alert.type} style={{ backgroundColor: '#334155', padding: '1rem', borderRadius: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: `1px solid ${getSeverityColor(alert.severity)}` }}>
                   <div>
-                    <div style={{
-                      color: '#f1f5f9',
-                      fontWeight: '500',
-                      marginBottom: '0.25rem'
-                    }}>
-                      {alert.type}
-                    </div>
-                    <div style={{
-                      color: getSeverityColor(alert.severity),
-                      fontSize: '0.875rem',
-                      textTransform: 'capitalize',
-                      fontWeight: '500'
-                    }}>
-                      {alert.severity} Priority
-                    </div>
+                    <div style={{ color: '#f1f5f9', fontWeight: '500', marginBottom: '0.25rem' }}>{alert.type}</div>
+                    <div style={{ color: getSeverityColor(alert.severity), fontSize: '0.875rem', textTransform: 'capitalize', fontWeight: '500' }}>{alert.severity} Priority</div>
                   </div>
-                  <div style={{
-                    backgroundColor: getSeverityColor(alert.severity),
-                    color: 'white',
-                    padding: '0.5rem 1rem',
-                    borderRadius: '0.5rem',
-                    fontWeight: 'bold'
-                  }}>
-                    {alert.count}
-                  </div>
+                  <div style={{ backgroundColor: getSeverityColor(alert.severity), color: 'white', padding: '0.5rem 1rem', borderRadius: '0.5rem', fontWeight: 'bold' }}>{alert.count}</div>
                 </div>
               ))}
             </div>
@@ -822,117 +321,36 @@ export default function SystemAnalyticsPage() {
         </div>
 
         {/* System Performance Summary */}
-        <div style={{
-          backgroundColor: '#1e293b',
-          padding: '2rem',
-          borderRadius: '0.75rem',
-          border: '1px solid #334155',
-          marginTop: '2rem'
-        }}>
-          <h2 style={{
-            color: '#f1f5f9',
-            fontSize: '1.25rem',
-            fontWeight: 'bold',
-            marginBottom: '1.5rem'
-          }}>
-            System Performance Summary
-          </h2>
-
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: '1.5rem'
-          }}>
-            <div style={{
-              backgroundColor: '#334155',
-              padding: '1.5rem',
-              borderRadius: '0.5rem',
-              textAlign: 'center'
-            }}>
-              <div style={{ color: '#10b981', fontSize: '2rem', fontWeight: 'bold' }}>
-                {analyticsData?.overview.systemUptime}%
-              </div>
-              <div style={{ color: '#94a3b8', fontSize: '0.875rem' }}>
-                System Uptime
-              </div>
+        <div style={{ backgroundColor: 'rgba(30, 41, 59, 0.8)', backdropFilter: 'blur(8px)', padding: '2rem', borderRadius: '0.75rem', border: '1px solid #334155', marginTop: '2rem' }}>
+          <h2 style={{ color: '#f1f5f9', fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1.5rem' }}>System Performance Summary</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
+            <div style={{ backgroundColor: '#334155', padding: '1.5rem', borderRadius: '0.5rem', textAlign: 'center' }}>
+              <div style={{ color: '#10b981', fontSize: '2rem', fontWeight: 'bold' }}>{analyticsData?.overview.systemUptime}%</div>
+              <div style={{ color: '#94a3b8', fontSize: '0.875rem' }}>System Uptime</div>
             </div>
-
-            <div style={{
-              backgroundColor: '#334155',
-              padding: '1.5rem',
-              borderRadius: '0.5rem',
-              textAlign: 'center'
-            }}>
-              <div style={{ color: '#f59e0b', fontSize: '2rem', fontWeight: 'bold' }}>
-                {analyticsData?.overview.avgResponseTime}ms
-              </div>
-              <div style={{ color: '#94a3b8', fontSize: '0.875rem' }}>
-                Avg Response Time
-              </div>
+            <div style={{ backgroundColor: '#334155', padding: '1.5rem', borderRadius: '0.5rem', textAlign: 'center' }}>
+              <div style={{ color: '#f59e0b', fontSize: '2rem', fontWeight: 'bold' }}>{analyticsData?.overview.avgResponseTime}ms</div>
+              <div style={{ color: '#94a3b8', fontSize: '0.875rem' }}>Avg Response Time</div>
             </div>
-
-            <div style={{
-              backgroundColor: '#334155',
-              padding: '1.5rem',
-              borderRadius: '0.5rem',
-              textAlign: 'center'
-            }}>
-              <div style={{ color: '#3b82f6', fontSize: '2rem', fontWeight: 'bold' }}>
-                {((analyticsData?.overview.activeUsers || 0) / (analyticsData?.overview.totalUsers || 1) * 100).toFixed(1)}%
-              </div>
-              <div style={{ color: '#94a3b8', fontSize: '0.875rem' }}>
-                User Activity Rate
-              </div>
+            <div style={{ backgroundColor: '#334155', padding: '1.5rem', borderRadius: '0.5rem', textAlign: 'center' }}>
+              <div style={{ color: '#3b82f6', fontSize: '2rem', fontWeight: 'bold' }}>{((analyticsData?.overview.activeUsers || 0) / (analyticsData?.overview.totalUsers || 1) * 100).toFixed(1)}%</div>
+              <div style={{ color: '#94a3b8', fontSize: '0.875rem' }}>User Activity Rate</div>
             </div>
-
-            <div style={{
-              backgroundColor: '#334155',
-              padding: '1.5rem',
-              borderRadius: '0.5rem',
-              textAlign: 'center'
-            }}>
-              <div style={{ color: '#8b5cf6', fontSize: '2rem', fontWeight: 'bold' }}>
-                {((analyticsData?.overview.activeDevices || 0) / (analyticsData?.overview.totalDevices || 1) * 100).toFixed(1)}%
-              </div>
-              <div style={{ color: '#94a3b8', fontSize: '0.875rem' }}>
-                Device Online Rate
-              </div>
+            <div style={{ backgroundColor: '#334155', padding: '1.5rem', borderRadius: '0.5rem', textAlign: 'center' }}>
+              <div style={{ color: '#8b5cf6', fontSize: '2rem', fontWeight: 'bold' }}>{((analyticsData?.overview.activeDevices || 0) / (analyticsData?.overview.totalDevices || 1) * 100).toFixed(1)}%</div>
+              <div style={{ color: '#94a3b8', fontSize: '0.875rem' }}>Device Online Rate</div>
             </div>
           </div>
         </div>
 
         {/* Analytics Info */}
-        <div style={{
-          backgroundColor: '#1e293b',
-          padding: '1.5rem',
-          borderRadius: '0.75rem',
-          border: '1px solid #334155',
-          marginTop: '2rem'
-        }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            marginBottom: '0.5rem'
-          }}>
+        <div style={{ backgroundColor: 'rgba(30, 41, 59, 0.8)', backdropFilter: 'blur(8px)', padding: '1.5rem', borderRadius: '0.75rem', border: '1px solid #334155', marginTop: '2rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
             <InformationCircleIcon width={20} height={20} color="#3b82f6" />
-            <h3 style={{
-              color: '#f1f5f9',
-              fontSize: '1rem',
-              fontWeight: '600',
-              margin: 0
-            }}>
-              Analytics Information
-            </h3>
+            <h3 style={{ color: '#f1f5f9', fontSize: '1rem', fontWeight: '600', margin: 0 }}>Analytics Information</h3>
           </div>
-          <p style={{
-            color: '#94a3b8',
-            margin: 0,
-            lineHeight: '1.5'
-          }}>
-            Analytics data is processed in real-time and updated every 5 minutes. Historical data is retained 
-            for 365 days for trend analysis. Export functionality allows you to download detailed reports 
-            in CSV or PDF format for further analysis and reporting.
+          <p style={{ color: '#94a3b8', margin: 0, lineHeight: '1.5' }}>
+            Analytics data is processed in real-time and updated every 5 minutes. Historical data is retained for 365 days for trend analysis. Export functionality allows you to download detailed reports in CSV or PDF format for further analysis and reporting.
           </p>
         </div>
       </div>
