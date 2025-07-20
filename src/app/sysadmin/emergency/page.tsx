@@ -530,3 +530,10 @@ export default function EmergencyManagementPage() {
     </RealTimeEmergencyClient>
   );
 }
+
+
+
+
+
+
+

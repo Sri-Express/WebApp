@@ -16,13 +16,12 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // By returning <html>, Next.js knows you want to control it.
+  // This is the correct place to add suppressHydrationWarning.
+  // Next.js will automatically inject the <head> from metadata and a <body> tag.
   return (
-    <html lang="en">
-      <head>
-        <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-      </head>
-      <body suppressHydrationWarning={true}>
+    <html lang="en" suppressHydrationWarning={true}>
+      <body>
         <ThemeProvider>
           <RealTimeEmergencyClient
             enableSound={true}
