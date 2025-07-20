@@ -6,7 +6,12 @@ import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 import { useTheme } from '@/app/context/ThemeContext';
 import ThemeSwitcher from '@/app/components/ThemeSwitcher';
-import { ShieldCheckIcon, ArrowLeftIcon, QrCodeIcon, XCircleIcon, MapPinIcon, CreditCardIcon, InformationCircleIcon, CalendarDaysIcon, ClockIcon, UserIcon, DevicePhoneMobileIcon, AtSymbolIcon, TicketIcon, BuildingOffice2Icon, PhoneIcon } from '@heroicons/react/24/outline';
+import { 
+  ShieldCheckIcon, ArrowLeftIcon, QrCodeIcon, XCircleIcon, MapPinIcon, 
+  CreditCardIcon, InformationCircleIcon, CalendarDaysIcon, ClockIcon, 
+  UserIcon, DevicePhoneMobileIcon, AtSymbolIcon, TicketIcon, 
+  BuildingOffice2Icon, PhoneIcon, CurrencyDollarIcon // <-- FIX: Added CurrencyDollarIcon here
+} from '@heroicons/react/24/outline';
 
 // --- Data Interfaces ---
 interface Booking { _id: string; bookingId: string; userId: string; routeId: string; scheduleId: string; travelDate: string; departureTime: string; passengerInfo: { name: string; phone: string; email: string; idType: 'nic' | 'passport'; idNumber: string; passengerType: 'regular' | 'student' | 'senior' | 'military'; }; seatInfo: { seatNumber: string; seatType: 'window' | 'aisle' | 'middle'; preferences: string[]; }; pricing: { basePrice: number; taxes: number; discounts: number; totalAmount: number; currency: string; }; paymentInfo: { paymentId: string; method: 'card' | 'bank' | 'digital_wallet' | 'cash'; status: 'pending' | 'completed' | 'failed' | 'refunded'; paidAt?: string; transactionId: string; }; status: 'confirmed' | 'pending' | 'cancelled' | 'completed' | 'no_show'; qrCode?: string; cancellationInfo?: { reason: string; cancelledAt: string; refundAmount: number; refundStatus: 'pending' | 'processed'; processedBy?: string; }; checkInInfo: { checkedIn: boolean; checkInTime?: string; checkInLocation?: string; }; routeInfo?: { name: string; startLocation: { name: string; address: string }; endLocation: { name: string; address: string }; operatorInfo: { companyName: string; contactNumber: string }; }; isActive: boolean; createdAt: string; updatedAt: string; }
