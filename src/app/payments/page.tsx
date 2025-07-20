@@ -185,9 +185,9 @@ export default function PaymentsPage() {
             
             status: safeString(payment?.status) || 'pending',
             
-            // ✅ FIXED: Use `ApiStatusHistory` type
+            // ✅ FIXED: Use type assertion to cast the array
             statusHistory: Array.isArray(payment?.statusHistory) ? 
-              payment.statusHistory.map((s: ApiStatusHistory) => ({
+              (payment.statusHistory as ApiStatusHistory[]).map((s: ApiStatusHistory) => ({
                 status: safeString(s?.status),
                 timestamp: safeString(s?.timestamp),
                 reason: safeString(s?.reason)

@@ -188,7 +188,8 @@ const AdvancedMap: React.FC<AdvancedMapProps> = ({
   const filteredVehicles = processedVehicles.filter(vehicle => filterStatus === 'all' || vehicle.operationalInfo?.status === filterStatus);
 
   console.log('🚌 AdvancedMap Render:', { totalVehicles: vehicles.length, processedVehicles: processedVehicles.length, filteredVehicles: filteredVehicles.length, selectedVehicle, debugMode });
-  console.log('📍 Vehicle Positions:', filteredVehicles.map(v => ({ id: v.vehicleId, lat: v.location.latitude, lng: v.location.longitude, status: v.operationalInfo.status })));
+  // FIX: Used optional chaining (?.) to prevent type error
+  console.log('📍 Vehicle Positions:', filteredVehicles.map(v => ({ id: v.vehicleId, lat: v.location.latitude, lng: v.location.longitude, status: v.operationalInfo?.status })));
 
   const handleVehicleClick = useCallback((vehicleId: string) => {
     console.log('🎯 Vehicle clicked:', vehicleId);
