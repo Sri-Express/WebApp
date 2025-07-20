@@ -8,8 +8,12 @@ import { useTheme } from '@/app/context/ThemeContext';
 import ThemeSwitcher from '@/app/components/ThemeSwitcher';
 import { 
   ExclamationTriangleIcon, ShieldCheckIcon, CheckCircleIcon,
-  TicketIcon, CurrencyDollarIcon, CalendarDaysIcon, ClockIcon, MagnifyingGlassIcon, MapPinIcon, CreditCardIcon, XCircleIcon, ArrowRightIcon
+  TicketIcon, CurrencyDollarIcon, CalendarDaysIcon, ClockIcon, 
+  MagnifyingGlassIcon, MapPinIcon, CreditCardIcon, XCircleIcon, 
+  ArrowRightIcon, BellIcon
 } from '@heroicons/react/24/outline';
+import RealTimeEmergencyClient from '../components/RealTimeEmergencyClient';
+import UserEmergencyAlerts from '../components/UserEmergencyAlerts';
 
 // --- Custom Vector Icons for Tabs ---
 const OverviewIcon = ({ color = 'currentColor' }) => (
@@ -36,7 +40,7 @@ interface Payment { _id?: string; id?: string; paymentId?: string; amount?: { to
 interface DashboardStats { totalTrips: number; totalSpent: number; upcomingTrips: number; onTimeRate: number; totalBookings?: number; confirmedBookings?: number; totalPayments?: number; averagePayment?: number; recentActivity?: number; favoriteRoutes?: string[]; }
 interface User { _id: string; name: string; email: string; phone?: string; role: string; }
 
-export default function ClientDashboardPage() {
+function DashboardContent() {
   const router = useRouter();
   const { theme } = useTheme();
   
@@ -217,6 +221,69 @@ export default function ClientDashboardPage() {
 
   const renderOverview = () => (
     <div className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+      <UserEmergencyAlerts showInDashboard={true} maxAlerts={2} />
+      
+      <div style={{
+        backgroundColor: currentThemeStyles.glassPanelBg,
+        padding: '1.5rem',
+        borderRadius: '1rem',
+        boxShadow: currentThemeStyles.glassPanelShadow,
+        backdropFilter: 'blur(12px)',
+        border: currentThemeStyles.glassPanelBorder,
+        marginBottom: '2rem'
+      }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '1rem'
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem'
+          }}>
+            <BellIcon width={24} height={24} color="#f59e0b" />
+            <h3 style={{
+              color: currentThemeStyles.textPrimary,
+              fontSize: '1.2rem',
+              fontWeight: '600',
+              margin: 0
+            }}>
+              Emergency Notifications
+            </h3>
+          </div>
+          <Link 
+            href="/notifications" 
+            style={{
+              backgroundColor: '#f59e0b',
+              color: 'white',
+              padding: '0.5rem 1rem',
+              borderRadius: '0.5rem',
+              textDecoration: 'none',
+              fontSize: '0.875rem',
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              transition: 'all 0.3s ease'
+            }}
+            className="notification-link"
+          >
+            <BellIcon width={16} height={16} />
+            View All Notifications
+          </Link>
+        </div>
+        <p style={{
+          color: currentThemeStyles.textSecondary,
+          fontSize: '0.9rem',
+          margin: 0
+        }}>
+          Stay updated with real-time emergency alerts, system notifications, and important announcements.
+          Click "View All Notifications" to see your complete notification history.
+        </p>
+      </div>
+
       {apiErrors.length > 0 && (
         <div style={{ backgroundColor: 'rgba(254, 226, 226, 0.8)', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1rem', border: '1px solid #fecaca', backdropFilter: 'blur(5px)' }}>
           <h4 style={{ color: '#b91c1c', margin: '0 0 0.5rem 0', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><ExclamationTriangleIcon width={20} />Connection Issues:</h4>
@@ -254,7 +321,8 @@ export default function ClientDashboardPage() {
             { name: 'Search Routes', href: '/search', icon: MagnifyingGlassIcon },
             { name: 'My Bookings', href: '/bookings', icon: TicketIcon },
             { name: 'Track Vehicle', href: '/track', icon: MapPinIcon },
-            { name: 'Payment History', href: '/payments', icon: CreditCardIcon }
+            { name: 'Payment History', href: '/payments', icon: CreditCardIcon },
+            { name: 'Notifications', href: '/notifications', icon: BellIcon }
           ].map((action, index) => (
             <Link key={action.name} href={action.href} style={{ textDecoration: 'none' }}>
               <div className="quick-action-panel" style={{ backgroundColor: currentThemeStyles.quickActionBg, padding: '1.5rem', borderRadius: '0.75rem', border: currentThemeStyles.quickActionBorder, transition: 'all 0.3s ease', cursor: 'pointer', animation: `fade-in-up 0.6s ease-out ${index * 0.1 + 0.4}s both` }}>
@@ -420,6 +488,7 @@ export default function ClientDashboardPage() {
       <style jsx>{animationStyles}</style>
       <style jsx global>{`
         .quick-action-panel:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+        .notification-link:hover { background-color: #d97706 !important; transform: translateY(-2px); }
         @media (max-width: 768px) {
           .main-content-grid { grid-template-columns: 1fr !important; }
           .nav-user-welcome { display: none; }
@@ -480,5 +549,16 @@ export default function ClientDashboardPage() {
         </main>
       </div>
     </div>
+  );
+}
+
+export default function ClientDashboardPage() {
+  return (
+    <RealTimeEmergencyClient
+      enableSound={true}
+      enablePushNotifications={true}
+    >
+      <DashboardContent />
+    </RealTimeEmergencyClient>
   );
 }

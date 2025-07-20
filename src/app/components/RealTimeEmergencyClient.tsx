@@ -55,7 +55,7 @@ export default function RealTimeEmergencyClient({
 
   // Sound effects for different alert types
   const playSound = useCallback((priority: string) => {
-    if (!enableSound || !audioRef.current) return;
+    if (!enableSound) return;
 
     try {
       // Different sounds for different priorities
@@ -115,13 +115,6 @@ export default function RealTimeEmergencyClient({
       }
     } catch (error) {
       console.error('Error playing sound:', error);
-      // Fallback to simple beep
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        const utterance = new SpeechSynthesisUtterance('Alert');
-        utterance.volume = 0.1;
-        utterance.rate = 2;
-        window.speechSynthesis.speak(utterance);
-      }
     }
   }, [enableSound]);
 
@@ -161,9 +154,8 @@ export default function RealTimeEmergencyClient({
         // Handle notification click
         notification.onclick = () => {
           window.focus();
-          // Navigate to emergency page if needed
           if (alert.emergency?._id) {
-            window.location.href = `/sysadmin/emergency`;
+            window.location.href = `/notifications`;
           }
           notification.close();
         };
@@ -181,6 +173,49 @@ export default function RealTimeEmergencyClient({
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
+
+  // Fixed function to fetch existing alerts
+  const fetchExistingAlerts = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const response = await fetch(`${API_BASE_URL}/api/admin/emergency/user-alerts`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('📥 Fetched alerts response:', data);
+        
+        // Check if data has alerts array
+        const alertsArray = data.alerts || [];
+        
+        if (Array.isArray(alertsArray) && alertsArray.length > 0) {
+          setAlerts(prev => {
+            // Merge existing alerts with any real-time alerts we might have
+            const merged = [...alertsArray, ...prev];
+            // Remove duplicates by ID
+            const unique = merged.filter((alert, index, self) => 
+              index === self.findIndex(a => a.id === alert.id)
+            );
+            return unique.slice(0, 100); // Keep last 100
+          });
+          console.log('📥 Loaded existing alerts:', alertsArray.length);
+        } else {
+          console.log('📥 No existing alerts found');
+        }
+      } else {
+        console.warn('Failed to fetch existing alerts:', response.status);
+      }
+    } catch (error) {
+      console.error('Error fetching existing alerts:', error);
+    }
   }, []);
 
   // Initialize WebSocket connection
@@ -213,6 +248,9 @@ export default function RealTimeEmergencyClient({
         connected: true,
         connectionError: undefined
       }));
+      
+      // Fetch existing alerts when connected
+      fetchExistingAlerts();
       
       // Clear reconnection timeout
       if (reconnectTimeoutRef.current) {
@@ -318,7 +356,9 @@ export default function RealTimeEmergencyClient({
     newSocket.on('update_dashboard_stats', (data) => {
       console.log('📈 Dashboard stats update triggered');
       // Trigger dashboard refresh
-      window.dispatchEvent(new CustomEvent('refreshDashboard', { detail: data }));
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('refreshDashboard', { detail: data }));
+      }
     });
 
     // Heartbeat handler
@@ -388,7 +428,7 @@ export default function RealTimeEmergencyClient({
       
       newSocket.disconnect();
     };
-  }, []);
+  }, [fetchExistingAlerts, playSound, showPushNotification, isVisible, onEmergencyAlert, onEmergencyStatusUpdate]);
 
   // Update connection status callback
   useEffect(() => {
@@ -444,39 +484,8 @@ export default function RealTimeEmergencyClient({
     <>
       {/* Hidden audio element for sound effects */}
       <audio ref={audioRef} style={{ display: 'none' }} />
-      
-      {/* Connection status indicator */}
-      <div style={{
-        position: 'fixed',
-        top: '10px',
-        right: '10px',
-        zIndex: 9999,
-        backgroundColor: connectionStatus.connected ? '#10b981' : '#ef4444',
-        color: 'white',
-        padding: '0.5rem 1rem',
-        borderRadius: '0.5rem',
-        fontSize: '0.875rem',
-        fontWeight: '600',
-        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.5rem',
-        opacity: connectionStatus.connected ? 0.8 : 1,
-        transition: 'all 0.3s ease'
-      }}>
-        <div style={{
-          width: '8px',
-          height: '8px',
-          borderRadius: '50%',
-          backgroundColor: 'currentColor',
-          animation: connectionStatus.connected ? 'pulse 2s infinite' : 'none'
-        }} />
-        {connectionStatus.connected ? (
-          `🔴 LIVE (${connectionStatus.connectedUsers} users)`
-        ) : (
-          `❌ Disconnected${connectionStatus.connectionError ? `: ${connectionStatus.connectionError}` : ''}`
-        )}
-      </div>
+     
+     
 
       {/* Render children with context */}
       {children && (

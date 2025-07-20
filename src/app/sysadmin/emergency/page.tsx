@@ -1,4 +1,4 @@
-// src/app/sysadmin/emergency/page.tsx - COMPLETE VERSION
+// src/app/sysadmin/emergency/page.tsx - UPDATED VERSION
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -110,6 +110,7 @@ function EmergencyPageContent() {
   const [broadcasting, setBroadcasting] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [pushEnabled, setPushEnabled] = useState(true);
+  const [apiErrors, setApiErrors] = useState<string[]>([]);
   const [realtimeConnection, setRealtimeConnection] = useState<ConnectionStatus>({
     connected: false,
     connectedUsers: 0
@@ -143,7 +144,7 @@ function EmergencyPageContent() {
     return localStorage.getItem('token');
   };
 
-  // API call helper
+  // API call helper with proper URL construction
   const apiCall = useCallback(async (endpoint: string, options: RequestInit = {}) => {
     const token = getToken();
     if (!token) {
@@ -151,8 +152,23 @@ function EmergencyPageContent() {
       return null;
     }
 
+    let baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    
+    if (baseURL.endsWith('/api')) {
+      // If baseURL already ends with /api, use it as is
+    } else if (baseURL.endsWith('/')) {
+      baseURL = baseURL + 'api';
+    } else {
+      baseURL = baseURL + '/api';
+    }
+    
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : '/' + endpoint;
+    const fullURL = `${baseURL}${cleanEndpoint}`;
+    
+    console.log(`🔗 API Call: ${fullURL}`);
+
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${endpoint}`, {
+      const response = await fetch(fullURL, {
         ...options,
         headers: {
           'Content-Type': 'application/json',
@@ -161,18 +177,34 @@ function EmergencyPageContent() {
         },
       });
 
+      console.log(`📡 Response status: ${response.status} for ${fullURL}`);
+
       if (!response.ok) {
         if (response.status === 401) {
           localStorage.removeItem('token');
           router.push('/sysadmin/login');
           return null;
         }
-        throw new Error(`API Error: ${response.status}`);
+        
+        const errorText = await response.text();
+        console.error(`❌ API Error ${response.status}:`, errorText);
+        throw new Error(`API Error: ${response.status} - ${response.statusText}`);
       }
 
       return await response.json();
     } catch (error) {
       console.error('API call error:', error);
+      let errorMessage = 'An unknown API error occurred.';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        if (error.message.includes('404')) {
+          const msg = `Endpoint not found: ${fullURL}. Check backend.`;
+          setApiErrors(prev => [...new Set([...prev, msg])]);
+        } else if (error.message.includes('Failed to fetch')) {
+          const msg = 'Network error: Failed to fetch. Is the backend server running?';
+          setApiErrors(prev => [...new Set([...prev, msg])]);
+        }
+      }
       return null;
     }
   }, [router]);
@@ -206,10 +238,8 @@ function EmergencyPageContent() {
   const handleRealtimeAlert = useCallback((alert: EmergencyAlert) => {
     console.log('🚨 Received real-time alert:', alert);
     
-    // Show in-app notification
     showInAppNotification(alert);
     
-    // Refresh data if it's an emergency event
     if (alert.type === 'emergency_created' || alert.type === 'emergency_resolved') {
       setTimeout(() => {
         loadData();
@@ -226,7 +256,6 @@ function EmergencyPageContent() {
   // Real-time emergency status update handler
   const handleEmergencyStatusUpdate = useCallback((status: any) => {
     console.log('📊 Emergency status update:', status);
-    // Update dashboard data with new status
     if (dashboardData) {
       setDashboardData(prev => ({
         ...prev!,
@@ -270,7 +299,6 @@ function EmergencyPageContent() {
       </div>
     `;
 
-    // Add CSS animation
     const style = document.createElement('style');
     style.textContent = `
       @keyframes slideIn {
@@ -284,7 +312,6 @@ function EmergencyPageContent() {
     `;
     document.head.appendChild(style);
 
-    // Click to dismiss
     notification.onclick = () => {
       notification.style.animation = 'slideOut 0.3s ease-in';
       setTimeout(() => {
@@ -297,7 +324,6 @@ function EmergencyPageContent() {
 
     document.body.appendChild(notification);
 
-    // Auto-dismiss after delay (except critical)
     if (alert.priority !== 'critical') {
       setTimeout(() => {
         if (notification.parentNode) {
@@ -312,10 +338,16 @@ function EmergencyPageContent() {
     }
   };
 
+  // Enhanced alert creation handler
   const handleCreateAlert = async () => {
-    if (!alertForm.title || !alertForm.description || !alertForm.address) return;
+    if (!alertForm.title || !alertForm.description || !alertForm.address) {
+      alert('Please fill in all required fields (title, description, address)');
+      return;
+    }
 
     setCreating(true);
+    console.log('🚨 Creating emergency alert...', alertForm);
+
     try {
       const alertData = {
         ...alertForm,
@@ -332,6 +364,8 @@ function EmergencyPageContent() {
       });
 
       if (response) {
+        console.log('✅ Alert created successfully:', response);
+        
         setShowCreateAlert(false);
         setAlertForm({
           type: 'system',
@@ -344,20 +378,38 @@ function EmergencyPageContent() {
           severity: 'medium'
         });
         
-        // Don't reload immediately, let real-time update handle it
+        showInAppNotification({
+          id: 'alert_success',
+          type: 'emergency_created',
+          title: 'Emergency Alert Created',
+          message: `Alert "${response.emergency?.title}" created successfully`,
+          priority: alertData.priority as any,
+          timestamp: new Date(),
+          recipients: ['all']
+        });
+        
         setTimeout(() => loadData(), 1000);
+      } else {
+        throw new Error('Failed to create alert - no response received');
       }
     } catch (error) {
-      console.error('Error creating alert:', error);
+      console.error('❌ Error creating alert:', error);
+      alert(`Failed to create emergency alert: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setCreating(false);
     }
   };
 
+  // Enhanced broadcast handler
   const handleBroadcast = async () => {
-    if (!broadcastForm.message) return;
+    if (!broadcastForm.message) {
+      alert('Please enter a broadcast message');
+      return;
+    }
 
     setBroadcasting(true);
+    console.log('🚀 Sending emergency broadcast...', broadcastForm);
+
     try {
       const response = await apiCall('/admin/emergency/broadcast', {
         method: 'POST',
@@ -365,6 +417,8 @@ function EmergencyPageContent() {
       });
 
       if (response) {
+        console.log('✅ Broadcast sent successfully:', response);
+        
         setShowBroadcast(false);
         setBroadcastForm({
           message: '',
@@ -373,23 +427,45 @@ function EmergencyPageContent() {
           priority: 'high'
         });
         
-        // Show success notification
         showInAppNotification({
           id: 'broadcast_success',
           type: 'broadcast',
           title: 'Broadcast Sent Successfully',
-          message: `Emergency broadcast delivered to ${response.broadcast.recipientCount} users`,
+          message: `Emergency broadcast delivered to ${response.broadcast?.recipientCount || 'all'} users`,
           priority: 'medium',
           timestamp: new Date(),
           recipients: ['all']
         });
+        
+        setTimeout(() => loadData(), 1000);
+      } else {
+        throw new Error('Failed to send broadcast - no response received');
       }
     } catch (error) {
-      console.error('Error sending broadcast:', error);
+      console.error('❌ Error sending broadcast:', error);
+      
+      showInAppNotification({
+        id: 'broadcast_error',
+        type: 'critical_alert',
+        title: 'Broadcast Failed',
+        message: error instanceof Error ? error.message : 'Failed to send emergency broadcast',
+        priority: 'high',
+        timestamp: new Date(),
+        recipients: ['all']
+      });
     } finally {
       setBroadcasting(false);
     }
   };
+
+  // Add connection status debug info
+  useEffect(() => {
+    console.log('🔌 Emergency page connection status:', {
+      realtimeConnection,
+      criticalCount,
+      unreadCount
+    });
+  }, [realtimeConnection, criticalCount, unreadCount]);
 
   const getTypeIcon = (type: string) => {
     switch (type) {
@@ -441,7 +517,12 @@ function EmergencyPageContent() {
         backgroundColor: '#0f172a',
         color: '#f1f5f9'
       }}>
-        <div>Loading emergency management center...</div>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ marginBottom: '1rem' }}>Loading emergency management center...</div>
+          <div style={{ fontSize: '0.875rem', color: '#94a3b8' }}>
+            Connecting to emergency services...
+          </div>
+        </div>
       </div>
     );
   }
@@ -508,6 +589,17 @@ function EmergencyPageContent() {
                 ) : (
                   'Offline'
                 )}
+              </div>
+              {/* Debug info panel */}
+              <div style={{
+                fontSize: '0.7rem',
+                color: '#94a3b8',
+                marginLeft: '1rem',
+                padding: '0.25rem 0.5rem',
+                borderRadius: '0.25rem',
+                backgroundColor: '#374151'
+              }}>
+                API: {process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}
               </div>
             </div>
           </div>
@@ -1778,6 +1870,45 @@ function EmergencyPageContent() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Enhanced error display */}
+      {apiErrors.length > 0 && (
+        <div style={{
+          position: 'fixed',
+          bottom: '20px',
+          right: '20px',
+          backgroundColor: '#dc2626',
+          color: 'white',
+          padding: '1rem',
+          borderRadius: '0.5rem',
+          maxWidth: '400px',
+          zIndex: 1000
+        }}>
+          <h4 style={{ margin: '0 0 0.5rem 0', fontWeight: 'bold' }}>
+            ⚠️ Connection Issues
+          </h4>
+          {apiErrors.map((error, index) => (
+            <div key={index} style={{ fontSize: '0.875rem', marginBottom: '0.25rem' }}>
+              • {error}
+            </div>
+          ))}
+          <button 
+            onClick={() => setApiErrors([])}
+            style={{
+              background: 'rgba(255,255,255,0.2)',
+              border: 'none',
+              color: 'white',
+              padding: '0.25rem 0.5rem',
+              borderRadius: '0.25rem',
+              marginTop: '0.5rem',
+              cursor: 'pointer',
+              width: '100%'
+            }}
+          >
+            Dismiss
+          </button>
         </div>
       )}
 
