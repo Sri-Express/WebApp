@@ -1182,7 +1182,7 @@ function EmergencyPageContent() {
                       borderRadius: '0.75rem'
                     }}>
                       <div style={{ color: '#f59e0b', fontSize: '2rem', fontWeight: 'bold' }}>
-                        <5s
+                        {'<5s'}
                       </div>
                       <div style={{ color: '#e2e8f0', fontSize: '0.875rem' }}>
                         Delivery Time
