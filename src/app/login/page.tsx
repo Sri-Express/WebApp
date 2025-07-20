@@ -70,7 +70,7 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -84,7 +84,7 @@ export default function LoginPage() {
       }
 
       localStorage.setItem('token', data.token);
-      router.push('/sysadmin/dashboard'); // Redirect to the admin dashboard
+      router.push('/dashboard'); // Redirect to the admin dashboard
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);

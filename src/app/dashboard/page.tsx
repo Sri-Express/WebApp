@@ -291,7 +291,7 @@ function DashboardContent() {
         </div>
       )}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', padding: '0 0.5rem' }}>
-       <div style={{ fontSize: '0.9rem', color: '#ffffff', textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>Last updated: {formatDateTime(lastRefresh.toString())}</div>
+       <div style={{ fontSize: '0.9rem', color: currentThemeStyles.textPrimary, textShadow: theme === 'dark' ? '0 1px 3px rgba(0,0,0,0.5)' : '0 1px 3px rgba(255,255,255,0.5)' }}>Last updated: {formatDateTime(lastRefresh.toString())}</div>
         <button onClick={() => loadDashboardData(true)} disabled={refreshing} style={{ backgroundColor: refreshing ? '#9CA3AF' : '#F59E0B', color: 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: '0.5rem', cursor: refreshing ? 'not-allowed' : 'pointer', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem', transition: 'background-color 0.3s' }}>
           {refreshing ? 'Refreshing...' : 'Refresh'}
         </button>
