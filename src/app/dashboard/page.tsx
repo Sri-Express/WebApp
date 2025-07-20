@@ -132,7 +132,7 @@ export default function ClientDashboardPage() {
       if (recentTripsData && Array.isArray(recentTripsData)) setRecentTrips(recentTripsData);
       if (upcomingTripsData && Array.isArray(upcomingTripsData)) setUpcomingTrips(upcomingTripsData);
 
-      const extractArray = <T>(response: unknown, key: string): T[] => {
+      const extractArray = <T,>(response: unknown, key: string): T[] => {
         if (!response) return [];
         if (Array.isArray(response)) return response as T[];
         if (typeof response === 'object' && response !== null) {
