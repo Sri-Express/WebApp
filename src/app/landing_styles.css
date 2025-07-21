@@ -1897,8 +1897,8 @@
 /* Features Grid */
 .features-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(4, 1fr); /* Changed from auto-fit to exactly 4 columns */
+  gap: 1.5rem; /* Reduced gap slightly */
 }
 
 .feature-card {
@@ -2026,14 +2026,14 @@
   font-size: 0.9rem;
 }
 
-/* Contact Section */
+/* Make contact card more transparent */
 .contact-card {
-  background-color: rgba(255, 255, 255, 0.95);
+  background-color: rgba(255, 255, 255, 0.7); /* Changed from 0.95 to 0.7 for more transparency */
   padding: 3rem;
   border-radius: 1rem;
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(251, 191, 36, 0.3);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15); /* Reduced shadow opacity from 0.25 to 0.15 */
+  backdrop-filter: blur(15px); /* Increased blur from 10px to 15px for better glass effect */
+  border: 1px solid rgba(251, 191, 36, 0.2); /* Reduced border opacity from 0.3 to 0.2 */
 }
 
 .contact-grid {
@@ -2146,12 +2146,8 @@
     padding: 1rem !important;
   }
 }
-
 @media (max-width: 768px) {
-  .hero-title {
-    font-size: 3rem !important;
-  }
-  .section-padding {
-    padding: 2rem 1rem !important;
+  .features-grid {
+    grid-template-columns: 1fr; /* 1 column on mobile */
   }
 }
