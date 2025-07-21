@@ -1,4 +1,3 @@
-
 // src/app/sysadmin/emergency/page.tsx - FULLY UPDATED VERSION
 "use client";
 
@@ -6,11 +5,11 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
-  ExclamationTriangleIcon, SpeakerWaveIcon, UserGroupIcon, MapPinIcon, PhoneIcon, BellAlertIcon,
-  ArrowPathIcon, PlusIcon, ShieldExclamationIcon, FireIcon, TruckIcon, HeartIcon,
+  ExclamationTriangleIcon, SpeakerWaveIcon, UserGroupIcon, BellAlertIcon,
+  PlusIcon, ShieldExclamationIcon, FireIcon, TruckIcon, HeartIcon,
   CloudIcon, WifiIcon, SpeakerXMarkIcon, XMarkIcon, ShieldCheckIcon
 } from '@heroicons/react/24/outline';
-import RealTimeEmergencyClient, { EmergencyAlert, ConnectionStatus, useEmergencyAlerts, useEmergencyContext } from '../../components/RealTimeEmergencyClient';
+import RealTimeEmergencyClient, { EmergencyAlert, useEmergencyAlerts, useEmergencyContext } from '../../components/RealTimeEmergencyClient';
 import { useTheme } from '@/app/context/ThemeContext';
 import ThemeSwitcher from '@/app/components/ThemeSwitcher';
 
@@ -62,7 +61,7 @@ function EmergencyPageContent() {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [apiErrors, setApiErrors] = useState<string[]>([]);
   
-  const { alerts: realtimeAlerts, unreadCount, criticalCount, markAsRead, connected } = useEmergencyAlerts();
+  const { alerts: realtimeAlerts, unreadCount, criticalCount, markAsRead } = useEmergencyAlerts();
   const { socket, connectionStatus: realtimeConnection } = useEmergencyContext();
   const shownNotificationsRef = useRef(new Set());
 
