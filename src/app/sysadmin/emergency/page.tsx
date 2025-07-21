@@ -2,19 +2,19 @@
 // src/app/sysadmin/emergency/page.tsx - FULLY UPDATED VERSION
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
-  ExclamationTriangleIcon, SpeakerWaveIcon, UserGroupIcon, ClockIcon, MapPinIcon, PhoneIcon, BellAlertIcon,
-  CheckCircleIcon, ArrowPathIcon, PlusIcon, EyeIcon, ShieldExclamationIcon, FireIcon, TruckIcon, HeartIcon,
+  ExclamationTriangleIcon, SpeakerWaveIcon, UserGroupIcon, MapPinIcon, PhoneIcon, BellAlertIcon,
+  ArrowPathIcon, PlusIcon, ShieldExclamationIcon, FireIcon, TruckIcon, HeartIcon,
   CloudIcon, WifiIcon, SpeakerXMarkIcon, XMarkIcon, ShieldCheckIcon
 } from '@heroicons/react/24/outline';
-import RealTimeEmergencyClient, { EmergencyAlert, ConnectionStatus, useEmergencyAlerts } from '../../components/RealTimeEmergencyClient';
+import RealTimeEmergencyClient, { EmergencyAlert, ConnectionStatus, useEmergencyAlerts, useEmergencyContext } from '../../components/RealTimeEmergencyClient';
 import { useTheme } from '@/app/context/ThemeContext';
 import ThemeSwitcher from '@/app/components/ThemeSwitcher';
 
-// Interfaces (unchanged)
+// Interfaces
 interface EmergencyIncident {
   _id: string; incidentId: string; type: 'accident' | 'breakdown' | 'security' | 'medical' | 'weather' | 'system' | 'other';
   priority: 'critical' | 'high' | 'medium' | 'low'; status: 'active' | 'responded' | 'resolved' | 'closed';
@@ -36,13 +36,20 @@ interface EmergencyTeam {
   members: { name: string; role: string; contactNumber: string; }[];
   statistics: { assignedIncidents: number; activeIncidents: number; resolvedIncidents: number; status: 'available' | 'busy'; };
 }
+// Specific type for the emergency status payload to avoid 'any'
+interface EmergencyStatusPayload {
+  activeCount: number;
+  criticalCount: number;
+}
+// Type alias for priority levels to avoid 'any'
+type Priority = 'low' | 'medium' | 'high' | 'critical';
 
 // Main component that includes the real-time client
 function EmergencyPageContent() {
   const router = useRouter();
   const { theme } = useTheme();
 
-  // State management (unchanged)
+  // State management
   const [dashboardData, setDashboardData] = useState<EmergencyDashboard | null>(null);
   const [incidents, setIncidents] = useState<EmergencyIncident[]>([]);
   const [teams, setTeams] = useState<EmergencyTeam[]>([]);
@@ -54,14 +61,15 @@ function EmergencyPageContent() {
   const [broadcasting, setBroadcasting] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [apiErrors, setApiErrors] = useState<string[]>([]);
-  const [realtimeConnection, setRealtimeConnection] = useState<ConnectionStatus>({ connected: false, connectedUsers: 0 });
-
-  const { alerts: realtimeAlerts, unreadCount, criticalCount, markAsRead } = useEmergencyAlerts();
+  
+  const { alerts: realtimeAlerts, unreadCount, criticalCount, markAsRead, connected } = useEmergencyAlerts();
+  const { socket, connectionStatus: realtimeConnection } = useEmergencyContext();
+  const shownNotificationsRef = useRef(new Set());
 
   const [alertForm, setAlertForm] = useState({ type: 'system', priority: 'medium', title: '', description: '', latitude: '', longitude: '', address: '', severity: 'medium' });
   const [broadcastForm, setBroadcastForm] = useState({ message: '', recipients: 'all', method: 'system', priority: 'high' });
 
-  // API and Data Logic (unchanged)
+  // API and Data Logic
   const getToken = () => localStorage.getItem('token');
 
   const apiCall = useCallback(async (endpoint: string, options: RequestInit = {}) => {
@@ -100,14 +108,11 @@ function EmergencyPageContent() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  // Real-time handlers (unchanged)
-  const handleConnectionStatusChange = useCallback((status: ConnectionStatus) => setRealtimeConnection(status), []);
-  const handleEmergencyStatusUpdate = useCallback((status: any) => {
-    if (dashboardData) setDashboardData(prev => ({ ...prev!, overview: { ...prev!.overview, activeEmergencies: status.activeCount, criticalCount: status.criticalCount } }));
-  }, [dashboardData]);
+  // In-app notification
+  const showInAppNotification = useCallback((alert: EmergencyAlert) => {
+    if (shownNotificationsRef.current.has(alert.id)) return;
+    shownNotificationsRef.current.add(alert.id);
 
-  // In-app notification (unchanged)
-  const showInAppNotification = (alert: EmergencyAlert) => {
     const notification = document.createElement('div');
     notification.style.cssText = `position: fixed; top: 80px; right: 20px; z-index: 10000; background: ${alert.priority === 'critical' ? '#dc2626' : alert.priority === 'high' ? '#ea580c' : '#f59e0b'}; color: white; padding: 1rem 1.5rem; border-radius: 0.75rem; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25); max-width: 400px; animation: slideIn 0.3s ease-out; cursor: pointer;`;
     notification.innerHTML = `<div style="display: flex; align-items: center; gap: 0.75rem;"><div style="font-size: 1.25rem;">🚨</div><div><div style="font-weight: 600; margin-bottom: 0.25rem;">${alert.title}</div><div style="font-size: 0.875rem; opacity: 0.9;">${alert.message}</div><div style="font-size: 0.75rem; opacity: 0.8; margin-top: 0.25rem;">${new Date(alert.timestamp).toLocaleTimeString()} • Click to dismiss</div></div></div>`;
@@ -117,9 +122,29 @@ function EmergencyPageContent() {
     notification.onclick = () => { notification.style.animation = 'slideOut 0.3s ease-in'; setTimeout(() => { if (notification.parentNode) notification.parentNode.removeChild(notification); }, 300); markAsRead(alert.id); };
     document.body.appendChild(notification);
     if (alert.priority !== 'critical') setTimeout(() => { if (notification.parentNode) { notification.style.animation = 'slideOut 0.3s ease-in'; setTimeout(() => { if (notification.parentNode) notification.parentNode.removeChild(notification); }, 300); } }, alert.priority === 'high' ? 15000 : 10000);
-  };
+  }, [markAsRead]);
 
-  // Alert/Broadcast handlers (unchanged)
+  // Real-time handler for dashboard updates
+  const handleEmergencyStatusUpdate = useCallback((status: EmergencyStatusPayload) => {
+    if (dashboardData) {
+      setDashboardData(prev => ({ ...prev!, overview: { ...prev!.overview, activeEmergencies: status.activeCount, criticalCount: status.criticalCount } }));
+    }
+  }, [dashboardData]);
+
+  // Effect to listen to socket events
+  useEffect(() => {
+    if (socket) {
+      socket.on('emergency_alert', showInAppNotification);
+      socket.on('emergency_status', handleEmergencyStatusUpdate);
+
+      return () => {
+        socket.off('emergency_alert', showInAppNotification);
+        socket.off('emergency_status', handleEmergencyStatusUpdate);
+      };
+    }
+  }, [socket, showInAppNotification, handleEmergencyStatusUpdate]);
+
+  // Alert/Broadcast handlers
   const handleCreateAlert = async () => {
     if (!alertForm.title || !alertForm.description || !alertForm.address) { alert('Please fill in all required fields.'); return; }
     setCreating(true);
@@ -128,7 +153,7 @@ function EmergencyPageContent() {
       const response = await apiCall('/admin/emergency/alert', { method: 'POST', body: JSON.stringify(alertData) });
       if (response) {
         setShowCreateAlert(false); setAlertForm({ type: 'system', priority: 'medium', title: '', description: '', latitude: '', longitude: '', address: '', severity: 'medium' });
-        showInAppNotification({ id: 'alert_success', type: 'emergency_created', title: 'Emergency Alert Created', message: `Alert "${response.emergency?.title}" created`, priority: alertData.priority as any, timestamp: new Date(), recipients: ['all'] });
+        showInAppNotification({ id: 'alert_success', type: 'emergency_created', title: 'Emergency Alert Created', message: `Alert "${response.emergency?.title}" created`, priority: alertData.priority as Priority, timestamp: new Date(), recipients: ['all'] });
         setTimeout(() => loadData(), 1000);
       } else { throw new Error('Failed to create alert'); }
     } catch (error) { alert(`Failed to create alert: ${error instanceof Error ? error.message : 'Unknown error'}`); } finally { setCreating(false); }
@@ -151,7 +176,7 @@ function EmergencyPageContent() {
   const currentThemeStyles = theme === 'dark' ? darkTheme : lightTheme;
   const animationStyles = ` @keyframes road-marking { 0% { transform: translateX(-200%); } 100% { transform: translateX(500%); } } .animate-road-marking { animation: road-marking 10s linear infinite; } @keyframes car-right { 0% { transform: translateX(-100%); } 100% { transform: translateX(100vw); } } .animate-car-right { animation: car-right 15s linear infinite; } @keyframes car-left { 0% { transform: translateX(100vw) scaleX(-1); } 100% { transform: translateX(-200px) scaleX(-1); } } .animate-car-left { animation: car-left 16s linear infinite; } @keyframes light-blink { 0%, 100% { opacity: 1; box-shadow: 0 0 15px #fcd34d; } 50% { opacity: 0.6; box-shadow: 0 0 5px #fcd34d; } } .animate-light-blink { animation: light-blink 1s infinite; } @keyframes fade-in-down { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } } .animate-fade-in-down { animation: fade-in-down 0.8s ease-out forwards; } @keyframes fade-in-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } } .animate-fade-in-up { animation: fade-in-up 0.8s ease-out forwards; } @keyframes trainMove { from { left: 100%; } to { left: -300px; } } @keyframes slight-bounce { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-1px); } } .animate-slight-bounce { animation: slight-bounce 2s ease-in-out infinite; } @keyframes steam { 0% { opacity: 0.8; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-20px) scale(2.5); } } .animate-steam { animation: steam 2s ease-out infinite; } @keyframes wheels { 0% { transform: rotate(0deg); } 100% { transform: rotate(-360deg); } } .animate-wheels { animation: wheels 2s linear infinite; } @keyframes connecting-rod { 0% { transform: translateX(-1px) rotate(0deg); } 50% { transform: translateX(1px) rotate(180deg); } 100% { transform: translateX(-1px) rotate(360deg); } } .animate-connecting-rod { animation: connecting-rod 2s linear infinite; } @keyframes piston-move { 0% { transform: translateX(-2px); } 50% { transform: translateX(2px); } 100% { transform: translateX(-2px); } } .animate-piston { animation: piston-move 2s linear infinite; } .animation-delay-100 { animation-delay: 0.1s; } .animation-delay-200 { animation-delay: 0.2s; } .animation-delay-300 { animation-delay: 0.3s; } .animation-delay-400 { animation-delay: 0.4s; } .animation-delay-500 { animation-delay: 0.5s; } .animation-delay-600 { animation-delay: 0.6s; } .animation-delay-700 { animation-delay: 0.7s; } .animation-delay-800 { animation-delay: 0.8s; } .animation-delay-1000 { animation-delay: 1s; } .animation-delay-1200 { animation-delay: 1.2s; } .animation-delay-1500 { animation-delay: 1.5s; } .animation-delay-2000 { animation-delay: 2s; } .animation-delay-2500 { animation-delay: 2.5s; } .animation-delay-3000 { animation-delay: 3s; } @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } `;
 
-  // Helper functions (unchanged)
+  // Helper functions
   const getTypeIcon = (type: string) => ({ accident: <ExclamationTriangleIcon width={16} height={16} />, breakdown: <TruckIcon width={16} height={16} />, security: <ShieldExclamationIcon width={16} height={16} />, medical: <HeartIcon width={16} height={16} />, weather: <CloudIcon width={16} height={16} />, system: <FireIcon width={16} height={16} /> }[type] || <ExclamationTriangleIcon width={16} height={16} />);
   const getPriorityColor = (priority: string) => ({ critical: '#dc2626', high: '#ea580c', medium: '#ca8a04', low: '#16a34a' }[priority] || '#6b7280');
   const getStatusColor = (status: string) => ({ active: '#dc2626', responded: '#ea580c', resolved: '#16a34a', closed: '#6b7280' }[status] || '#6b7280');
@@ -530,10 +555,3 @@ export default function EmergencyManagementPage() {
     </RealTimeEmergencyClient>
   );
 }
-
-
-
-
-
-
-
