@@ -1,27 +1,43 @@
-// components/CustomerChatWidget.tsx - Add this to your main dashboard
+// REPLACE your CustomerChatWidget.tsx with this complete version
 'use client';
 import { useState, useEffect, useRef } from 'react';
 
 interface Message {
-  id: string;
-  sender: 'customer' | 'agent' | 'ai' | 'system';
+  messageId: string;
+  sender: 'customer' | 'agent' | 'ai_bot' | 'system';
   content: string;
   timestamp: string;
+  isRead: boolean;
 }
 
-interface ChatWidgetProps {
+interface ChatSession {
+  _id: string;
+  sessionId: string;
+  status: 'waiting' | 'active' | 'ended' | 'transferred';
+  messages: Message[];
+  customerInfo: {
+    name: string;
+    email: string;
+  };
+  assignedAgent?: {
+    name: string;
+  };
+}
+
+interface CustomerChatWidgetProps {
   userId?: string;
   userName?: string;
   userEmail?: string;
 }
 
-export default function CustomerChatWidget({ userId, userName, userEmail }: ChatWidgetProps) {
+export default function CustomerChatWidget({ userId, userName, userEmail }: CustomerChatWidgetProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [chatSession, setChatSession] = useState<ChatSession | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
-  const [chatSessionId, setChatSessionId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState(false);
-  const [connected, setConnected] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -32,82 +48,131 @@ export default function CustomerChatWidget({ userId, userName, userEmail }: Chat
     scrollToBottom();
   }, [messages]);
 
+  // Poll for new messages when chat is active
+  useEffect(() => {
+    if (!chatSession) return;
+
+    const pollMessages = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/cs/chat/sessions/${chatSession._id}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.data.chat) {
+            setMessages(data.data.chat.messages || []);
+            setChatSession(prev => prev ? { ...prev, ...data.data.chat } : null);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to poll messages:', error);
+      }
+    };
+
+    // Poll every 3 seconds
+    const interval = setInterval(pollMessages, 3000);
+    return () => clearInterval(interval);
+  }, [chatSession]);
+
   const startChat = async () => {
+    setIsConnecting(true);
+    setError(null);
+    
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/cs/chat/sessions`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/cs/chat/sessions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token && { 'Authorization': `Bearer ${token}` })
         },
         body: JSON.stringify({
-          customerId: userId,
+          customerId: userId || 'anonymous-' + Date.now(),
           channel: 'web',
-          initialMessage: 'Hello, I need help with my booking.'
+          initialMessage: 'Hello! I need help with my booking.'
         })
       });
 
       if (response.ok) {
         const data = await response.json();
-        if (data.success) {
-          setChatSessionId(data.data.chat._id);
+        console.log('Chat started:', data);
+        if (data.data?.chat) {
+          setChatSession(data.data.chat);
           setMessages(data.data.chat.messages || []);
-          setConnected(true);
         }
+      } else {
+        const errorData = await response.text();
+        throw new Error(`Failed to start chat: ${response.status} - ${errorData}`);
       }
     } catch (error) {
-      console.error('Failed to start chat:', error);
+      console.error('Chat start error:', error);
+      setError(error instanceof Error ? error.message : 'Failed to start chat');
+    } finally {
+      setIsConnecting(false);
     }
   };
 
   const sendMessage = async () => {
-    if (!newMessage.trim() || !chatSessionId) return;
+    if (!newMessage.trim() || !chatSession || isConnecting) return;
 
     const tempMessage: Message = {
-      id: Date.now().toString(),
+      messageId: 'temp-' + Date.now(),
       sender: 'customer',
       content: newMessage,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      isRead: false
     };
 
+    // Optimistically add message
     setMessages(prev => [...prev, tempMessage]);
+    const messageToSend = newMessage;
     setNewMessage('');
-    setIsTyping(true);
+    setIsConnecting(true);
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/cs/chat/sessions/${chatSessionId}/messages`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/cs/chat/sessions/${chatSession._id}/messages`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token && { 'Authorization': `Bearer ${token}` })
         },
         body: JSON.stringify({
-          content: newMessage,
+          content: messageToSend,
           sender: 'customer'
         })
       });
 
       if (response.ok) {
         const data = await response.json();
-        // Message already added optimistically
-        
-        // Simulate AI/agent response after 2 seconds
+        console.log('Message sent:', data);
+        // Remove temp message and refresh from server
         setTimeout(() => {
-          const aiResponse: Message = {
-            id: (Date.now() + 1).toString(),
-            sender: 'ai',
-            content: 'Thank you for contacting Sri Express support! I\'m here to help you with your booking. Can you please provide me with your booking ID or tell me more about the issue you\'re experiencing?',
-            timestamp: new Date().toISOString()
-          };
-          setMessages(prev => [...prev, aiResponse]);
-          setIsTyping(false);
-        }, 2000);
+          fetchMessages();
+        }, 500);
+      } else {
+        // Remove temp message on error
+        setMessages(prev => prev.filter(m => m.messageId !== tempMessage.messageId));
+        throw new Error('Failed to send message');
       }
     } catch (error) {
-      console.error('Failed to send message:', error);
-      setIsTyping(false);
+      console.error('Send message error:', error);
+      setError('Failed to send message');
+      // Remove temp message on error
+      setMessages(prev => prev.filter(m => m.messageId !== tempMessage.messageId));
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
+  const fetchMessages = async () => {
+    if (!chatSession) return;
+    
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/cs/chat/sessions/${chatSession._id}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data.chat) {
+          setMessages(data.data.chat.messages || []);
+          setChatSession(prev => prev ? { ...prev, ...data.data.chat } : null);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch messages:', error);
     }
   };
 
@@ -115,6 +180,16 @@ export default function CustomerChatWidget({ userId, userName, userEmail }: Chat
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
+    }
+  };
+
+  const getStatusDisplay = () => {
+    if (!chatSession) return '🔴 Not connected';
+    switch (chatSession.status) {
+      case 'waiting': return '🟡 Waiting for agent...';
+      case 'active': return `🟢 Connected${chatSession.assignedAgent ? ` to ${chatSession.assignedAgent.name}` : ''}`;
+      case 'ended': return '⚪ Chat ended';
+      default: return '🔴 Unknown status';
     }
   };
 
@@ -171,7 +246,8 @@ export default function CustomerChatWidget({ userId, userName, userEmail }: Chat
       zIndex: 1000,
       display: 'flex',
       flexDirection: 'column',
-      overflow: 'hidden'
+      overflow: 'hidden',
+      border: '1px solid #e5e7eb'
     }}>
       {/* Header */}
       <div style={{
@@ -187,7 +263,7 @@ export default function CustomerChatWidget({ userId, userName, userEmail }: Chat
             💬 Sri Express Support
           </h3>
           <p style={{ margin: '4px 0 0 0', fontSize: '12px', opacity: 0.9 }}>
-            {connected ? '🟢 Connected' : '🔴 Not connected'}
+            {getStatusDisplay()}
           </p>
         </div>
         <button
@@ -196,7 +272,7 @@ export default function CustomerChatWidget({ userId, userName, userEmail }: Chat
             background: 'none',
             border: 'none',
             color: 'white',
-            fontSize: '20px',
+            fontSize: '18px',
             cursor: 'pointer',
             padding: '4px'
           }}
@@ -212,7 +288,7 @@ export default function CustomerChatWidget({ userId, userName, userEmail }: Chat
         overflowY: 'auto',
         backgroundColor: '#f8fafc'
       }}>
-        {!connected ? (
+        {!chatSession ? (
           <div style={{ textAlign: 'center', padding: '20px' }}>
             <h4 style={{ color: '#374151', marginBottom: '12px' }}>
               👋 Welcome to Sri Express Support!
@@ -222,25 +298,26 @@ export default function CustomerChatWidget({ userId, userName, userEmail }: Chat
             </p>
             <button
               onClick={startChat}
+              disabled={isConnecting}
               style={{
-                backgroundColor: '#10b981',
+                backgroundColor: isConnecting ? '#9ca3af' : '#10b981',
                 color: 'white',
                 border: 'none',
                 padding: '12px 24px',
                 borderRadius: '8px',
-                cursor: 'pointer',
+                cursor: isConnecting ? 'not-allowed' : 'pointer',
                 fontWeight: '600',
                 fontSize: '14px'
               }}
             >
-              🚀 Start Chat
+              {isConnecting ? '🔄 Starting...' : '🚀 Start Chat'}
             </button>
           </div>
         ) : (
           <>
             {messages.map((message) => (
               <div
-                key={message.id}
+                key={message.messageId}
                 style={{
                   marginBottom: '12px',
                   display: 'flex',
@@ -253,9 +330,9 @@ export default function CustomerChatWidget({ userId, userName, userEmail }: Chat
                     padding: '8px 12px',
                     borderRadius: '12px',
                     backgroundColor: message.sender === 'customer' ? '#3b82f6' : 
-                                   message.sender === 'ai' ? '#10b981' : 
-                                   message.sender === 'system' ? '#6b7280' : '#e5e7eb',
-                    color: message.sender === 'customer' || message.sender === 'ai' || message.sender === 'system' ? 'white' : '#374151',
+                                   message.sender === 'agent' ? '#10b981' : 
+                                   message.sender === 'ai_bot' ? '#0891b2' : '#6b7280',
+                    color: 'white',
                     fontSize: '14px',
                     lineHeight: '1.4'
                   }}
@@ -266,8 +343,8 @@ export default function CustomerChatWidget({ userId, userName, userEmail }: Chat
                     marginBottom: '4px'
                   }}>
                     {message.sender === 'customer' ? '👤 You' : 
-                     message.sender === 'ai' ? '🤖 AI Assistant' : 
-                     message.sender === 'agent' ? '👨‍💼 Agent' : '⚙️ System'} • {new Date(message.timestamp).toLocaleTimeString()}
+                     message.sender === 'agent' ? `👨‍💼 ${chatSession.assignedAgent?.name || 'Agent'}` : 
+                     message.sender === 'ai_bot' ? '🤖 AI Assistant' : '⚙️ System'} • {new Date(message.timestamp).toLocaleTimeString()}
                   </div>
                   {message.content}
                 </div>
@@ -287,17 +364,42 @@ export default function CustomerChatWidget({ userId, userName, userEmail }: Chat
                   fontSize: '14px',
                   color: '#6b7280'
                 }}>
-                  🤖 AI is typing...
+                  💭 Agent is typing...
                 </div>
               </div>
             )}
             <div ref={messagesEndRef} />
           </>
         )}
+
+        {error && (
+          <div style={{
+            backgroundColor: '#fee2e2',
+            color: '#dc2626',
+            padding: '8px 12px',
+            borderRadius: '6px',
+            marginTop: '8px',
+            fontSize: '14px'
+          }}>
+            {error}
+            <button 
+              onClick={() => setError(null)}
+              style={{
+                float: 'right',
+                background: 'none',
+                border: 'none',
+                color: '#dc2626',
+                cursor: 'pointer'
+              }}
+            >
+              ✕
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Input Area */}
-      {connected && (
+      {chatSession && (
         <div style={{
           padding: '16px',
           borderTop: '1px solid #e5e7eb',
@@ -310,31 +412,43 @@ export default function CustomerChatWidget({ userId, userName, userEmail }: Chat
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Type your message..."
+              disabled={isConnecting || chatSession.status === 'ended'}
               style={{
                 flex: 1,
                 padding: '8px 12px',
                 border: '1px solid #d1d5db',
                 borderRadius: '8px',
-                fontSize: '14px'
+                fontSize: '14px',
+                opacity: chatSession.status === 'ended' ? 0.5 : 1
               }}
             />
             <button
               onClick={sendMessage}
-              disabled={!newMessage.trim()}
+              disabled={!newMessage.trim() || isConnecting || chatSession.status === 'ended'}
               style={{
                 backgroundColor: '#3b82f6',
                 color: 'white',
                 border: 'none',
                 padding: '8px 16px',
                 borderRadius: '8px',
-                cursor: newMessage.trim() ? 'pointer' : 'not-allowed',
-                opacity: newMessage.trim() ? 1 : 0.5,
+                cursor: (!newMessage.trim() || isConnecting || chatSession.status === 'ended') ? 'not-allowed' : 'pointer',
+                opacity: (!newMessage.trim() || isConnecting || chatSession.status === 'ended') ? 0.5 : 1,
                 fontSize: '14px'
               }}
             >
-              📤
+              {isConnecting ? '⏳' : '📤'}
             </button>
           </div>
+          {chatSession.status === 'ended' && (
+            <p style={{
+              margin: '8px 0 0 0',
+              fontSize: '12px',
+              color: '#6b7280',
+              textAlign: 'center'
+            }}>
+              This chat has ended. Start a new chat if you need more help.
+            </p>
+          )}
         </div>
       )}
     </div>

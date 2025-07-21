@@ -14,6 +14,7 @@ import {
 } from '@heroicons/react/24/outline';
 import RealTimeEmergencyClient from '../components/RealTimeEmergencyClient';
 import UserEmergencyAlerts from '../components/UserEmergencyAlerts';
+import CustomerChatWidget from '../components/CustomerChatWidget';
 
 // --- Custom Vector Icons for Tabs ---
 const OverviewIcon = ({ color = 'currentColor' }) => (
@@ -325,7 +326,7 @@ function DashboardContent() {
             { name: 'Notifications', href: '/notifications', icon: BellIcon }
           ].map((action, index) => (
             <Link key={action.name} href={action.href} style={{ textDecoration: 'none' }}>
-              <div className="quick-action-panel" style={{ backgroundColor: currentThemeStyles.quickActionBg, padding: '1.5rem', borderRadius: '0.75rem', border: currentThemeStyles.quickActionBorder, transition: 'all 0.3s ease', cursor: 'pointer', animation: `fade-in-up 0.6s ease-out ${index * 0.1 + 0.4}s both` }}>
+              <div className="quick-action-panel" style={{ height: '100%', display: 'flex', alignItems: 'center', backgroundColor: currentThemeStyles.quickActionBg, padding: '1.5rem', borderRadius: '0.75rem', border: currentThemeStyles.quickActionBorder, transition: 'all 0.3s ease', cursor: 'pointer', animation: `fade-in-up 0.6s ease-out ${index * 0.1 + 0.4}s both` }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   <action.icon width={24} height={24} color="#F59E0B" />
                   <h3 style={{ color: currentThemeStyles.textPrimary, fontSize: '1.1rem', fontWeight: '600', margin: 0 }}>{action.name}</h3>
@@ -337,60 +338,64 @@ function DashboardContent() {
       </div>
       <div style={{ backgroundColor: currentThemeStyles.glassPanelBg, padding: '2rem', borderRadius: '1rem', boxShadow: currentThemeStyles.glassPanelShadow, backdropFilter: 'blur(12px)', border: currentThemeStyles.glassPanelBorder }}>
         <div className="main-content-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-          <div>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
             <h3 style={{ color: currentThemeStyles.textPrimary, marginBottom: '1rem', fontSize: '1.2rem', fontWeight: '600' }}>Recent Bookings</h3>
-            {Array.isArray(recentBookings) && recentBookings.length > 0 ? (
-              recentBookings.slice(0, 3).map((booking) => {
-                const bookingId = booking?.bookingId || booking?._id || booking?.id;
-                const amount = booking?.pricing?.totalAmount || booking?.amount?.total || booking?.price || 0;
-                const status = booking?.status || 'unknown';
-                const travelDate = booking?.travelDate || booking?.date || new Date().toISOString();
-                return (
-                  <div key={bookingId as string} style={{ backgroundColor: currentThemeStyles.alertBg, padding: '1rem', borderRadius: '0.5rem', marginBottom: '1rem', borderLeft: `4px solid #3b82f6` }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                        <div style={{ fontWeight: '600', color: currentThemeStyles.textPrimary, fontSize: '0.9rem' }}>Booking #{typeof bookingId === 'string' ? bookingId.slice(-8) : bookingId}</div>
-                        <div style={{ color: currentThemeStyles.textSecondary, fontSize: '0.8rem' }}>{formatDate(travelDate)}</div>
-                      </div>
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ color: '#F59E0B', fontWeight: '600', fontSize: '0.9rem' }}>{formatPrice(amount)}</div>
-                        <div style={{ fontSize: '0.7rem', color: status === 'confirmed' ? '#10B981' : currentThemeStyles.textMuted, textTransform: 'capitalize' }}>{status}</div>
+            <div style={{ flex: '1 1 0%' }}>
+              {Array.isArray(recentBookings) && recentBookings.length > 0 ? (
+                recentBookings.slice(0, 3).map((booking) => {
+                  const bookingId = booking?.bookingId || booking?._id || booking?.id;
+                  const amount = booking?.pricing?.totalAmount || booking?.amount?.total || booking?.price || 0;
+                  const status = booking?.status || 'unknown';
+                  const travelDate = booking?.travelDate || booking?.date || new Date().toISOString();
+                  return (
+                    <div key={bookingId as string} style={{ backgroundColor: currentThemeStyles.alertBg, padding: '1rem', borderRadius: '0.5rem', marginBottom: '1rem', borderLeft: `4px solid #3b82f6` }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <div style={{ fontWeight: '600', color: currentThemeStyles.textPrimary, fontSize: '0.9rem' }}>Booking #{typeof bookingId === 'string' ? bookingId.slice(-8) : bookingId}</div>
+                          <div style={{ color: currentThemeStyles.textSecondary, fontSize: '0.8rem' }}>{formatDate(travelDate)}</div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ color: '#F59E0B', fontWeight: '600', fontSize: '0.9rem' }}>{formatPrice(amount)}</div>
+                          <div style={{ fontSize: '0.7rem', color: status === 'confirmed' ? '#10B981' : currentThemeStyles.textMuted, textTransform: 'capitalize' }}>{status}</div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })
-            ) : ( <div style={{ textAlign: 'center', padding: '1rem', color: currentThemeStyles.textSecondary, fontSize: '0.9rem' }}>No recent bookings found.</div> )}
+                  );
+                })
+              ) : ( <div style={{ textAlign: 'center', padding: '1rem', color: currentThemeStyles.textSecondary, fontSize: '0.9rem' }}>No recent bookings found.</div> )}
+            </div>
             {Array.isArray(recentBookings) && recentBookings.length > 0 && (
               <Link href="/bookings" style={{ color: '#F59E0B', textDecoration: 'none', fontSize: '0.9rem', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                 View all bookings <ArrowRightIcon width={16} />
               </Link>
             )}
           </div>
-          <div>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
             <h3 style={{ color: currentThemeStyles.textPrimary, marginBottom: '1rem', fontSize: '1.2rem', fontWeight: '600' }}>Recent Payments</h3>
-            {Array.isArray(recentPayments) && recentPayments.length > 0 ? (
-              recentPayments.slice(0, 3).map((payment) => {
-                const paymentId = payment?.paymentId || payment?._id || payment?.id;
-                const amount = payment?.amount?.total || payment?.total || 0;
-                const status = payment?.status || 'unknown';
-                const createdAt = payment?.createdAt || payment?.date || new Date().toISOString();
-                return (
-                  <div key={paymentId as string} style={{ backgroundColor: currentThemeStyles.alertBg, padding: '1rem', borderRadius: '0.5rem', marginBottom: '1rem', borderLeft: `4px solid #10b981` }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                        <div style={{ fontWeight: '600', color: currentThemeStyles.textPrimary, fontSize: '0.9rem' }}>Payment #{typeof paymentId === 'string' ? paymentId.slice(-8) : paymentId}</div>
-                        <div style={{ color: currentThemeStyles.textSecondary, fontSize: '0.8rem' }}>{formatDate(createdAt)}</div>
-                      </div>
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ color: '#10B981', fontWeight: '600', fontSize: '0.9rem' }}>{formatPrice(amount)}</div>
-                        <div style={{ fontSize: '0.7rem', color: status === 'completed' ? '#10B981' : currentThemeStyles.textMuted, textTransform: 'capitalize' }}>{status}</div>
+            <div style={{ flex: '1 1 0%' }}>
+              {Array.isArray(recentPayments) && recentPayments.length > 0 ? (
+                recentPayments.slice(0, 3).map((payment) => {
+                  const paymentId = payment?.paymentId || payment?._id || payment?.id;
+                  const amount = payment?.amount?.total || payment?.total || 0;
+                  const status = payment?.status || 'unknown';
+                  const createdAt = payment?.createdAt || payment?.date || new Date().toISOString();
+                  return (
+                    <div key={paymentId as string} style={{ backgroundColor: currentThemeStyles.alertBg, padding: '1rem', borderRadius: '0.5rem', marginBottom: '1rem', borderLeft: `4px solid #10b981` }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <div style={{ fontWeight: '600', color: currentThemeStyles.textPrimary, fontSize: '0.9rem' }}>Payment #{typeof paymentId === 'string' ? paymentId.slice(-8) : paymentId}</div>
+                          <div style={{ color: currentThemeStyles.textSecondary, fontSize: '0.8rem' }}>{formatDate(createdAt)}</div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ color: '#10B981', fontWeight: '600', fontSize: '0.9rem' }}>{formatPrice(amount)}</div>
+                          <div style={{ fontSize: '0.7rem', color: status === 'completed' ? '#10B981' : currentThemeStyles.textMuted, textTransform: 'capitalize' }}>{status}</div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })
-            ) : ( <div style={{ textAlign: 'center', padding: '1rem', color: currentThemeStyles.textSecondary, fontSize: '0.9rem' }}>No recent payments found.</div> )}
+                  );
+                })
+              ) : ( <div style={{ textAlign: 'center', padding: '1rem', color: currentThemeStyles.textSecondary, fontSize: '0.9rem' }}>No recent payments found.</div> )}
+            </div>
             {Array.isArray(recentPayments) && recentPayments.length > 0 && (
               <Link href="/payments" style={{ color: '#F59E0B', textDecoration: 'none', fontSize: '0.9rem', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                 View all payments <ArrowRightIcon width={16} />
@@ -548,6 +553,11 @@ function DashboardContent() {
           </div>
         </main>
       </div>
+      <CustomerChatWidget 
+        userId={user?._id} 
+        userName={user?.name} 
+        userEmail={user?.email} 
+      />
     </div>
   );
 }

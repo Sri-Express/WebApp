@@ -93,7 +93,7 @@ export default function CSChat() {
       ]);
 
       if (sessionsData.success && statsData.success) {
-        setChatSessions(sessionsData.data.sessions || []);
+setChatSessions(sessionsData.data.chats || sessionsData.data.sessions || []);
         setQueueStats(statsData.data || null);
       } else {
         throw new Error(sessionsData.message || statsData.message || 'Unknown error');
