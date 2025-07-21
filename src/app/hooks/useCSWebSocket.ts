@@ -1,10 +1,59 @@
 // hooks/useCSWebSocket.ts
 import { useEffect, useRef, useState } from 'react';
 
+// Define specific data types for different message types
+interface NewChatData {
+  sessionId: string;
+  userId: string;
+  priority?: string;
+}
+
+interface NewTicketData {
+  ticketId: string;
+  priority: string;
+  subject?: string;
+  userId?: string;
+}
+
+interface ChatMessageData {
+  sessionId: string;
+  message: string;
+  senderId: string;
+  senderType: 'user' | 'agent';
+}
+
+interface TicketUpdateData {
+  ticketId: string;
+  status: string;
+  updatedBy: string;
+  notes?: string;
+}
+
+interface AgentStatusData {
+  agentId: string;
+  status: 'online' | 'offline' | 'busy';
+  timestamp: string;
+}
+
+// Union type for all possible message data
+type WebSocketMessageData = 
+  | NewChatData 
+  | NewTicketData 
+  | ChatMessageData 
+  | TicketUpdateData 
+  | AgentStatusData;
+
 interface WebSocketMessage {
   type: 'new_chat' | 'new_ticket' | 'chat_message' | 'ticket_update' | 'agent_status';
-  data: any;
+  data: WebSocketMessageData;
   timestamp: string;
+}
+
+// Type for outgoing messages
+interface OutgoingMessage {
+  type: string;
+  data: Record<string, unknown>;
+  timestamp?: string;
 }
 
 export function useCSWebSocket() {
@@ -24,15 +73,20 @@ export function useCSWebSocket() {
 
       // Simulate periodic messages
       const interval = setInterval(() => {
-        const mockMessages = [
+        const mockMessages: WebSocketMessage[] = [
           {
-            type: 'new_ticket' as const,
-            data: { ticketId: 'TKT' + Date.now(), priority: 'medium' },
+            type: 'new_ticket',
+            data: { ticketId: 'TKT' + Date.now(), priority: 'medium' } as NewTicketData,
             timestamp: new Date().toISOString()
           },
           {
-            type: 'chat_message' as const,
-            data: { sessionId: 'CH' + Date.now(), message: 'Hello!' },
+            type: 'chat_message',
+            data: { 
+              sessionId: 'CH' + Date.now(), 
+              message: 'Hello!', 
+              senderId: 'user123',
+              senderType: 'user'
+            } as ChatMessageData,
             timestamp: new Date().toISOString()
           }
         ];
@@ -89,7 +143,7 @@ export function useCSWebSocket() {
     return cleanup;
   }, []);
 
-  const sendMessage = (message: any) => {
+  const sendMessage = (message: OutgoingMessage) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify(message));
     } else {

@@ -2,6 +2,31 @@
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 
+// Type definitions for API data structures
+interface CreateTicketData {
+  subject: string;
+  description: string;
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  category: string;
+  userId?: string;
+  userEmail?: string;
+  userName?: string;
+  tags?: string[];
+  attachments?: string[];
+}
+
+interface UpdateTicketData {
+  subject?: string;
+  description?: string;
+  status?: 'open' | 'in_progress' | 'resolved' | 'closed';
+  priority?: 'low' | 'medium' | 'high' | 'critical';
+  category?: string;
+  assignedTo?: string;
+  tags?: string[];
+  notes?: string;
+  resolution?: string;
+}
+
 // Simple API client class
 class CSApiClient {
   private baseUrl: string;
@@ -84,7 +109,7 @@ class CSApiClient {
     return this.handleResponse(response);
   }
 
-  async createTicket(ticketData: any) {
+  async createTicket(ticketData: CreateTicketData) {
     const response = await fetch(`${this.baseUrl}/api/cs/tickets`, {
       method: 'POST',
       headers: this.getHeaders(),
@@ -93,7 +118,7 @@ class CSApiClient {
     return this.handleResponse(response);
   }
 
-  async updateTicket(id: string, updates: any) {
+  async updateTicket(id: string, updates: UpdateTicketData) {
     const response = await fetch(`${this.baseUrl}/api/cs/tickets/${id}`, {
       method: 'PUT',
       headers: this.getHeaders(),
@@ -188,7 +213,7 @@ export function useCSApi() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  const executeWithErrorHandling = useCallback(async (apiCall: () => Promise<any>) => {
+  const executeWithErrorHandling = useCallback(async <T>(apiCall: () => Promise<T>): Promise<T> => {
     setLoading(true);
     setError(null);
     try {

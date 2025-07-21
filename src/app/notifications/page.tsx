@@ -18,11 +18,25 @@ import { useEmergencyAlerts } from '../components/RealTimeEmergencyClient';
 import { useTheme } from '@/app/context/ThemeContext';
 import ThemeSwitcher from '@/app/components/ThemeSwitcher';
 
+// Type definitions
+interface Alert {
+  id: string;
+  type: string;
+  priority: string;
+  timestamp: string;
+  title: string;
+  message: string;
+  read: boolean;
+  recipients: string[];
+}
+
+type FilterType = 'all' | 'unread' | 'critical';
+
 export default function NotificationsPage() {
   const router = useRouter();
   const { theme } = useTheme();
   const { alerts, unreadCount, criticalCount, markAsRead, connected } = useEmergencyAlerts();
-  const [filter, setFilter] = useState<'all' | 'unread' | 'critical'>('all');
+  const [filter, setFilter] = useState<FilterType>('all');
 
   // Check auth
   useEffect(() => {
@@ -58,7 +72,7 @@ export default function NotificationsPage() {
   const animationStyles = ` @keyframes road-marking { 0% { transform: translateX(-200%); } 100% { transform: translateX(500%); } } .animate-road-marking { animation: road-marking 10s linear infinite; } @keyframes car-right { 0% { transform: translateX(-100%); } 100% { transform: translateX(100vw); } } .animate-car-right { animation: car-right 15s linear infinite; } @keyframes car-left { 0% { transform: translateX(100vw) scaleX(-1); } 100% { transform: translateX(-200px) scaleX(-1); } } .animate-car-left { animation: car-left 16s linear infinite; } @keyframes light-blink { 0%, 100% { opacity: 1; box-shadow: 0 0 15px #fcd34d; } 50% { opacity: 0.6; box-shadow: 0 0 5px #fcd34d; } } .animate-light-blink { animation: light-blink 1s infinite; } @keyframes fade-in-down { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } } .animate-fade-in-down { animation: fade-in-down 0.8s ease-out forwards; } @keyframes fade-in-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } } .animate-fade-in-up { animation: fade-in-up 0.8s ease-out forwards; } @keyframes trainMove { from { left: 100%; } to { left: -300px; } } @keyframes slight-bounce { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-1px); } } .animate-slight-bounce { animation: slight-bounce 2s ease-in-out infinite; } @keyframes steam { 0% { opacity: 0.8; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-20px) scale(2.5); } } .animate-steam { animation: steam 2s ease-out infinite; } @keyframes wheels { 0% { transform: rotate(0deg); } 100% { transform: rotate(-360deg); } } .animate-wheels { animation: wheels 2s linear infinite; } .animation-delay-100 { animation-delay: 0.1s; } .animation-delay-200 { animation-delay: 0.2s; } .animation-delay-300 { animation-delay: 0.3s; } .animation-delay-400 { animation-delay: 0.4s; } .animation-delay-500 { animation-delay: 0.5s; } .animation-delay-600 { animation-delay: 0.6s; } .animation-delay-700 { animation-delay: 0.7s; } .animation-delay-800 { animation-delay: 0.8s; } .animation-delay-1000 { animation-delay: 1s; } .animation-delay-1200 { animation-delay: 1.2s; } .animation-delay-1500 { animation-delay: 1.5s; } .animation-delay-2000 { animation-delay: 2s; } .animation-delay-2500 { animation-delay: 2.5s; } .animation-delay-3000 { animation-delay: 3s; } @media (max-width: 768px) { .animated-vehicle { display: none; } } `;
 
   // Get alert icon
-  const getAlertIcon = (alert: any) => {
+  const getAlertIcon = (alert: Alert) => {
     switch (alert.type) {
       case 'emergency_created': return <ExclamationTriangleIcon width={24} height={24} />;
       case 'broadcast': return <SpeakerWaveIcon width={24} height={24} />;
@@ -150,13 +164,13 @@ export default function NotificationsPage() {
             border: currentThemeStyles.glassPanelBorder
           }}>
             {[
-              { id: 'all', name: 'All Notifications', count: userAlerts.length },
-              { id: 'unread', name: 'Unread', count: unreadCount },
-              { id: 'critical', name: 'Critical', count: criticalCount }
+              { id: 'all' as FilterType, name: 'All Notifications', count: userAlerts.length },
+              { id: 'unread' as FilterType, name: 'Unread', count: unreadCount },
+              { id: 'critical' as FilterType, name: 'Critical', count: criticalCount }
             ].map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setFilter(tab.id as any)}
+                onClick={() => setFilter(tab.id)}
                 style={{
                   flex: 1,
                   padding: '0.75rem 1rem',
