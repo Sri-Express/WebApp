@@ -34,7 +34,7 @@ interface ITicket {
       role: string;
     };
     timestamp: string;
-    metadata?: any;
+    metadata?: Record<string, unknown>;
   }>;
   resolution?: {
     solution: string;
@@ -119,7 +119,7 @@ export default function TicketDetails() {
         const result = await response.json();
         if (result.success) {
           setNewNote('');
-          fetchTicket(token, ticket._id);
+          if(token) fetchTicket(token, ticket._id);
         }
       } else {
         throw new Error('Failed to add note');
@@ -150,7 +150,7 @@ export default function TicketDetails() {
       if (response.ok) {
         const result = await response.json();
         if (result.success) {
-          fetchTicket(token, ticket._id);
+          if(token) fetchTicket(token, ticket._id);
         }
       } else {
         throw new Error('Failed to update status');
@@ -183,7 +183,7 @@ export default function TicketDetails() {
         if (result.success) {
           setResolutionText('');
           setShowResolutionForm(false);
-          fetchTicket(token, ticket._id);
+          if(token) fetchTicket(token, ticket._id);
         }
       } else {
         throw new Error('Failed to resolve ticket');
@@ -217,7 +217,7 @@ export default function TicketDetails() {
       if (response.ok) {
         const result = await response.json();
         if (result.success) {
-          fetchTicket(token, ticket._id);
+          if(token) fetchTicket(token, ticket._id);
         }
       } else {
         throw new Error('Failed to escalate ticket');

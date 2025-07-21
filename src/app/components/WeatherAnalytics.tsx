@@ -28,7 +28,6 @@ import {
   ComposedChart,
   ScatterChart,
   Scatter,
-  TooltipProps,
 } from 'recharts';
 import {
   ChartBarIcon,
@@ -46,7 +45,6 @@ import {
 } from '@heroicons/react/24/outline';
 import { WeatherData, CurrentWeather } from '@/app/services/weatherService';
 import { useTheme } from '@/app/context/ThemeContext';
-import { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent';
 
 // Define interfaces for props and data structures
 interface WeatherAnalyticsProps {
@@ -73,6 +71,22 @@ interface TransportationAnalytics {
   delayProbability: number;
   recommendedTimes: string[];
   avoidTimes: string[];
+}
+
+// Define a specific type for the recharts tooltip payload to avoid 'any'
+interface CustomTooltipPayload {
+    color?: string;
+    dataKey?: string;
+    name?: string;
+    value?: number | string;
+    payload?: ChartDataPoint;
+}
+
+// Define custom tooltip props interface
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: CustomTooltipPayload[];
+  label?: string | number;
 }
 
 // Define the type for the active tab state
@@ -268,7 +282,7 @@ const WeatherAnalytics: React.FC<WeatherAnalyticsProps> = ({
   }, [weatherData, hourlyChartData]);
 
   // Custom tooltip component with proper types
-  const CustomTooltip = ({ active, payload, label }: TooltipProps<ValueType, NameType>) => {
+  const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
     if (active && payload && payload.length) {
       return (
         <div style={{

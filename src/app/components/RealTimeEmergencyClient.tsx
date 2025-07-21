@@ -143,7 +143,10 @@ export default function RealTimeEmergencyClient({
           badge: '/emergency-badge.png',
           tag: alert.id,
           requireInteraction: alert.priority === 'critical',
-          timestamp: new Date(alert.timestamp).getTime(),
+          // FIX: The 'timestamp' property is not a valid option in the NotificationOptions object.
+          // It has been removed from the spec and causes a build error.
+          // The browser automatically timestamps the notification upon creation.
+          // timestamp: new Date(alert.timestamp).getTime(), 
           data: {
             emergencyId: alert.emergency?._id,
             priority: alert.priority,

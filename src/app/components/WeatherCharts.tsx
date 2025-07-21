@@ -26,7 +26,6 @@ import {
   ScatterChart,
   Scatter,
   Line,
-  TooltipProps,
 } from 'recharts';
 import {
   SunIcon,
@@ -59,6 +58,19 @@ interface ChartDataPoint {
   uvIndex: number;
   visibility: number;
   feelsLike: number;
+}
+
+// Define custom tooltip props interface
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: Array<{
+    color?: string;
+    dataKey?: string;
+    name?: string;
+    value?: number | string;
+    payload?: ChartDataPoint;
+  }>;
+  label?: string | number;
 }
 
 const WeatherCharts: React.FC<WeatherChartsProps> = ({
@@ -199,7 +211,7 @@ const WeatherCharts: React.FC<WeatherChartsProps> = ({
   }, [weatherData]);
 
   // Custom tooltip component
-  const CustomTooltip: React.FC<TooltipProps<number, string>> = ({ active, payload, label }) => {
+  const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
         <div style={{
@@ -481,7 +493,7 @@ const WeatherCharts: React.FC<WeatherChartsProps> = ({
                     cy="50%"
                     outerRadius={80}
                     dataKey="value"
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
                   >
                     {weatherPatternData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />

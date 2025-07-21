@@ -1,4 +1,3 @@
-
 // src/app/dashboard/page.tsx - FULLY MERGED & STYLED PRODUCTION VERSION
 "use client";
 
@@ -412,7 +411,7 @@ function DashboardContent() {
           margin: 0
         }}>
           Stay updated with real-time emergency alerts, system notifications, and important announcements.
-          Click "View All Notifications" to see your complete notification history.
+          Click &ldquo;View All Notifications&rdquo; to see your complete notification history.
         </p>
       </div>
 
