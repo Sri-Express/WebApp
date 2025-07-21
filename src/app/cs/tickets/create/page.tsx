@@ -25,9 +25,17 @@ interface TicketData {
   attachments?: string[];
 }
 
+// Added for type safety
+interface SearchedCustomer {
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+}
+
 // --- Constants ---
 const CATEGORIES = ['booking_issue', 'payment_problem', 'route_information', 'schedule_inquiry', 'refund_request', 'account_support', 'technical_issue', 'complaint', 'suggestion', 'other'];
-const CATEGORY_LABELS = { booking_issue: 'Booking Issue', payment_problem: 'Payment Problem', route_information: 'Route Information', schedule_inquiry: 'Schedule Inquiry', refund_request: 'Refund Request', account_support: 'Account Support', technical_issue: 'Technical Issue', complaint: 'Complaint', suggestion: 'Suggestion', other: 'Other' };
+const CATEGORY_LABELS: Record<string, string> = { booking_issue: 'Booking Issue', payment_problem: 'Payment Problem', route_information: 'Route Information', schedule_inquiry: 'Schedule Inquiry', refund_request: 'Refund Request', account_support: 'Account Support', technical_issue: 'Technical Issue', complaint: 'Complaint', suggestion: 'Suggestion', other: 'Other' };
 
 export default function CreateTicket() {
   const router = useRouter();
@@ -36,7 +44,7 @@ export default function CreateTicket() {
   // --- State Management ---
   const [formData, setFormData] = useState<TicketData>({ subject: '', description: '', category: '', priority: 'medium', customerInfo: { name: '', email: '', phone: '', customerId: '' }, source: 'manual', tags: [] });
   const [tagInput, setTagInput] = useState('');
-  const [existingCustomers, setExistingCustomers] = useState<any[]>([]);
+  const [existingCustomers, setExistingCustomers] = useState<SearchedCustomer[]>([]);
   const [customerSearch, setCustomerSearch] = useState('');
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -68,7 +76,7 @@ export default function CreateTicket() {
   // --- Customer Search Logic ---
   const searchCustomers = useCallback(async (query: string) => {
     try {
-      const mockCustomers = [
+      const mockCustomers: SearchedCustomer[] = [
         { id: '1', name: 'Anjali Wickrama', email: 'anjali@example.com', phone: '+94701234567' },
         { id: '2', name: 'Ranil Kumar', email: 'ranil@example.com', phone: '+94709876543' },
         { id: '3', name: 'Priya De Silva', email: 'priya@example.com', phone: '+94715555555' }
@@ -90,18 +98,20 @@ export default function CreateTicket() {
   }, [customerSearch, searchCustomers]);
 
   // --- Event Handlers ---
-  const selectCustomer = (customer: any) => {
+  const selectCustomer = (customer: SearchedCustomer) => {
     setFormData(prev => ({ ...prev, customerInfo: { name: customer.name, email: customer.email, phone: customer.phone, customerId: customer.id } }));
     setCustomerSearch(customer.name);
     setShowCustomerDropdown(false);
   };
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: string) => {
     if (field.startsWith('customerInfo.')) {
       const customerField = field.split('.')[1];
       setFormData(prev => ({ ...prev, customerInfo: { ...prev.customerInfo, [customerField]: value } }));
     } else {
-      setFormData(prev => ({ ...prev, [field]: value }));
+      // Using 'as any' here is a pragmatic way to handle dynamic keys with TypeScript's strictness
+      // without overly complex generic types for a single form handler.
+      setFormData(prev => ({ ...prev, [field]: value as any }));
     }
   };
 
@@ -273,7 +283,7 @@ export default function CreateTicket() {
                     <label style={{ display: 'block', fontSize: '1rem', fontWeight: '500', color: currentThemeStyles.textSecondary, marginBottom: '0.5rem' }}>Category</label>
                     <select value={formData.category} onChange={(e) => handleInputChange('category', e.target.value)} style={{ width: '100%', padding: '0.75rem', backgroundColor: currentThemeStyles.inputBg, border: currentThemeStyles.inputBorder, borderRadius: '0.5rem', fontSize: '1rem', color: currentThemeStyles.textPrimary }} required>
                       <option value="">Select Category</option>
-                      {CATEGORIES.map((cat) => (<option key={cat} value={cat}>{CATEGORY_LABELS[cat as keyof typeof CATEGORY_LABELS]}</option>))}
+                      {CATEGORIES.map((cat) => (<option key={cat} value={cat}>{CATEGORY_LABELS[cat]}</option>))}
                     </select>
                   </div>
                   <div>

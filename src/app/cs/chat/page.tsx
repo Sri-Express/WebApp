@@ -7,7 +7,7 @@ import ThemeSwitcher from '@/app/components/ThemeSwitcher'; // Assuming this pat
 import { 
   ShieldCheckIcon, ChatBubbleOvalLeftEllipsisIcon, ClockIcon, ListBulletIcon, ChartBarIcon, 
   CheckBadgeIcon, PaperAirplaneIcon, UserCircleIcon, ArrowUturnLeftIcon, PowerIcon,
-  CpuChipIcon, Cog6ToothIcon, ExclamationTriangleIcon
+  CpuChipIcon, Cog6ToothIcon
 } from '@heroicons/react/24/outline';
 
 // --- Data Interfaces (Unchanged) ---
@@ -64,7 +64,7 @@ export default function CSChat() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [agentStatus, setAgentStatus] = useState('available');
-  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [autoRefresh] = useState(true); // setAutoRefresh removed as it's unused
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // --- Theme and Style Definitions ---
@@ -117,9 +117,9 @@ export default function CSChat() {
       } else {
         throw new Error(sessionsData.message || statsData.message || 'Unknown error');
       }
-    } catch (error) {
-      console.error('Failed to fetch chat data:', error);
-      setError(error instanceof Error ? error.message : 'Failed to load chat data');
+    } catch (fetchError) {
+      console.error('Failed to fetch chat data:', fetchError);
+      setError(fetchError instanceof Error ? fetchError.message : 'Failed to load chat data');
     } finally {
       setLoading(false);
     }
@@ -144,8 +144,8 @@ export default function CSChat() {
       } else {
         setError('Failed to load chat messages');
       }
-    } catch (error) {
-      console.error('Failed to fetch messages:', error);
+    } catch (fetchError) {
+      console.error('Failed to fetch messages:', fetchError);
       setError('Failed to load chat messages');
     }
   };
@@ -186,8 +186,8 @@ export default function CSChat() {
       } else {
         setError('Failed to send message');
       }
-    } catch (error) {
-      console.error('Failed to send message:', error);
+    } catch (sendError) {
+      console.error('Failed to send message:', sendError);
       setError('Failed to send message');
     }
   };
@@ -213,8 +213,8 @@ export default function CSChat() {
       } else {
         setError('Failed to assign chat');
       }
-    } catch (error) {
-      console.error('Failed to assign chat:', error);
+    } catch (assignError) {
+      console.error('Failed to assign chat:', assignError);
       setError('Failed to assign chat');
     }
   };
@@ -242,8 +242,8 @@ export default function CSChat() {
       } else {
         setError('Failed to end chat');
       }
-    } catch (error) {
-      console.error('Failed to end chat:', error);
+    } catch (endError) {
+      console.error('Failed to end chat:', endError);
       setError('Failed to end chat');
     }
   };
@@ -362,6 +362,12 @@ export default function CSChat() {
               </div>
             ))}
           </div>
+          
+          {error && (
+            <div style={{ backgroundColor: 'rgba(239, 68, 68, 0.2)', color: '#fca5a5', border: '1px solid rgba(239, 68, 68, 0.4)', padding: '1rem', borderRadius: '0.75rem', fontWeight: 500 }}>
+              <strong>Error:</strong> {error}
+            </div>
+          )}
 
           {/* Main Chat Interface */}
           <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '3fr 7fr', gap: '1.5rem', minHeight: 0 }}>

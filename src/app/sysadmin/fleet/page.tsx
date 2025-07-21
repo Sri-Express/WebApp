@@ -161,7 +161,6 @@ export default function FleetManagementPage() {
         throw new Error('Failed to approve fleet');
       }
 
-      // FIX 1: Removed unused 'data' variable. The response is consumed but not assigned.
       await response.json();
       
       // Update fleet status in state
@@ -206,7 +205,6 @@ export default function FleetManagementPage() {
         throw new Error('Failed to reject fleet');
       }
 
-      // FIX 2: Removed unused 'data' variable. The response is consumed but not assigned.
       await response.json();
       
       // Update fleet status in state
@@ -976,9 +974,8 @@ export default function FleetManagementPage() {
             }}>
               Reject Fleet Application
             </h3>
-            {/* FIX 3: Replaced unescaped apostrophe with ' */}
             <p style={{ color: '#94a3b8', marginBottom: '1rem' }}>
-              Please provide a reason for rejecting <strong>{showRejectionModal.companyName}</strong>'s application:
+              Please provide a reason for rejecting <strong>{showRejectionModal.companyName}</strong>&apos;s application:
             </p>
             <textarea
               value={rejectionReason}
