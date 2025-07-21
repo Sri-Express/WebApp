@@ -32,7 +32,7 @@ export function CSAuthGuard({ children, fallback }: CSAuthGuardProps) {
       }
       
       setIsAuthenticated(true);
-    } catch (error) {
+    } catch {
       router.push('/cs/login');
       setIsAuthenticated(false);
     }

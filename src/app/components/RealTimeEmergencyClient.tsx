@@ -35,6 +35,14 @@ export interface ConnectionStatus {
 // Defines the structure for emergency status updates.
 export type EmergencyStatusUpdate = Record<string, unknown>;
 
+// Defines the structure for the push notification request data.
+interface PushNotificationRequestData {
+  tag: string;
+  title: string;
+  body: string;
+  data?: Record<string, unknown>;
+}
+
 interface RealTimeEmergencyClientProps {
   onEmergencyAlert?: (alert: EmergencyAlert) => void;
   onConnectionStatusChange?: (status: ConnectionStatus) => void;
@@ -81,7 +89,7 @@ export default function RealTimeEmergencyClient({
       }
 
       // Safely checks for vendor-prefixed AudioContext without using 'any'.
-      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+      const AudioContext = window.AudioContext || (window as unknown as { webkitAudioContext: typeof window.AudioContext }).webkitAudioContext;
       if (!AudioContext) {
         console.warn('Web Audio API is not supported in this browser.');
         return;
@@ -295,7 +303,7 @@ export default function RealTimeEmergencyClient({
       }, 45000);
     });
 
-    newSocket.on('push_notification_request', (data: any) => {
+    newSocket.on('push_notification_request', (data: PushNotificationRequestData) => {
       console.log('🔔 Push notification request:', data);
       showPushNotification({
         id: data.tag,

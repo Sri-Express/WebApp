@@ -6,19 +6,18 @@ import { BellIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 export default function NotificationPermissions() {
   const [showBanner, setShowBanner] = useState(false);
-  const [permission, setPermission] = useState<NotificationPermission>('default');
 
   useEffect(() => {
     if ('Notification' in window) {
-      setPermission(Notification.permission);
-      setShowBanner(Notification.permission === 'default');
+      if (Notification.permission === 'default') {
+        setShowBanner(true);
+      }
     }
   }, []);
 
   const requestPermission = async () => {
     if ('Notification' in window) {
       const result = await Notification.requestPermission();
-      setPermission(result);
       setShowBanner(false);
       
       if (result === 'granted') {
