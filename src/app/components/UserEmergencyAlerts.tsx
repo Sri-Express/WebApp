@@ -1,7 +1,7 @@
 // src/app/components/UserEmergencyAlerts.tsx
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   ExclamationTriangleIcon,
@@ -9,12 +9,9 @@ import {
   XMarkIcon,
   ShieldExclamationIcon,
   SpeakerWaveIcon,
-  FireIcon,
-  HeartIcon,
-  CloudIcon,
-  TruckIcon,
   ClockIcon
 } from '@heroicons/react/24/outline';
+// The unused icons (FireIcon, HeartIcon, etc.) and the 'useEffect' hook have been removed.
 import { useEmergencyAlerts, EmergencyAlert } from './RealTimeEmergencyClient';
 
 interface UserEmergencyAlertsProps {
@@ -28,7 +25,7 @@ export default function UserEmergencyAlerts({
 }: UserEmergencyAlertsProps) {
   const router = useRouter();
   const { alerts, unreadCount, criticalCount, markAsRead, connected } = useEmergencyAlerts();
-  const [showAll, setShowAll] = useState(false);
+  // The unused 'showAll' and 'setShowAll' state has been removed.
   const [dismissedAlerts, setDismissedAlerts] = useState<string[]>([]);
 
   // Filter alerts for users (exclude admin-only alerts)

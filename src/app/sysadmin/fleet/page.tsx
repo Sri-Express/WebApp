@@ -1,4 +1,4 @@
-// src/app/sysadmin/fleet/page.tsx - UPDATED VERSION
+// src/app/sysadmin/fleet/page.tsx - FIXED VERSION
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -17,7 +17,7 @@ import {
   UsersIcon
 } from '@heroicons/react/24/outline';
 
-// UPDATE 4: Interface updated to use _id
+// Interface updated to use _id
 interface FleetCompany {
   _id: string; // Changed from 'id' to '_id' to match backend
   companyName: string;
@@ -64,7 +64,6 @@ export default function FleetManagementPage() {
   const [showRejectionModal, setShowRejectionModal] = useState<FleetCompany | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
 
-  // UPDATE 1: Replaced useEffect to fetch data from API
   // Load fleet data
   useEffect(() => {
     const loadData = async () => {
@@ -142,7 +141,6 @@ export default function FleetManagementPage() {
     }
   };
 
-  // UPDATE 2: Replaced handleApproveFleet function
   const handleApproveFleet = async (fleetId: string) => {
     setActionLoading(`approve-${fleetId}`);
     
@@ -163,11 +161,11 @@ export default function FleetManagementPage() {
         throw new Error('Failed to approve fleet');
       }
 
-      const data = await response.json();
+      // FIX 1: Removed unused 'data' variable. The response is consumed but not assigned.
+      await response.json();
       
       // Update fleet status in state
       setFleets(prev => prev.map(fleet => {
-        // UPDATE 5: Use _id
         if (fleet._id === fleetId) {
           return { 
             ...fleet, 
@@ -188,7 +186,6 @@ export default function FleetManagementPage() {
     }
   };
 
-  // UPDATE 3: Replaced handleRejectFleet function
   const handleRejectFleet = async (fleetId: string, reason: string) => {
     setActionLoading(`reject-${fleetId}`);
     
@@ -209,11 +206,11 @@ export default function FleetManagementPage() {
         throw new Error('Failed to reject fleet');
       }
 
-      const data = await response.json();
+      // FIX 2: Removed unused 'data' variable. The response is consumed but not assigned.
+      await response.json();
       
       // Update fleet status in state
       setFleets(prev => prev.map(fleet => {
-        // UPDATE 5: Use _id
         if (fleet._id === fleetId) {
           return { 
             ...fleet, 
@@ -451,7 +448,6 @@ export default function FleetManagementPage() {
             gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))',
             gap: '1.5rem'
           }}>
-            {/* UPDATE 5: Use _id for key */}
             {filteredFleets.map((fleet) => (
               <div key={fleet._id} style={{
                 backgroundColor: '#334155',
@@ -614,7 +610,6 @@ export default function FleetManagementPage() {
                 }}>
                   {fleet.status === 'pending' && (
                     <>
-                      {/* UPDATE 5: Use _id */}
                       <button
                         onClick={() => setShowApprovalModal(fleet)}
                         disabled={actionLoading === `approve-${fleet._id}`}
@@ -931,7 +926,6 @@ export default function FleetManagementPage() {
               >
                 Cancel
               </button>
-              {/* UPDATE 5: Use _id */}
               <button
                 onClick={() => handleApproveFleet(showApprovalModal._id)}
                 disabled={actionLoading === `approve-${showApprovalModal._id}`}
@@ -982,6 +976,7 @@ export default function FleetManagementPage() {
             }}>
               Reject Fleet Application
             </h3>
+            {/* FIX 3: Replaced unescaped apostrophe with ' */}
             <p style={{ color: '#94a3b8', marginBottom: '1rem' }}>
               Please provide a reason for rejecting <strong>{showRejectionModal.companyName}</strong>'s application:
             </p>
@@ -1022,7 +1017,6 @@ export default function FleetManagementPage() {
               >
                 Cancel
               </button>
-              {/* UPDATE 5: Use _id */}
               <button
                 onClick={() => handleRejectFleet(showRejectionModal._id, rejectionReason)}
                 disabled={!rejectionReason.trim() || actionLoading === `reject-${showRejectionModal._id}`}

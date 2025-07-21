@@ -2,18 +2,15 @@
 'use client';
 import { useEffect, useState } from 'react';
 
-interface WebSocketMessage {
-  type: 'new_chat' | 'new_ticket' | 'chat_message' | 'ticket_update' | 'agent_status';
-  data: any;
-  timestamp: string;
-}
+// The 'WebSocketMessage' interface was removed as it was not being used.
 
 interface Notification {
   id: number;
   type: string;
   message: string;
   timestamp: string;
-  data: any;
+  // Changed 'any' to 'Record<string, unknown>' for better type safety.
+  data: Record<string, unknown>;
 }
 
 export function CSNotifications() {

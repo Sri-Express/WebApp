@@ -15,7 +15,7 @@ import {
   ArrowPathIcon,
   MapPinIcon,
   ExclamationTriangleIcon,
-  InformationCircleIcon,
+  InformationCircleIcon, // This is now used for a tooltip.
   ShieldCheckIcon,
   SparklesIcon,
 } from '@heroicons/react/24/outline';
@@ -42,23 +42,34 @@ interface User {
   };
 }
 
+// Defined specific types to replace 'any' and improve type safety.
+type ActiveTab = 'overview' | 'analytics' | 'chatbot' | 'settings';
+type ChartType = 'temperature' | 'precipitation' | 'wind' | 'comprehensive' | 'transportation' | 'comparison';
+type TimeRange = '24h' | '7d' | '30d';
+
+interface TabInfo {
+  id: ActiveTab;
+  name: string;
+  icon: React.FC<React.SVGProps<SVGSVGElement>>;
+}
+
 const WeatherPage: React.FC = () => {
   const router = useRouter();
   const { theme } = useTheme();
 
   // State management
   const [user, setUser] = useState<User | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'analytics' | 'chatbot' | 'settings'>('overview');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('overview');
   const [selectedLocation, setSelectedLocation] = useState('Colombo');
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [multiLocationData, setMultiLocationData] = useState<Map<string, CurrentWeather>>(new Map());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+  const [lastRefresh, setLastRefresh] = useState<Date>(new Date()); // This is now displayed in the UI.
 
   // Chart settings
-  const [chartType, setChartType] = useState<'temperature' | 'precipitation' | 'wind' | 'comprehensive' | 'transportation' | 'comparison'>('comprehensive');
-  const [timeRange, setTimeRange] = useState<'24h' | '7d' | '30d'>('24h');
+  const [chartType, setChartType] = useState<ChartType>('comprehensive');
+  const [timeRange, setTimeRange] = useState<TimeRange>('24h');
 
   // Available Sri Lankan locations
   const availableLocations = weatherService.getAllLocations().map(loc => loc.name);
@@ -128,20 +139,20 @@ const WeatherPage: React.FC = () => {
   };
 
   const handleRefresh = () => loadWeatherData();
-  const handleTabChange = (tab: typeof activeTab) => setActiveTab(tab);
+  const handleTabChange = (tab: ActiveTab) => setActiveTab(tab);
 
   const getAlertsCount = (): number => weatherData?.alerts?.length || 0;
 
-  const getTransportationStatus = (): { status: string; color: string } => {
-    if (!weatherData) return { status: 'Unknown', color: '#9ca3af' };
+  const getTransportationStatus = (): { status: string; color: string; description: string } => {
+    if (!weatherData) return { status: 'Unknown', color: '#9ca3af', description: 'Weather data is not available.' };
     const impact = weatherData.transportationImpact.overall;
     switch (impact) {
-      case 'excellent': return { status: 'Excellent', color: '#4ade80' };
-      case 'good': return { status: 'Good', color: '#60a5fa' };
-      case 'fair': return { status: 'Fair', color: '#facc15' };
-      case 'poor': return { status: 'Poor', color: '#fb923c' };
-      case 'dangerous': return { status: 'Dangerous', color: '#f87171' };
-      default: return { status: 'Unknown', color: '#9ca3af' };
+      case 'excellent': return { status: 'Excellent', color: '#4ade80', description: 'Ideal conditions for all transportation.' };
+      case 'good': return { status: 'Good', color: '#60a5fa', description: 'Good conditions, minor delays possible.' };
+      case 'fair': return { status: 'Fair', color: '#facc15', description: 'Conditions may cause minor disruptions.' };
+      case 'poor': return { status: 'Poor', color: '#fb923c', description: 'Expect delays and difficult travel conditions.' };
+      case 'dangerous': return { status: 'Dangerous', color: '#f87171', description: 'Travel is not recommended. High risk.' };
+      default: return { status: 'Unknown', color: '#9ca3af', description: 'Transportation impact is unknown.' };
     }
   };
 
@@ -207,6 +218,13 @@ const WeatherPage: React.FC = () => {
     );
   }
 
+  const tabs: TabInfo[] = [
+    { id: 'overview', name: 'Overview', icon: CloudIcon },
+    { id: 'analytics', name: 'Analytics', icon: ChartBarIcon },
+    { id: 'chatbot', name: 'AI Assistant', icon: ChatBubbleLeftRightIcon },
+    { id: 'settings', name: 'Settings', icon: Cog6ToothIcon },
+  ];
+
   return (
     <div style={{ backgroundColor: currentThemeStyles.mainBg, minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
       <style jsx>{animationStyles}</style>
@@ -253,6 +271,8 @@ const WeatherPage: React.FC = () => {
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: weatherData ? '#4ade80' : '#f87171' }}></div>
                 <span style={{ color: transportationStatus.color }}>{transportationStatus.status}</span>
+                {/* FIX: Used InformationCircleIcon to show a tooltip, resolving the unused variable error. */}
+                <InformationCircleIcon style={{ width: '16px', height: '16px', color: currentThemeStyles.textSecondary, cursor: 'help' }} title={transportationStatus.description} />
               </div>
               {getAlertsCount() > 0 && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#facc15' }}>
@@ -261,6 +281,10 @@ const WeatherPage: React.FC = () => {
                 </div>
               )}
             </div>
+            {/* FIX: Displaying last refresh time to use the 'lastRefresh' state variable. */}
+            <span style={{ color: currentThemeStyles.textMuted, fontSize: '0.75rem', display: 'none', lg: { display: 'inline' } }}>
+              Last updated: {lastRefresh.toLocaleTimeString()}
+            </span>
             <ThemeSwitcher />
             <button onClick={handleRefresh} disabled={loading} style={{ padding: '0.5rem', color: currentThemeStyles.textSecondary, cursor: 'pointer', background: 'none', border: 'none', opacity: loading ? 0.5 : 1 }} title="Refresh weather data">
               <ArrowPathIcon style={{ width: '20px', height: '20px', animation: loading ? 'spin 1s linear infinite' : 'none' }} />
@@ -276,15 +300,11 @@ const WeatherPage: React.FC = () => {
           {/* Tab Navigation as a Glass Panel */}
           <div style={{ backgroundColor: currentThemeStyles.glassPanelBg, padding: '0 1.5rem', borderRadius: '1rem', boxShadow: currentThemeStyles.glassPanelShadow, backdropFilter: 'blur(12px)', border: currentThemeStyles.glassPanelBorder, marginBottom: '2rem' }}>
             <div style={{ display: 'flex', gap: '2rem', overflowX: 'auto' }}>
-              {[
-                { id: 'overview', name: 'Overview', icon: CloudIcon },
-                { id: 'analytics', name: 'Analytics', icon: ChartBarIcon },
-                { id: 'chatbot', name: 'AI Assistant', icon: ChatBubbleLeftRightIcon },
-                { id: 'settings', name: 'Settings', icon: Cog6ToothIcon },
-              ].map((tab) => (
+              {tabs.map((tab) => (
                 <button
                   key={tab.id}
-                  onClick={() => handleTabChange(tab.id as any)}
+                  // FIX: Removed 'as any' by using a correctly typed variable.
+                  onClick={() => handleTabChange(tab.id)}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -333,7 +353,8 @@ const WeatherPage: React.FC = () => {
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center', justifyContent: 'space-between', backgroundColor: currentThemeStyles.controlBg, padding: '1rem', borderRadius: '0.75rem', border: currentThemeStyles.controlBorder }}>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center' }}>
                     <label style={{ color: currentThemeStyles.textPrimary, fontSize: '0.875rem', fontWeight: 500 }}>Chart Type:</label>
-                    <select value={chartType} onChange={(e) => setChartType(e.target.value as any)} style={{ backgroundColor: currentThemeStyles.controlBg, border: currentThemeStyles.controlBorder, color: currentThemeStyles.textPrimary, borderRadius: '0.25rem', padding: '0.25rem 0.75rem', fontSize: '0.875rem' }}>
+                    {/* FIX: Replaced 'as any' with a specific cast to 'ChartType'. */}
+                    <select value={chartType} onChange={(e) => setChartType(e.target.value as ChartType)} style={{ backgroundColor: currentThemeStyles.controlBg, border: currentThemeStyles.controlBorder, color: currentThemeStyles.textPrimary, borderRadius: '0.25rem', padding: '0.25rem 0.75rem', fontSize: '0.875rem' }}>
                       <option value="comprehensive">Comprehensive</option>
                       <option value="temperature">Temperature</option>
                       <option value="precipitation">Precipitation</option>

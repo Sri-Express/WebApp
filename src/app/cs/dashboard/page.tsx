@@ -1,7 +1,39 @@
-// app/cs/dashboard/page.tsx - CLEAN VERSION THAT ACTUALLY LOOKS GOOD
+// app/cs/dashboard/page.tsx - FIXED AND CLEANED VERSION
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+
+// FIX: Defined specific interfaces to replace 'any' for better type safety
+interface User {
+  name: string;
+  // Add other user properties as needed
+}
+
+interface AlertItem {
+  priority: 'critical' | 'high' | 'low';
+  message: string;
+  action: string;
+}
+
+interface QueueItem {
+  _id: string;
+  subject?: string;
+  customerInfo?: {
+    name: string;
+  };
+  ticketId?: string;
+  sessionId?: string;
+  priority?: 'urgent' | 'high' | 'normal';
+}
+
+interface ActivityItem {
+  action: string;
+  userId?: {
+    name: string;
+  };
+  timestamp: string;
+  category: string;
+}
 
 interface DashboardData {
   overview: {
@@ -43,36 +75,26 @@ interface DashboardData {
     };
   };
   queues: {
-    urgent: any[];
-    waiting: any[];
-    escalated: any[];
+    urgent: QueueItem[];
+    waiting: QueueItem[];
+    escalated: QueueItem[];
   };
-  alerts: any[];
-  recentActivity?: any[];
+  alerts: AlertItem[];
+  recentActivity?: ActivityItem[];
 }
 
 export default function CSDashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [user, setUser] = useState<any>(null);
+  // FIX: Used the specific 'User' interface instead of 'any'
+  const [user, setUser] = useState<User | null>(null);
   const [period, setPeriod] = useState('7');
   const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    // Check authentication
-    const token = localStorage.getItem('cs_token');
-    const userData = localStorage.getItem('cs_user');
-    if (!token || !userData) {
-      router.push('/cs/login');
-      return;
-    }
-    setUser(JSON.parse(userData));
-    fetchDashboardData(token);
-  }, [period, router]);
-
-  const fetchDashboardData = async (token: string) => {
+  // FIX: Wrapped fetchDashboardData in useCallback to safely use it in useEffect's dependency array
+  const fetchDashboardData = useCallback(async (token: string) => {
     setLoading(true);
     setError(null);
     try {
@@ -90,13 +112,30 @@ export default function CSDashboard() {
       } else {
         throw new Error(result.message || 'An unknown error occurred');
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      // FIX: Handled error type safely instead of using 'any'
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('An unknown error occurred');
+      }
       console.error('Failed to fetch dashboard data:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [period]); // This function will be memoized and only update if 'period' changes
+
+  useEffect(() => {
+    const token = localStorage.getItem('cs_token');
+    const userData = localStorage.getItem('cs_user');
+    if (!token || !userData) {
+      router.push('/cs/login');
+      return;
+    }
+    setUser(JSON.parse(userData));
+    fetchDashboardData(token);
+    // FIX: Added 'fetchDashboardData' to the dependency array to resolve the linting warning
+  }, [period, router, fetchDashboardData]);
 
   const refreshData = async () => {
     setRefreshing(true);
@@ -210,7 +249,6 @@ export default function CSDashboard() {
       minHeight: '100vh',
       fontFamily: 'system-ui, -apple-system, sans-serif'
     }}>
-      {/* Add CSS Animation */}
       <style jsx>{`
         @keyframes spin {
           0% { transform: rotate(0deg); }
@@ -517,7 +555,8 @@ export default function CSDashboard() {
           title="⏳ Waiting Chats" 
           items={queues.waiting} 
           type="chat"
-          onItemClick={(item) => router.push(`/cs/chat`)}
+          // FIX: Removed unused 'item' parameter to resolve the error
+          onItemClick={() => router.push(`/cs/chat`)}
         />
         <QueuePanel 
           title="⬆️ Escalated Tickets" 
@@ -620,9 +659,11 @@ const QueuePanel = ({
   onItemClick 
 }: { 
   title: string;
-  items: any[];
+  // FIX: Used the specific 'QueueItem' interface instead of 'any'
+  items: QueueItem[];
   type: 'ticket' | 'chat';
-  onItemClick: (item: any) => void;
+  // FIX: Used the specific 'QueueItem' interface instead of 'any'
+  onItemClick: (item: QueueItem) => void;
 }) => (
   <div style={{
     padding: '24px',

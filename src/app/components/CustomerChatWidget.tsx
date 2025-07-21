@@ -20,7 +20,7 @@ interface ChatSession {
     email: string;
   };
   assignedAgent?: {
-    name: string;
+    name:string;
   };
 }
 
@@ -37,7 +37,7 @@ export default function CustomerChatWidget({ userId, userName, userEmail }: Cust
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [isTyping, setIsTyping] = useState(false);
+  // The 'isTyping' state and its setter 'setIsTyping' were removed as they were unused.
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -82,10 +82,15 @@ export default function CustomerChatWidget({ userId, userName, userEmail }: Cust
         headers: {
           'Content-Type': 'application/json',
         },
+        // Used the 'userName' and 'userEmail' props to provide customer info.
         body: JSON.stringify({
           customerId: userId || 'anonymous-' + Date.now(),
           channel: 'web',
-          initialMessage: 'Hello! I need help with my booking.'
+          initialMessage: 'Hello! I need help with my booking.',
+          customerInfo: {
+            name: userName || 'Guest',
+            email: userEmail || 'not-provided'
+          }
         })
       });
 
@@ -351,23 +356,7 @@ export default function CustomerChatWidget({ userId, userName, userEmail }: Cust
               </div>
             ))}
             
-            {isTyping && (
-              <div style={{
-                display: 'flex',
-                justifyContent: 'flex-start',
-                marginBottom: '12px'
-              }}>
-                <div style={{
-                  backgroundColor: '#e5e7eb',
-                  padding: '8px 12px',
-                  borderRadius: '12px',
-                  fontSize: '14px',
-                  color: '#6b7280'
-                }}>
-                  💭 Agent is typing...
-                </div>
-              </div>
-            )}
+            {/* The 'isTyping' indicator was removed as the state was unused. */}
             <div ref={messagesEndRef} />
           </>
         )}

@@ -1,6 +1,53 @@
 // /app/services/weatherService.ts
 // Complete Weather Service for Sri Express Transportation Platform
 
+// --- START: API Response Interfaces ---
+// Describes the raw data structure from the OpenWeatherMap /weather endpoint
+interface RawCurrentWeatherResponse {
+  weather: {
+    main: string;
+    description: string;
+    icon: string;
+  }[];
+  main: {
+    temp: number;
+    feels_like: number;
+    humidity: number;
+    pressure: number;
+  };
+  wind?: {
+    speed: number;
+    deg: number;
+  };
+  visibility?: number;
+}
+
+// Describes a single item in the forecast list from the /forecast endpoint
+interface ForecastListItem {
+  dt: number;
+  main: {
+    temp: number;
+    feels_like: number;
+    humidity: number;
+  };
+  weather: {
+    main: string;
+    description: string;
+    icon: string;
+  }[];
+  wind?: {
+    speed: number;
+  };
+  pop?: number; // Probability of precipitation
+}
+
+// Describes the raw data structure from the OpenWeatherMap /forecast endpoint
+interface RawForecastResponse {
+  list: ForecastListItem[];
+}
+// --- END: API Response Interfaces ---
+
+
 interface WeatherLocation {
   name: string;
   lat: number;
@@ -83,8 +130,8 @@ interface WeatherData {
 class WeatherService {
   private apiKey: string;
   private baseUrl = 'https://api.openweathermap.org/data/2.5';
-  private oneCallUrl = 'https://api.openweathermap.org/data/3.0/onecall';
-  private cache = new Map<string, { data: any; timestamp: number }>();
+  // The cache now stores data as 'unknown' for better type safety.
+  private cache = new Map<string, { data: unknown; timestamp: number }>();
   private cacheTimeout = 10 * 60 * 1000; // 10 minutes
 
   // Major Sri Lankan cities and transportation hubs
@@ -130,7 +177,7 @@ class WeatherService {
   }
 
   // Get cached data
-  private getCachedData(key: string): any | null {
+  private getCachedData(key: string): unknown | null {
     if (this.isCacheValid(key)) {
       return this.cache.get(key)?.data || null;
     }
@@ -138,7 +185,7 @@ class WeatherService {
   }
 
   // Set cache data
-  private setCacheData(key: string, data: any): void {
+  private setCacheData(key: string, data: unknown): void {
     this.cache.set(key, { data, timestamp: Date.now() });
   }
 
@@ -153,7 +200,8 @@ class WeatherService {
       const cacheKey = `current_${location}`;
       const cachedData = this.getCachedData(cacheKey);
       if (cachedData) {
-        return cachedData;
+        // Asserting the type of the cached data
+        return cachedData as CurrentWeather;
       }
 
       const url = `${this.baseUrl}/weather?lat=${loc.lat}&lon=${loc.lon}&appid=${this.apiKey}&units=metric`;
@@ -163,7 +211,7 @@ class WeatherService {
         throw new Error(`Weather API error: ${response.status}`);
       }
 
-      const data = await response.json();
+      const data: RawCurrentWeatherResponse = await response.json();
 
       const currentWeather: CurrentWeather = {
         location: loc.name,
@@ -171,7 +219,7 @@ class WeatherService {
         feelsLike: Math.round(data.main.feels_like),
         humidity: data.main.humidity,
         pressure: data.main.pressure,
-        windSpeed: Math.round(data.wind?.speed * 3.6 || 0), // Convert m/s to km/h
+        windSpeed: Math.round((data.wind?.speed || 0) * 3.6), // Convert m/s to km/h
         windDirection: data.wind?.deg || 0,
         visibility: Math.round((data.visibility || 10000) / 1000), // Convert to km
         uvIndex: 0, // Will be updated with UV data
@@ -200,7 +248,7 @@ class WeatherService {
       const cacheKey = `comprehensive_${location}`;
       const cachedData = this.getCachedData(cacheKey);
       if (cachedData) {
-        return cachedData;
+        return cachedData as WeatherData;
       }
 
       // Note: One Call API 3.0 requires subscription, fallback to free API combination
@@ -218,7 +266,7 @@ class WeatherService {
         hourly: this.parseHourlyForecast(forecastData),
         daily: this.parseDailyForecast(forecastData),
         alerts: [], // Would need additional API for alerts
-        transportationImpact: this.calculateTransportationImpact(currentData, forecastData),
+        transportationImpact: this.calculateTransportationImpact(currentData),
         lastUpdated: new Date(),
       };
 
@@ -267,26 +315,26 @@ class WeatherService {
   }
 
   // Private helper methods
-  private async getCurrentWeatherRaw(loc: WeatherLocation): Promise<any> {
+  private async getCurrentWeatherRaw(loc: WeatherLocation): Promise<RawCurrentWeatherResponse | null> {
     const url = `${this.baseUrl}/weather?lat=${loc.lat}&lon=${loc.lon}&appid=${this.apiKey}&units=metric`;
     const response = await fetch(url);
     return response.ok ? await response.json() : null;
   }
 
-  private async getForecastRaw(loc: WeatherLocation): Promise<any> {
+  private async getForecastRaw(loc: WeatherLocation): Promise<RawForecastResponse | null> {
     const url = `${this.baseUrl}/forecast?lat=${loc.lat}&lon=${loc.lon}&appid=${this.apiKey}&units=metric`;
     const response = await fetch(url);
     return response.ok ? await response.json() : null;
   }
 
-  private parseCurrentWeather(data: any, locationName: string): CurrentWeather {
+  private parseCurrentWeather(data: RawCurrentWeatherResponse, locationName: string): CurrentWeather {
     return {
       location: locationName,
       temperature: Math.round(data.main.temp),
       feelsLike: Math.round(data.main.feels_like),
       humidity: data.main.humidity,
       pressure: data.main.pressure,
-      windSpeed: Math.round(data.wind?.speed * 3.6 || 0),
+      windSpeed: Math.round((data.wind?.speed || 0) * 3.6),
       windDirection: data.wind?.deg || 0,
       visibility: Math.round((data.visibility || 10000) / 1000),
       uvIndex: 0, // Would need additional API call
@@ -297,8 +345,8 @@ class WeatherService {
     };
   }
 
-  private parseHourlyForecast(data: any): HourlyForecast[] {
-    return data.list.slice(0, 24).map((item: any) => ({
+  private parseHourlyForecast(data: RawForecastResponse): HourlyForecast[] {
+    return data.list.slice(0, 24).map((item: ForecastListItem) => ({
       time: new Date(item.dt * 1000).toLocaleTimeString('en-US', { 
         hour: '2-digit', 
         minute: '2-digit' 
@@ -306,35 +354,35 @@ class WeatherService {
       temperature: Math.round(item.main.temp),
       feelsLike: Math.round(item.main.feels_like),
       humidity: item.main.humidity,
-      windSpeed: Math.round(item.wind?.speed * 3.6 || 0),
+      windSpeed: Math.round((item.wind?.speed || 0) * 3.6),
       precipitationChance: Math.round((item.pop || 0) * 100),
       condition: item.weather[0].main,
       icon: item.weather[0].icon,
     }));
   }
 
-  private parseDailyForecast(data: any): WeatherForecast[] {
-    const dailyData = new Map();
+  private parseDailyForecast(data: RawForecastResponse): WeatherForecast[] {
+    const dailyData = new Map<string, ForecastListItem[]>();
     
     // Group by date
-    data.list.forEach((item: any) => {
+    data.list.forEach((item: ForecastListItem) => {
       const date = new Date(item.dt * 1000).toDateString();
       if (!dailyData.has(date)) {
         dailyData.set(date, []);
       }
-      dailyData.get(date).push(item);
+      dailyData.get(date)?.push(item);
     });
 
     const forecasts: WeatherForecast[] = [];
     let dayCount = 0;
 
-    for (const [dateStr, items] of dailyData) {
+    for (const [dateStr, items] of dailyData.entries()) {
       if (dayCount >= 7) break; // Limit to 7 days
 
-      const temps = items.map((item: any) => item.main.temp);
-      const humidities = items.map((item: any) => item.main.humidity);
-      const winds = items.map((item: any) => item.wind?.speed || 0);
-      const pops = items.map((item: any) => item.pop || 0);
+      const temps = items.map((item: ForecastListItem) => item.main.temp);
+      const humidities = items.map((item: ForecastListItem) => item.main.humidity);
+      const winds = items.map((item: ForecastListItem) => item.wind?.speed || 0);
+      const pops = items.map((item: ForecastListItem) => item.pop || 0);
 
       const date = new Date(dateStr);
       
@@ -360,9 +408,9 @@ class WeatherService {
     return forecasts;
   }
 
-  private calculateTransportationImpact(current: any, forecast: any): TransportationImpact {
+  private calculateTransportationImpact(current: RawCurrentWeatherResponse): TransportationImpact {
     const condition = current.weather[0].main.toLowerCase();
-    const windSpeed = current.wind?.speed * 3.6 || 0;
+    const windSpeed = (current.wind?.speed || 0) * 3.6;
     const visibility = current.visibility || 10000;
     const humidity = current.main.humidity;
 

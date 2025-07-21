@@ -1,14 +1,10 @@
-
 // /app/components/WeatherCharts.tsx
-// Advanced Weather Chart Components for Sri Express
+// Advanced Weather Chart Components for Sri Express - FIXED VERSION
 
 'use client';
 
 import React, { useMemo } from 'react';
 import {
-  LineChart,
-  Line,
-  AreaChart,
   Area,
   BarChart,
   Bar,
@@ -29,21 +25,20 @@ import {
   Radar,
   ScatterChart,
   Scatter,
+  Line,
+  TooltipProps, // FIX: Imported TooltipProps for proper typing
 } from 'recharts';
 import {
   SunIcon,
   CloudIcon,
-  EyeIcon,
-  FlagIcon, // Corrected: Replaced WindIcon with FlagIcon
-  BeakerIcon,
+  FlagIcon,
   ArrowPathIcon,
   ChartBarIcon,
-  ClockIcon,
-  CalendarDaysIcon,
-  ExclamationTriangleIcon,
   TruckIcon, 
 } from '@heroicons/react/24/outline';
 import { WeatherData, CurrentWeather } from '@/app/services/weatherService';
+
+// FIX: Removed unused imports: LineChart, AreaChart, EyeIcon, BeakerIcon, ClockIcon, CalendarDaysIcon, ExclamationTriangleIcon
 
 interface WeatherChartsProps {
   weatherData: WeatherData | null;
@@ -51,7 +46,7 @@ interface WeatherChartsProps {
   chartType: 'temperature' | 'precipitation' | 'wind' | 'comprehensive' | 'transportation' | 'comparison';
   timeRange: '24h' | '7d' | '30d';
   multiLocationData?: Map<string, CurrentWeather>;
-  historicalData?: any[];
+  // FIX: Removed unused 'historicalData' prop
   loading?: boolean;
 }
 
@@ -74,7 +69,6 @@ const WeatherCharts: React.FC<WeatherChartsProps> = ({
   chartType,
   timeRange,
   multiLocationData = new Map(),
-  historicalData = [],
   loading = false,
 }) => {
   // Process hourly data for charts
@@ -118,7 +112,8 @@ const WeatherCharts: React.FC<WeatherChartsProps> = ({
   const transportationSafetyData = useMemo(() => {
     if (!weatherData) return [];
 
-    return hourlyChartData.map((hour, index) => {
+    // FIX: Removed unused 'index' parameter
+    return hourlyChartData.map((hour) => {
       let safetyScore = 100;
       
       // Reduce safety based on weather conditions
@@ -156,7 +151,8 @@ const WeatherCharts: React.FC<WeatherChartsProps> = ({
   const weatherPatternData = useMemo(() => {
     if (!weatherData?.daily) return [];
 
-    const patterns = weatherData.daily.reduce((acc: any, day) => {
+    // FIX: Provided a specific type for the accumulator instead of 'any'
+    const patterns = weatherData.daily.reduce((acc: Record<string, number>, day) => {
       const condition = day.condition;
       acc[condition] = (acc[condition] || 0) + 1;
       return acc;
@@ -173,30 +169,32 @@ const WeatherCharts: React.FC<WeatherChartsProps> = ({
 
     return Object.entries(patterns).map(([condition, count]) => ({
       name: condition,
-      value: count as number,
+      value: count,
       color: colors[condition as keyof typeof colors] || '#999999',
     }));
   }, [weatherData]);
 
   // Custom tooltip component
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  // FIX: Used TooltipProps for type safety instead of 'any'
+  const CustomTooltip: React.FC<TooltipProps<number, string>> = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-slate-800/95 backdrop-blur-sm p-4 rounded-xl border border-slate-600 shadow-xl">
           <p className="text-slate-200 font-medium mb-2">{label}</p>
-          {payload.map((entry: any, index: number) => (
+          {/* FIX: Type for 'entry' is now inferred from TooltipProps */}
+          {payload.map((entry, index) => (
             <p key={index} className="text-sm flex items-center justify-between" style={{ color: entry.color }}>
               <span className="mr-2">{entry.dataKey}:</span>
               <span className="font-medium">
                 {entry.value}
-                {entry.dataKey.includes('temp') || entry.dataKey.includes('Temperature') ? '°C' :
-                 entry.dataKey.includes('wind') || entry.dataKey.includes('Wind') ? ' km/h' :
-                 entry.dataKey.includes('precipitation') || entry.dataKey.includes('humidity') || 
-                 entry.dataKey.includes('Humidity') || entry.dataKey.includes('safetyScore') || 
-                 entry.dataKey.includes('delayRisk') ? '%' :
-                 entry.dataKey.includes('pressure') ? ' hPa' :
-                 entry.dataKey.includes('visibility') ? ' km' :
-                 entry.dataKey.includes('uvIndex') ? ' UV' : ''}
+                {entry.dataKey?.includes('temp') || entry.dataKey?.includes('Temperature') ? '°C' :
+                 entry.dataKey?.includes('wind') || entry.dataKey?.includes('Wind') ? ' km/h' :
+                 entry.dataKey?.includes('precipitation') || entry.dataKey?.includes('humidity') || 
+                 entry.dataKey?.includes('Humidity') || entry.dataKey?.includes('safetyScore') || 
+                 entry.dataKey?.includes('delayRisk') ? '%' :
+                 entry.dataKey?.includes('pressure') ? ' hPa' :
+                 entry.dataKey?.includes('visibility') ? ' km' :
+                 entry.dataKey?.includes('uvIndex') ? ' UV' : ''}
               </span>
             </p>
           ))}
