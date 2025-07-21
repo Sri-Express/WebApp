@@ -1,3 +1,4 @@
+
 // src/app/dashboard/page.tsx - FULLY MERGED & STYLED PRODUCTION VERSION
 "use client";
 
@@ -10,7 +11,7 @@ import {
   ExclamationTriangleIcon, ShieldCheckIcon, CheckCircleIcon,
   TicketIcon, CurrencyDollarIcon, CalendarDaysIcon, ClockIcon, 
   MagnifyingGlassIcon, MapPinIcon, CreditCardIcon, XCircleIcon, 
-  ArrowRightIcon, BellIcon
+  ArrowRightIcon, BellIcon, CloudIcon, ArrowPathIcon
 } from '@heroicons/react/24/outline';
 import RealTimeEmergencyClient from '../components/RealTimeEmergencyClient';
 import UserEmergencyAlerts from '../components/UserEmergencyAlerts';
@@ -40,6 +41,27 @@ interface Booking { _id?: string; id?: string; bookingId?: string; routeId?: str
 interface Payment { _id?: string; id?: string; paymentId?: string; amount?: { total: number; currency: string; }; total?: number; currency?: string; status?: string; createdAt?: string; date?: string; }
 interface DashboardStats { totalTrips: number; totalSpent: number; upcomingTrips: number; onTimeRate: number; totalBookings?: number; confirmedBookings?: number; totalPayments?: number; averagePayment?: number; recentActivity?: number; favoriteRoutes?: string[]; }
 interface User { _id: string; name: string; email: string; phone?: string; role: string; }
+interface WeatherData { current: { temp: number; condition: string; icon: string; }; forecast: { day: string; temp: number; }[]; }
+
+// --- Mock Weather Service (as per your architecture) ---
+const weatherService = {
+  getComprehensiveWeather: async (location: string): Promise<WeatherData> => {
+    await new Promise(resolve => setTimeout(resolve, 750)); // Simulate API latency
+    const locationsData: { [key: string]: WeatherData } = {
+      'Colombo': { current: { temp: 29, condition: 'Partly Cloudy', icon: '⛅️' }, forecast: [{ day: 'Mon', temp: 30 }, { day: 'Tue', temp: 31 }, { day: 'Wed', temp: 29 }] },
+      'Kandy': { current: { temp: 24, condition: 'Light Showers', icon: '🌦️' }, forecast: [{ day: 'Mon', temp: 25 }, { day: 'Tue', temp: 24 }, { day: 'Wed', temp: 23 }] },
+      'Galle': { current: { temp: 28, condition: 'Sunny', icon: '☀️' }, forecast: [{ day: 'Mon', temp: 29 }, { day: 'Tue', temp: 29 }, { day: 'Wed', temp: 30 }] },
+      'Jaffna': { current: { temp: 31, condition: 'Clear Skies', icon: '☀️' }, forecast: [{ day: 'Mon', temp: 32 }, { day: 'Tue', temp: 31 }, { day: 'Wed', temp: 32 }] },
+    };
+    return locationsData[location] || locationsData['Colombo'];
+  },
+  getAllLocations: () => [
+    { name: 'Colombo' },
+    { name: 'Kandy' },
+    { name: 'Galle' },
+    { name: 'Jaffna' },
+  ]
+};
 
 function DashboardContent() {
   const router = useRouter();
@@ -60,6 +82,11 @@ function DashboardContent() {
   const [profileError, setProfileError] = useState('');
   const [profileSuccess, setProfileSuccess] = useState('');
   const [apiErrors, setApiErrors] = useState<string[]>([]);
+  
+  // --- Weather State ---
+  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
+  const [weatherLoading, setWeatherLoading] = useState(true);
+  const [userLocation, setUserLocation] = useState('Colombo');
 
   // --- Theme and Style Definitions ---
   const lightTheme = { mainBg: '#fffbeb', bgGradient: 'linear-gradient(to bottom right, #fffbeb, #fef3c7, #fde68a)', glassPanelBg: 'rgba(255, 255, 255, 0.92)', glassPanelBorder: '1px solid rgba(251, 191, 36, 0.3)', glassPanelShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 10px 20px -5px rgba(0, 0, 0, 0.1)', textPrimary: '#1f2937', textSecondary: '#4B5563', textMuted: '#6B7280', quickActionBg: 'rgba(249, 250, 251, 0.8)', quickActionBorder: '1px solid rgba(209, 213, 219, 0.5)', alertBg: 'rgba(249, 250, 251, 0.6)' };
@@ -165,11 +192,31 @@ function DashboardContent() {
     }
   }, [apiCall]);
   
+  // --- Weather API Functions ---
+  const loadWeatherData = useCallback(async (location = userLocation) => {
+    setWeatherLoading(true);
+    try {
+      const data = await weatherService.getComprehensiveWeather(location);
+      setWeatherData(data);
+    } catch (error) {
+      console.error('Weather data error:', error);
+      setApiErrors(prev => [...prev, 'Failed to load weather data.']);
+    } finally {
+      setWeatherLoading(false);
+    }
+  }, [userLocation]);
+
+  const handleLocationChange = (newLocation: string) => {
+    setUserLocation(newLocation);
+    loadWeatherData(newLocation);
+  };
+
   useEffect(() => {
     const token = getToken();
     if (!token) { router.push('/login'); return; }
     loadDashboardData();
-  }, [loadDashboardData, router]);
+    loadWeatherData(); // Load weather data on initial mount
+  }, [loadDashboardData, loadWeatherData, router]);
 
   useEffect(() => {
     const interval = setInterval(() => loadDashboardData(true), 30000);
@@ -220,10 +267,94 @@ function DashboardContent() {
     );
   }
 
+  // --- Weather Widget Component ---
+  const WeatherWidgets = ({ weatherData, currentLocation, loading, onRefresh, onLocationChange, availableLocations, compact }) => {
+    const handleRefresh = (e) => {
+      e.stopPropagation();
+      onRefresh(currentLocation);
+    };
+  
+    return (
+      <div style={{
+        backgroundColor: currentThemeStyles.glassPanelBg,
+        padding: compact ? '1rem 1.5rem' : '1.5rem',
+        borderRadius: '1rem',
+        boxShadow: currentThemeStyles.glassPanelShadow,
+        backdropFilter: 'blur(12px)',
+        border: currentThemeStyles.glassPanelBorder,
+        marginBottom: '2rem',
+        color: currentThemeStyles.textPrimary,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: '1.5rem',
+        flexWrap: 'wrap'
+      }}>
+        {loading ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', width: '100%', justifyContent: 'center' }}>
+            <ArrowPathIcon className="animate-spin" width={20} height={20} color={currentThemeStyles.textSecondary} />
+            <span style={{ color: currentThemeStyles.textSecondary, fontWeight: 500 }}>Loading Weather...</span>
+          </div>
+        ) : weatherData ? (
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <span style={{ fontSize: '2.5rem' }}>{weatherData.current.icon}</span>
+              <div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{weatherData.current.temp}°C</div>
+                <div style={{ color: currentThemeStyles.textSecondary, fontWeight: 500 }}>{weatherData.current.condition}</div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
+              {weatherData.forecast.map(day => (
+                <div key={day.day} style={{ textAlign: 'center' }}>
+                  <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{day.day}</div>
+                  <div style={{ color: currentThemeStyles.textSecondary, fontSize: '1.1rem' }}>{day.temp}°</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginLeft: 'auto' }}>
+              <select
+                value={currentLocation}
+                onChange={(e) => onLocationChange(e.target.value)}
+                style={{
+                  backgroundColor: currentThemeStyles.alertBg,
+                  color: currentThemeStyles.textPrimary,
+                  border: currentThemeStyles.quickActionBorder,
+                  borderRadius: '0.5rem',
+                  padding: '0.5rem 0.75rem',
+                  fontWeight: 500,
+                  cursor: 'pointer'
+                }}
+              >
+                {availableLocations.map(loc => <option key={loc} value={loc}>{loc}</option>)}
+              </select>
+              <button onClick={handleRefresh} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem' }}>
+                <ArrowPathIcon width={20} height={20} color={currentThemeStyles.textSecondary} />
+              </button>
+            </div>
+          </>
+        ) : (
+          <div style={{ color: currentThemeStyles.textSecondary }}>Weather data unavailable.</div>
+        )}
+      </div>
+    );
+  };
+
   const renderOverview = () => (
     <div className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
       <UserEmergencyAlerts showInDashboard={true} maxAlerts={2} />
       
+      {/* --- Weather Widget --- */}
+      <WeatherWidgets
+        weatherData={weatherData}
+        currentLocation={userLocation}
+        loading={weatherLoading}
+        onRefresh={loadWeatherData}
+        onLocationChange={handleLocationChange}
+        availableLocations={weatherService.getAllLocations().map(loc => loc.name)}
+        compact={true}
+      />
+
       <div style={{
         backgroundColor: currentThemeStyles.glassPanelBg,
         padding: '1.5rem',
@@ -323,6 +454,7 @@ function DashboardContent() {
             { name: 'My Bookings', href: '/bookings', icon: TicketIcon },
             { name: 'Track Vehicle', href: '/track', icon: MapPinIcon },
             { name: 'Payment History', href: '/payments', icon: CreditCardIcon },
+            { name: 'Weather & Travel', href: '/weather', icon: CloudIcon },
             { name: 'Notifications', href: '/notifications', icon: BellIcon }
           ].map((action, index) => (
             <Link key={action.name} href={action.href} style={{ textDecoration: 'none' }}>
@@ -498,9 +630,12 @@ function DashboardContent() {
           .main-content-grid { grid-template-columns: 1fr !important; }
           .nav-user-welcome { display: none; }
         }
+        .animate-spin { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
       `}</style>
       
       <div style={{ position: 'absolute', inset: 0, background: currentThemeStyles.bgGradient, zIndex: 0 }}>
+        {/* ... [The entire animated background SVG/div structure remains unchanged] ... */}
         <div style={{ position: 'absolute', top: '15%', left: 0, right: 0, height: '100px', backgroundColor: '#1f2937', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)', zIndex: 2 }}></div><div style={{ position: 'absolute', top: '15%', left: 0, right: 0, height: '100px', zIndex: 3, display: 'flex', justifyContent: 'center', alignItems: 'center' }}><div style={{ width: '100%', height: '5px', background: 'repeating-linear-gradient(to right, #fcd34d, #fcd34d 30px, transparent 30px, transparent 60px)', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2)' }}></div></div><div style={{ position: 'absolute', top: '15%', left: 0, right: 0, height: '100px', overflow: 'hidden', zIndex: 3 }}><div style={{ position: 'absolute', top: '25%', left: 0, right: 0, height: '8px', display: 'flex', transform: 'translateY(-50%)' }}><div className="animate-road-marking" style={{ position: 'absolute', width: '80px', backgroundColor: '#fbbf24', left: '10%' }}></div><div className="animate-road-marking animation-delay-200" style={{ position: 'absolute', width: '80px', backgroundColor: '#fbbf24', left: '30%' }}></div><div className="animate-road-marking animation-delay-500" style={{ position: 'absolute', width: '80px', backgroundColor: '#fbbf24', left: '50%' }}></div><div className="animate-road-marking animation-delay-700" style={{ position: 'absolute', width: '80px', backgroundColor: '#fbbf24', left: '70%' }}></div></div><div style={{ position: 'absolute', top: '75%', left: 0, right: 0, height: '8px', display: 'flex', transform: 'translateY(-50%)' }}><div className="animate-road-marking animation-delay-300" style={{ position: 'absolute', width: '80px', backgroundColor: '#fbbf24', left: '20%' }}></div><div className="animate-road-marking animation-delay-400" style={{ position: 'absolute', width: '80px', backgroundColor: '#fbbf24', left: '40%' }}></div><div className="animate-road-marking animation-delay-600" style={{ position: 'absolute', width: '80px', backgroundColor: '#fbbf24', left: '60%' }}></div><div className="animate-road-marking animation-delay-800" style={{ position: 'absolute', width: '80px', backgroundColor: '#fbbf24', left: '80%' }}></div></div></div>
         <div style={{ position: 'absolute', top: '60%', left: 0, right: 0, height: '80px', backgroundColor: '#1f2937', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.2)', zIndex: 2 }}></div><div style={{ position: 'absolute', top: '60%', left: 0, right: 0, height: '80px', zIndex: 3, display: 'flex', justifyContent: 'center', alignItems: 'center' }}><div style={{ width: '100%', height: '4px', background: 'repeating-linear-gradient(to right, #fcd34d, #fcd34d 20px, transparent 20px, transparent 40px)', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2)' }}></div></div>
         <div style={{ position: 'absolute', top: '85%', left: 0, right: 0, height: '50px', background: 'linear-gradient(to bottom, #4b5563 0%, #374151 100%)', boxShadow: '0 5px 10px -3px rgba(0, 0, 0, 0.3)', zIndex: 2 }}></div><div style={{ position: 'absolute', top: '85%', left: 0, right: 0, height: '50px', overflow: 'visible', zIndex: 3 }}><div style={{ position: 'absolute', top: '35%', left: 0, right: 0, height: '6px', background: 'linear-gradient(to bottom, #94a3b8 0%, #64748b 100%)', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3)', zIndex: 4 }}></div><div style={{ position: 'absolute', top: '65%', left: 0, right: 0, height: '6px', background: 'linear-gradient(to bottom, #94a3b8 0%, #64748b 100%)', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3)', zIndex: 4 }}></div><div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '100%', display: 'flex', gap: '15px', zIndex: 3 }}>{Array(30).fill(0).map((_, i) => (<div key={i} style={{ width: '20px', height: '100%', background: 'linear-gradient(to bottom, #92400e 0%, #7c2d12 70%, #713f12 100%)', marginLeft: `${i * 30}px`, boxShadow: 'inset 0 0 2px rgba(0, 0, 0, 0.5)', border: '1px solid #78350f' }}></div>))}</div></div>
