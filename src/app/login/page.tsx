@@ -389,7 +389,7 @@ export default function LoginPage() {
           {/* Registration text */}
           <div style={{ textAlign: 'center', marginTop: '1.75rem', backgroundColor: currentThemeStyles.registerBg, padding: '1rem', borderRadius: '0.75rem', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
             <p style={{ color: currentThemeStyles.registerText, fontSize: '0.95rem' }}>
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <Link href="/register" className="register-link" style={{ color: currentThemeStyles.registerLinkColor, textDecoration: 'none', fontWeight: '600', borderBottom: '1px solid transparent', transition: 'all 0.2s ease', paddingBottom: '2px' }}>
                 Register here
               </Link>

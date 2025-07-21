@@ -277,7 +277,6 @@ const QueuePanel = ({ title, items, type, onItemClick }: { title: string; items:
 
 const PerformanceMetric = ({ value, label, color }: { value: string | number; label: string; color: string; }) => {
   const { theme } = useTheme();
-  const textPrimary = theme === 'dark' ? '#f9fafb' : '#1f2937';
   const textSecondary = theme === 'dark' ? '#9ca3af' : '#6b7280';
   return (
     <div style={{ textAlign: 'center' }}>
