@@ -17,17 +17,27 @@ import {
   CalendarDaysIcon,
   XMarkIcon,
   ExclamationCircleIcon,
-  CheckCircleIcon,
-  MapPinIcon,
-  ClockIcon,
-  EyeIcon,
   FlagIcon,
-  QuestionMarkCircleIcon,
-  SparklesIcon,
   TruckIcon,
 } from '@heroicons/react/24/solid';
 import { WeatherData, CurrentWeather } from '@/app/services/weatherService';
 import { useTheme } from '@/app/context/ThemeContext';
+
+// Define interfaces for Speech Recognition API for type safety
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start: () => void;
+  abort: () => void;
+  onresult: (event: SpeechRecognitionEvent) => void;
+  onend: () => void;
+  onerror: (event: Event) => void;
+}
+
+interface SpeechRecognitionEvent extends Event {
+  results: Array<Array<{ transcript: string }>>;
+}
 
 // Custom Sri Express Weather Bot Avatar Component
 const WeatherBotAvatar: React.FC<{ size?: 'sm' | 'md' | 'lg'; animate?: boolean }> = ({ 
@@ -121,7 +131,7 @@ const WeatherBotAvatar: React.FC<{ size?: 'sm' | 'md' | 'lg'; animate?: boolean 
 };
 
 // Enhanced Weather Icons
-const WeatherIconMap = {
+const WeatherIconMap: Record<string, React.FC<React.SVGProps<SVGSVGElement>>> = {
   'clear': SunIcon,
   'clouds': CloudIcon,
   'rain': () => <CloudIcon style={{ color: '#60a5fa' }} />,
@@ -151,7 +161,7 @@ interface Message {
       conditions: string;
       recommendation: string;
     };
-    chartData?: any[];
+    chartData?: Record<string, string | number>[];
   };
   suggestions?: string[];
   isTyping?: boolean;
@@ -161,7 +171,6 @@ interface WeatherChatbotProps {
   weatherData: WeatherData | null;
   currentLocation: string;
   availableLocations: string[];
-  onLocationChange?: (location: string) => void;
   className?: string;
   multiLocationData?: Map<string, CurrentWeather>;
 }
@@ -182,7 +191,6 @@ const WeatherChatbot: React.FC<WeatherChatbotProps> = ({
   weatherData,
   currentLocation,
   availableLocations,
-  onLocationChange,
   className = '',
   multiLocationData = new Map(),
 }) => {
@@ -206,10 +214,9 @@ const WeatherChatbot: React.FC<WeatherChatbotProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [conversationContext, setConversationContext] = useState<string>('');
   
   const chatContainerRef = useRef<HTMLDivElement>(null);
-  const speechRecognition = useRef<any>(null);
+  const speechRecognition = useRef<SpeechRecognition | null>(null);
 
   // Theme styles
   const lightTheme = {
@@ -247,27 +254,6 @@ const WeatherChatbot: React.FC<WeatherChatbotProps> = ({
   };
 
   const currentThemeStyles = theme === 'dark' ? darkTheme : lightTheme;
-
-  // Initialize speech recognition
-  useEffect(() => {
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      // @ts-ignore
-      const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
-      speechRecognition.current = new SpeechRecognition();
-      speechRecognition.current.continuous = false;
-      speechRecognition.current.interimResults = false;
-      speechRecognition.current.lang = 'en-US';
-
-      speechRecognition.current.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript;
-        setInputMessage(transcript);
-        setTimeout(() => handleSendMessage(transcript), 500);
-      };
-
-      speechRecognition.current.onend = () => setIsListening(false);
-      speechRecognition.current.onerror = () => setIsListening(false);
-    }
-  }, []);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -316,8 +302,107 @@ const WeatherChatbot: React.FC<WeatherChatbotProps> = ({
     return JSON.stringify(context, null, 2);
   }, [weatherData, currentLocation, availableLocations, multiLocationData]);
 
+  // Extract weather data from AI response
+  const extractWeatherDataFromResponse = useCallback((response: string, userQuery: string): Message['weatherData'] => {
+    const data: Message['weatherData'] = {};
+
+    const tempMatch = response.match(/(\d+)°C/);
+    if (tempMatch) data.temperature = parseInt(tempMatch[1]);
+
+    const conditionKeywords = ['sunny', 'clear', 'cloudy', 'rain', 'storm', 'drizzle', 'fog', 'mist'];
+    const foundCondition = conditionKeywords.find(keyword => 
+      response.toLowerCase().includes(keyword)
+    );
+    if (foundCondition) data.condition = foundCondition;
+
+    const precipMatch = response.match(/(\d+)%.*?(rain|precipitation|chance)/i);
+    if (precipMatch) data.precipitation = parseInt(precipMatch[1]);
+
+    const windMatch = response.match(/(\d+)\s*km\/h/i);
+    if (windMatch) data.wind = parseInt(windMatch[1]);
+
+    if (userQuery.toLowerCase().includes('forecast') || userQuery.toLowerCase().includes('tomorrow') || userQuery.toLowerCase().includes('week')) {
+      data.visualType = 'forecast';
+    } else if (userQuery.toLowerCase().includes('route') || userQuery.toLowerCase().includes('travel') || userQuery.toLowerCase().includes('trip')) {
+      data.visualType = 'route';
+    } else if (userQuery.toLowerCase().includes('chart') || userQuery.toLowerCase().includes('graph') || userQuery.toLowerCase().includes('trend')) {
+      data.visualType = 'chart';
+    } else if (response.toLowerCase().includes('alert') || response.toLowerCase().includes('warning')) {
+      data.visualType = 'alert';
+    }
+
+    if (userQuery.toLowerCase().includes('to') && data.visualType === 'route') {
+      const routeMatch = userQuery.match(/([\w\s]+)\s+to\s+([\w\s]+)/i);
+      if (routeMatch) {
+        data.routeInfo = {
+          from: routeMatch[1].trim(),
+          to: routeMatch[2].trim(),
+          conditions: data.condition || 'unknown',
+          recommendation: 'Check current conditions before departure',
+        };
+      }
+    }
+
+    data.location = currentLocation;
+    return data;
+  }, [currentLocation]);
+
+  // Generate smart follow-up suggestions
+  const generateSmartSuggestions = useCallback((userQuery: string): string[] => {
+    const suggestions: string[] = [];
+    
+    if (userQuery.toLowerCase().includes('current') || userQuery.toLowerCase().includes('now')) {
+      suggestions.push('Show me the hourly forecast');
+      suggestions.push('How will this affect transportation?');
+      suggestions.push('Compare with other cities');
+    } else if (userQuery.toLowerCase().includes('forecast') || userQuery.toLowerCase().includes('tomorrow')) {
+      suggestions.push('Best time to travel tomorrow?');
+      suggestions.push('Show weather analytics');
+      suggestions.push('Any weather alerts?');
+    } else if (userQuery.toLowerCase().includes('route') || userQuery.toLowerCase().includes('travel')) {
+      suggestions.push('Check return journey weather');
+      suggestions.push('Alternative route conditions');
+      suggestions.push('Travel time recommendations');
+    } else {
+      suggestions.push('Will it rain today?');
+      suggestions.push('Best travel times this week');
+      suggestions.push('Weather for Colombo to Kandy');
+    }
+
+    return suggestions.slice(0, 3);
+  }, []);
+
+  // Generate fallback response for errors
+  const generateFallbackResponse = useCallback((): Message => {
+    let fallbackContent = '🌤️ I apologize, but I\'m having trouble accessing the latest weather data right now.';
+    
+    if (weatherData) {
+      const { current } = weatherData;
+      fallbackContent = `🌤️ Based on the available data for ${currentLocation}:
+
+📍 Current conditions: ${current.temperature}°C, ${current.description}
+💨 Wind: ${current.windSpeed} km/h
+💧 Humidity: ${current.humidity}%
+
+For detailed forecasts and transportation impact, please check the analytics section or try asking again.`;
+    }
+
+    return {
+      id: Date.now().toString(),
+      role: 'assistant',
+      content: fallbackContent,
+      timestamp: new Date(),
+      weatherData: weatherData ? {
+        temperature: weatherData.current.temperature,
+        condition: weatherData.current.condition,
+        location: currentLocation,
+      } : undefined,
+      suggestions: ['Try asking again', 'Check weather analytics', 'Current conditions'],
+    };
+  }, [weatherData, currentLocation]);
+
   // Enhanced AI response generation
-  const generateAIResponse = async (userMessage: string): Promise<Message> => {
+  const generateAIResponse = useCallback(async (userMessage: string): Promise<Message> => {
     try {
       const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
       
@@ -380,16 +465,15 @@ User query: "${userMessage}"`;
       }
 
       const data = await response.json() as GeminiResponse;
-      const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Sorry, I could not process your request.';
+      const aiResponseText = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Sorry, I could not process your request.';
 
-      // Extract weather data and generate suggestions
-      const weatherDataExtracted = extractWeatherDataFromResponse(aiResponse, userMessage);
-      const suggestions = generateSmartSuggestions(userMessage, aiResponse);
+      const weatherDataExtracted = extractWeatherDataFromResponse(aiResponseText, userMessage);
+      const suggestions = generateSmartSuggestions(userMessage);
 
       return {
         id: Date.now().toString(),
         role: 'assistant',
-        content: aiResponse,
+        content: aiResponseText,
         timestamp: new Date(),
         weatherData: weatherDataExtracted,
         suggestions,
@@ -397,122 +481,15 @@ User query: "${userMessage}"`;
 
     } catch (error) {
       console.error('Error generating AI response:', error);
-      return generateFallbackResponse(userMessage);
+      return generateFallbackResponse();
     }
-  };
-
-  // Extract weather data from AI response
-  const extractWeatherDataFromResponse = (response: string, userQuery: string): Message['weatherData'] => {
-    const data: Message['weatherData'] = {};
-
-    // Extract temperature
-    const tempMatch = response.match(/(\d+)°C/);
-    if (tempMatch) data.temperature = parseInt(tempMatch[1]);
-
-    // Extract weather condition
-    const conditionKeywords = ['sunny', 'clear', 'cloudy', 'rain', 'storm', 'drizzle', 'fog', 'mist'];
-    const foundCondition = conditionKeywords.find(keyword => 
-      response.toLowerCase().includes(keyword)
-    );
-    if (foundCondition) data.condition = foundCondition;
-
-    // Extract precipitation
-    const precipMatch = response.match(/(\d+)%.*?(rain|precipitation|chance)/i);
-    if (precipMatch) data.precipitation = parseInt(precipMatch[1]);
-
-    // Extract wind
-    const windMatch = response.match(/(\d+)\s*km\/h/i);
-    if (windMatch) data.wind = parseInt(windMatch[1]);
-
-    // Determine visual type based on query
-    if (userQuery.toLowerCase().includes('forecast') || userQuery.toLowerCase().includes('tomorrow') || userQuery.toLowerCase().includes('week')) {
-      data.visualType = 'forecast';
-    } else if (userQuery.toLowerCase().includes('route') || userQuery.toLowerCase().includes('travel') || userQuery.toLowerCase().includes('trip')) {
-      data.visualType = 'route';
-    } else if (userQuery.toLowerCase().includes('chart') || userQuery.toLowerCase().includes('graph') || userQuery.toLowerCase().includes('trend')) {
-      data.visualType = 'chart';
-    } else if (response.toLowerCase().includes('alert') || response.toLowerCase().includes('warning')) {
-      data.visualType = 'alert';
-    }
-
-    // Extract route information if present
-    if (userQuery.toLowerCase().includes('to') && data.visualType === 'route') {
-      const routeMatch = userQuery.match(/([\w\s]+)\s+to\s+([\w\s]+)/i);
-      if (routeMatch) {
-        data.routeInfo = {
-          from: routeMatch[1].trim(),
-          to: routeMatch[2].trim(),
-          conditions: data.condition || 'unknown',
-          recommendation: 'Check current conditions before departure',
-        };
-      }
-    }
-
-    data.location = currentLocation;
-    return data;
-  };
-
-  // Generate smart follow-up suggestions
-  const generateSmartSuggestions = (userQuery: string, aiResponse: string): string[] => {
-    const suggestions: string[] = [];
-    
-    if (userQuery.toLowerCase().includes('current') || userQuery.toLowerCase().includes('now')) {
-      suggestions.push('Show me the hourly forecast');
-      suggestions.push('How will this affect transportation?');
-      suggestions.push('Compare with other cities');
-    } else if (userQuery.toLowerCase().includes('forecast') || userQuery.toLowerCase().includes('tomorrow')) {
-      suggestions.push('Best time to travel tomorrow?');
-      suggestions.push('Show weather analytics');
-      suggestions.push('Any weather alerts?');
-    } else if (userQuery.toLowerCase().includes('route') || userQuery.toLowerCase().includes('travel')) {
-      suggestions.push('Check return journey weather');
-      suggestions.push('Alternative route conditions');
-      suggestions.push('Travel time recommendations');
-    } else {
-      // Default suggestions
-      suggestions.push('Will it rain today?');
-      suggestions.push('Best travel times this week');
-      suggestions.push('Weather for Colombo to Kandy');
-    }
-
-    return suggestions.slice(0, 3);
-  };
-
-  // Generate fallback response for errors
-  const generateFallbackResponse = (userMessage: string): Message => {
-    let fallbackContent = '🌤️ I apologize, but I\'m having trouble accessing the latest weather data right now.';
-    
-    if (weatherData) {
-      const { current } = weatherData;
-      fallbackContent = `🌤️ Based on the available data for ${currentLocation}:
-
-📍 Current conditions: ${current.temperature}°C, ${current.description}
-💨 Wind: ${current.windSpeed} km/h
-💧 Humidity: ${current.humidity}%
-
-For detailed forecasts and transportation impact, please check the analytics section or try asking again.`;
-    }
-
-    return {
-      id: Date.now().toString(),
-      role: 'assistant',
-      content: fallbackContent,
-      timestamp: new Date(),
-      weatherData: weatherData ? {
-        temperature: weatherData.current.temperature,
-        condition: weatherData.current.condition,
-        location: currentLocation,
-      } : undefined,
-      suggestions: ['Try asking again', 'Check weather analytics', 'Current conditions'],
-    };
-  };
+  }, [generateWeatherContext, messages, extractWeatherDataFromResponse, generateSmartSuggestions, generateFallbackResponse]);
 
   // Handle sending messages
-  const handleSendMessage = async (message?: string) => {
+  const handleSendMessage = useCallback(async (message?: string) => {
     const messageText = message || inputMessage.trim();
     if (!messageText || isLoading) return;
 
-    // Add user message
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
@@ -524,7 +501,6 @@ For detailed forecasts and transportation impact, please check the analytics sec
     setInputMessage('');
     setIsLoading(true);
 
-    // Add typing indicator
     const typingMessage: Message = {
       id: 'typing',
       role: 'assistant',
@@ -535,22 +511,37 @@ For detailed forecasts and transportation impact, please check the analytics sec
     setMessages(prev => [...prev, typingMessage]);
 
     try {
-      // Generate AI response
       const aiResponse = await generateAIResponse(messageText);
-      
-      // Remove typing indicator and add real response
       setMessages(prev => prev.filter(m => m.id !== 'typing').concat(aiResponse));
-      
-      // Update conversation context
-      setConversationContext(prev => prev + `\nUser: ${messageText}\nAssistant: ${aiResponse.content}`);
     } catch (error) {
       console.error('Error in chat:', error);
-      const errorResponse = generateFallbackResponse(messageText);
+      const errorResponse = generateFallbackResponse();
       setMessages(prev => prev.filter(m => m.id !== 'typing').concat(errorResponse));
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [inputMessage, isLoading, generateAIResponse, generateFallbackResponse]);
+
+  // Initialize speech recognition
+  useEffect(() => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      // @ts-expect-error - Using vendor-prefixed API which is not in standard TS lib
+      const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
+      speechRecognition.current = new SpeechRecognition() as SpeechRecognition;
+      speechRecognition.current.continuous = false;
+      speechRecognition.current.interimResults = false;
+      speechRecognition.current.lang = 'en-US';
+
+      speechRecognition.current.onresult = (event: SpeechRecognitionEvent) => {
+        const transcript = event.results[0][0].transcript;
+        setInputMessage(transcript);
+        setTimeout(() => handleSendMessage(transcript), 500);
+      };
+
+      speechRecognition.current.onend = () => setIsListening(false);
+      speechRecognition.current.onerror = () => setIsListening(false);
+    }
+  }, [handleSendMessage]);
 
   // Handle suggestion clicks
   const handleSuggestionClick = (suggestion: string) => {
@@ -594,7 +585,7 @@ For detailed forecasts and transportation impact, please check the analytics sec
   // Get weather icon component
   const getWeatherIcon = (condition?: string) => {
     if (!condition) return CloudIcon;
-    const IconComponent = WeatherIconMap[condition.toLowerCase() as keyof typeof WeatherIconMap];
+    const IconComponent = WeatherIconMap[condition.toLowerCase()];
     return IconComponent || CloudIcon;
   };
 
@@ -607,7 +598,7 @@ For detailed forecasts and transportation impact, please check the analytics sec
   const renderWeatherVisualization = (data?: Message['weatherData']) => {
     if (!data || data.visualType === 'default') return null;
 
-    const baseVisualizationStyle = {
+    const baseVisualizationStyle: React.CSSProperties = {
       marginTop: '0.75rem',
       padding: '1rem',
       borderRadius: '0.75rem',
@@ -1098,7 +1089,7 @@ For detailed forecasts and transportation impact, please check the analytics sec
                 opacity: isLoading || isListening ? 0.5 : 1
               }}
               onFocus={(e) => e.target.style.borderColor = '#60a5fa'}
-              onBlur={(e) => e.target.style.borderColor = currentThemeStyles.controlBorder.split(' ')[2]}
+              onBlur={(e) => e.target.style.borderColor = (currentThemeStyles.controlBorder.split(' ')[2] || '')}
             />
             <button
               onClick={() => handleSendMessage()}

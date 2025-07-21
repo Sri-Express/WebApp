@@ -28,6 +28,7 @@ import {
   ComposedChart,
   ScatterChart,
   Scatter,
+  TooltipProps,
 } from 'recharts';
 import {
   ChartBarIcon,
@@ -35,7 +36,6 @@ import {
   CloudIcon,
   SunIcon,
   EyeIcon,
-  BeakerIcon,
   FlagIcon,
   MapPinIcon,
   ClockIcon,
@@ -46,13 +46,14 @@ import {
 } from '@heroicons/react/24/outline';
 import { WeatherData, CurrentWeather } from '@/app/services/weatherService';
 import { useTheme } from '@/app/context/ThemeContext';
+import { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent';
 
+// Define interfaces for props and data structures
 interface WeatherAnalyticsProps {
   weatherData: WeatherData | null;
   selectedLocation: string;
   loading?: boolean;
   onRefresh?: () => void;
-  historicalData?: any[];
   multiLocationData?: Map<string, CurrentWeather>;
 }
 
@@ -74,16 +75,18 @@ interface TransportationAnalytics {
   avoidTimes: string[];
 }
 
+// Define the type for the active tab state
+type ActiveTab = 'overview' | 'trends' | 'forecast' | 'transportation' | 'comparison';
+
 const WeatherAnalytics: React.FC<WeatherAnalyticsProps> = ({
   weatherData,
   selectedLocation,
   loading = false,
   onRefresh,
-  historicalData = [],
   multiLocationData = new Map(),
 }) => {
   const { theme } = useTheme();
-  const [activeTab, setActiveTab] = useState<'overview' | 'trends' | 'forecast' | 'transportation' | 'comparison'>('overview');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('overview');
   const [timeRange, setTimeRange] = useState<'24h' | '7d' | '30d'>('24h');
   const [animationKey, setAnimationKey] = useState(0);
 
@@ -215,13 +218,13 @@ const WeatherAnalytics: React.FC<WeatherAnalyticsProps> = ({
   const conditionDistribution = useMemo(() => {
     if (!weatherData?.daily) return [];
 
-    const conditions = weatherData.daily.reduce((acc: any, day) => {
+    const conditions = weatherData.daily.reduce((acc: Record<string, number>, day) => {
       const condition = day.condition;
       acc[condition] = (acc[condition] || 0) + 1;
       return acc;
     }, {});
 
-    const colors = {
+    const colors: Record<string, string> = {
       Clear: '#FFD700',
       Clouds: '#87CEEB',
       Rain: '#4682B4',
@@ -232,8 +235,8 @@ const WeatherAnalytics: React.FC<WeatherAnalyticsProps> = ({
 
     return Object.entries(conditions).map(([condition, count]) => ({
       name: condition,
-      value: count as number,
-      color: colors[condition as keyof typeof colors] || '#999999',
+      value: count,
+      color: colors[condition] || '#999999',
     }));
   }, [weatherData]);
 
@@ -264,8 +267,8 @@ const WeatherAnalytics: React.FC<WeatherAnalyticsProps> = ({
     }));
   }, [weatherData, hourlyChartData]);
 
-  // Custom tooltip components
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  // Custom tooltip component with proper types
+  const CustomTooltip = ({ active, payload, label }: TooltipProps<ValueType, NameType>) => {
     if (active && payload && payload.length) {
       return (
         <div style={{
@@ -279,18 +282,18 @@ const WeatherAnalytics: React.FC<WeatherAnalyticsProps> = ({
           <p style={{ color: currentThemeStyles.textPrimary, fontWeight: '500', marginBottom: '0.5rem' }}>
             {label}
           </p>
-          {payload.map((entry: any, index: number) => (
+          {payload.map((entry, index: number) => (
             <p key={index} style={{
               fontSize: '0.875rem',
               color: entry.color,
               margin: '0.125rem 0'
             }}>
               {`${entry.dataKey}: ${entry.value}${
-                entry.dataKey.includes('temp') || entry.dataKey.includes('Temperature') ? '°C' :
-                entry.dataKey.includes('wind') || entry.dataKey.includes('Wind') ? ' km/h' :
-                entry.dataKey.includes('precipitation') || entry.dataKey.includes('humidity') || entry.dataKey.includes('Humidity') ? '%' :
-                entry.dataKey.includes('pressure') ? ' hPa' :
-                entry.dataKey.includes('visibility') ? ' km' : ''
+                entry.dataKey?.toString().includes('temp') || entry.dataKey?.toString().includes('Temperature') ? '°C' :
+                entry.dataKey?.toString().includes('wind') || entry.dataKey?.toString().includes('Wind') ? ' km/h' :
+                entry.dataKey?.toString().includes('precipitation') || entry.dataKey?.toString().includes('humidity') || entry.dataKey?.toString().includes('Humidity') ? '%' :
+                entry.dataKey?.toString().includes('pressure') ? ' hPa' :
+                entry.dataKey?.toString().includes('visibility') ? ' km' : ''
               }`}
             </p>
           ))}
@@ -478,7 +481,7 @@ const WeatherAnalytics: React.FC<WeatherAnalyticsProps> = ({
         ].map((tab) => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id as any)}
+            onClick={() => setActiveTab(tab.id as ActiveTab)}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -586,7 +589,7 @@ const WeatherAnalytics: React.FC<WeatherAnalyticsProps> = ({
                   cy="50%"
                   outerRadius={80}
                   dataKey="value"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  label={({ name, percent }) => `${name} ${(percent || 0 * 100).toFixed(0)}%`}
                 >
                   {conditionDistribution.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />

@@ -24,7 +24,7 @@ import {
   InformationCircleIcon,
   ChartBarIcon,
 } from '@heroicons/react/24/outline';
-import { WeatherData, CurrentWeather, TransportationImpact } from '@/app/services/weatherService';
+import { WeatherData, TransportationImpact } from '@/app/services/weatherService';
 import { useTheme } from '@/app/context/ThemeContext';
 
 interface WeatherWidgetsProps {
@@ -75,9 +75,9 @@ const WeatherIcon: React.FC<WeatherIconProps> = ({ condition, size = 'md', color
 };
 
 // Transportation Impact Badge
-const TransportationImpactBadge: React.FC<{ impact: TransportationImpact['overall']; theme: any }> = ({ impact, theme }) => {
-  const getImpactStyles = (impact: string) => {
-    switch (impact) {
+const TransportationImpactBadge: React.FC<{ impact: TransportationImpact['overall'] }> = ({ impact }) => {
+  const getImpactStyles = (impactLevel: string) => {
+    switch (impactLevel) {
       case 'excellent':
         return { backgroundColor: 'rgba(34, 197, 94, 0.2)', color: '#4ade80', border: '1px solid rgba(34, 197, 94, 0.3)' };
       case 'good':
@@ -93,8 +93,8 @@ const TransportationImpactBadge: React.FC<{ impact: TransportationImpact['overal
     }
   };
 
-  const getImpactIcon = (impact: string) => {
-    switch (impact) {
+  const getImpactIcon = (impactLevel: string) => {
+    switch (impactLevel) {
       case 'excellent':
       case 'good':
         return <CheckCircleIcon style={{ width: '12px', height: '12px' }} />;
@@ -330,7 +330,7 @@ const WeatherWidgets: React.FC<WeatherWidgetsProps> = ({
     );
   }
 
-  const { current, daily, hourly, transportationImpact } = weatherData;
+  const { current, daily, transportationImpact } = weatherData;
 
   if (compact) {
     // Compact widget for dashboard integration
@@ -376,7 +376,7 @@ const WeatherWidgets: React.FC<WeatherWidgetsProps> = ({
           </div>
           
           <div style={{ textAlign: 'right' }}>
-            <TransportationImpactBadge impact={transportationImpact.overall} theme={currentThemeStyles} />
+            <TransportationImpactBadge impact={transportationImpact.overall} />
             <div style={{ fontSize: '0.75rem', color: currentThemeStyles.textMuted, marginTop: '0.25rem' }}>
               Travel conditions
             </div>
@@ -551,7 +551,7 @@ const WeatherWidgets: React.FC<WeatherWidgetsProps> = ({
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div style={{ textAlign: 'center' }}>
-              <TransportationImpactBadge impact={transportationImpact.overall} theme={currentThemeStyles} />
+              <TransportationImpactBadge impact={transportationImpact.overall} />
               <p style={{ fontSize: '0.75rem', color: currentThemeStyles.textMuted, marginTop: '0.5rem', margin: 0 }}>
                 Overall conditions
               </p>

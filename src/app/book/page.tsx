@@ -114,9 +114,9 @@ export default function BookingPage() {
         throw new Error(`API Error ${response.status}: ${errorData}`);
       }
       return await response.json();
-    } catch (error) {
-      console.error('💥 API call error:', error);
-      throw error;
+    } catch (err) {
+      console.error('💥 API call error:', err);
+      throw err;
     }
   }, [router]);
   
@@ -259,7 +259,7 @@ export default function BookingPage() {
         </div>
         <div>
           <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: currentThemeStyles.textSecondary }}>Passenger Type</label>
-          <select value={bookingData.passengerInfo.passengerType} onChange={(e) => setBookingData(prev => ({ ...prev, passengerInfo: { ...prev.passengerInfo, passengerType: e.target.value as any } }))} style={inputStyle}>
+          <select value={bookingData.passengerInfo.passengerType} onChange={(e) => setBookingData(prev => ({ ...prev, passengerInfo: { ...prev.passengerInfo, passengerType: e.target.value as 'regular' | 'student' | 'senior' | 'military' } }))} style={inputStyle}>
             <option value="regular">Regular</option><option value="student">Student (Discount Available)</option><option value="senior">Senior Citizen (Discount Available)</option><option value="military">Military (Discount Available)</option>
           </select>
         </div>
@@ -273,11 +273,11 @@ export default function BookingPage() {
       <div style={{ display: 'grid', gap: '1rem', marginBottom: '1.5rem' }}>
         <div>
           <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: currentThemeStyles.textSecondary }}>Seat Preference</label>
-          <select value={bookingData.seatInfo.seatType} onChange={(e) => setBookingData(prev => ({ ...prev, seatInfo: { ...prev.seatInfo, seatType: e.target.value as any } }))} style={inputStyle}><option value="window">Window Seat</option><option value="aisle">Aisle Seat</option><option value="middle">Middle Seat</option></select>
+          <select value={bookingData.seatInfo.seatType} onChange={(e) => setBookingData(prev => ({ ...prev, seatInfo: { ...prev.seatInfo, seatType: e.target.value as 'window' | 'aisle' | 'middle' } }))} style={inputStyle}><option value="window">Window Seat</option><option value="aisle">Aisle Seat</option><option value="middle">Middle Seat</option></select>
         </div>
         <div>
           <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: currentThemeStyles.textSecondary }}>Payment Method *</label>
-          <select value={bookingData.paymentMethod} onChange={(e) => setBookingData(prev => ({ ...prev, paymentMethod: e.target.value as any }))} style={inputStyle}><option value="card">💳 Credit/Debit Card</option><option value="bank">🏦 Bank Transfer</option><option value="digital_wallet">📱 Digital Wallet</option><option value="cash">💵 Cash on Booking</option></select>
+          <select value={bookingData.paymentMethod} onChange={(e) => setBookingData(prev => ({ ...prev, paymentMethod: e.target.value as 'card' | 'bank' | 'digital_wallet' | 'cash' }))} style={inputStyle}><option value="card">💳 Credit/Debit Card</option><option value="bank">🏦 Bank Transfer</option><option value="digital_wallet">📱 Digital Wallet</option><option value="cash">💵 Cash on Booking</option></select>
         </div>
       </div>
       <div style={{ backgroundColor: currentThemeStyles.quickActionBg, padding: '1rem', borderRadius: '0.5rem', border: currentThemeStyles.quickActionBorder }}>
