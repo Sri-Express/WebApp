@@ -106,12 +106,19 @@ export default function CreateTicket() {
 
   const handleInputChange = (field: string, value: string) => {
     if (field.startsWith('customerInfo.')) {
-      const customerField = field.split('.')[1];
-      setFormData(prev => ({ ...prev, customerInfo: { ...prev.customerInfo, [customerField]: value } }));
+      const customerField = field.split('.')[1] as keyof CustomerInfo;
+      setFormData(prev => ({
+        ...prev,
+        customerInfo: { ...prev.customerInfo, [customerField]: value },
+      }));
     } else {
-      // Using 'as any' here is a pragmatic way to handle dynamic keys with TypeScript's strictness
-      // without overly complex generic types for a single form handler.
-      setFormData(prev => ({ ...prev, [field]: value as any }));
+      // Replaced 'as any' with a specific type assertion for the keys being updated.
+      // This is safe because this handler is only called for these specific fields from form controls,
+      // all of which are compatible with a string value.
+      setFormData(prev => ({
+        ...prev,
+        [field as keyof Omit<TicketData, 'customerInfo' | 'tags' | 'attachments'>]: value,
+      }));
     }
   };
 
