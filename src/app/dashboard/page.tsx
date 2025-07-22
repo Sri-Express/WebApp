@@ -266,9 +266,20 @@ function DashboardContent() {
     );
   }
 
+  // --- Weather Widget Props Interface ---
+  interface WeatherWidgetsProps {
+    weatherData: WeatherData | null;
+    currentLocation: string;
+    loading: boolean;
+    onRefresh: (location: string) => void;
+    onLocationChange: (location: string) => void;
+    availableLocations: string[];
+    compact: boolean;
+  }
+
   // --- Weather Widget Component ---
-  const WeatherWidgets = ({ weatherData, currentLocation, loading, onRefresh, onLocationChange, availableLocations, compact }) => {
-    const handleRefresh = (e) => {
+  const WeatherWidgets = ({ weatherData, currentLocation, loading, onRefresh, onLocationChange, availableLocations, compact }: WeatherWidgetsProps) => {
+    const handleRefresh = (e: React.MouseEvent<HTMLButtonElement>) => {
       e.stopPropagation();
       onRefresh(currentLocation);
     };

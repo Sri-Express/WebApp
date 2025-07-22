@@ -23,10 +23,10 @@ interface Alert {
   id: string;
   type: string;
   priority: string;
-  timestamp: string;
+  timestamp: Date | string;
   title: string;
   message: string;
-  read: boolean;
+  read?: boolean; // Fix: Made read property optional to handle undefined
   recipients: string[];
 }
 

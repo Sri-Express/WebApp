@@ -858,7 +858,7 @@ export default function TicketDetails() {
                 </>
               )}
 
-              {ticket.status !== 'escalated' && ticket.status !== 'resolved' && ticket.status !== 'closed' && (
+              {!ticket.escalation?.escalated && ticket.status !== 'resolved' && ticket.status !== 'closed' && (
                 <button
                   onClick={escalateTicket}
                   disabled={updatingStatus}

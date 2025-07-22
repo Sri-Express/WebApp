@@ -42,7 +42,7 @@ interface Route {
   vehicleInfo: {
     type: 'bus' | 'train';
     capacity: number;
-    amenities: string[];
+    amenities?: string[]; // FIX: Made amenities optional
   };
   pricing: {
     basePrice: number;
@@ -67,15 +67,6 @@ interface RealtimeData {
   occupancyRate: number;
   lastUpdate: string;
 }
-
-// ✅ FIXED: Removed the unused 'Schedule' interface
-// interface Schedule {
-//   departureTime: string;
-//   arrivalTime: string;
-//   frequency: number;
-//   daysOfWeek: string[];
-//   isActive: boolean;
-// }
 
 export default function RouteDetailsPage() {
   const router = useRouter();
@@ -222,7 +213,7 @@ export default function RouteDetailsPage() {
       </div>
 
       {/* Amenities */}
-      {route?.vehicleInfo.amenities.length > 0 && (
+      {route?.vehicleInfo?.amenities && route.vehicleInfo.amenities.length > 0 && (
         <div style={{ backgroundColor: 'white', padding: '2rem', borderRadius: '0.75rem', border: '1px solid #e5e7eb', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
           <h3 style={{ fontSize: '1.5rem', fontWeight: '600', color: '#1F2937', marginBottom: '1rem' }}>Vehicle Amenities</h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
