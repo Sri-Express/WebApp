@@ -241,7 +241,7 @@ export default function AdvancedTrackingPage() {
         <div style={{ display: 'grid', gridTemplateColumns: viewMode === 'both' ? '1fr 450px' : '1fr', gap: '2rem', height: viewMode === 'map' ? '70vh' : 'auto' }}>
           {(viewMode === 'map' || viewMode === 'both') && (
             <div style={{ backgroundColor: currentThemeStyles.glassPanelBg, borderRadius: '1rem', boxShadow: currentThemeStyles.glassPanelShadow, backdropFilter: 'blur(12px)', border: currentThemeStyles.glassPanelBorder, overflow: 'hidden' }}>
-              <AdvancedMap vehicles={filteredVehicles.length > 0 ? filteredVehicles : vehicles} routes={routes} selectedVehicle={selectedVehicle} onVehicleSelect={setSelectedVehicle} height={viewMode === 'both' ? '650px' : '70vh'} theme={theme} />
+              <AdvancedMap vehicles={filteredVehicles.length > 0 ? filteredVehicles : vehicles} selectedVehicle={selectedVehicle} onVehicleSelect={setSelectedVehicle} height={viewMode === 'both' ? '650px' : '70vh'} />
             </div>
           )}
 
