@@ -6,9 +6,7 @@ import {
   ChartBarIcon,
   TruckIcon,
   StarIcon,
-  CurrencyDollarIcon,
-  ClockIcon,
-  BatteryIcon,
+  BoltIcon,
   SignalIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon
@@ -535,7 +533,7 @@ export default function FleetAnalyticsPage() {
                     alignItems: 'center',
                     gap: '0.5rem'
                   }}>
-                    <BatteryIcon width={16} height={16} color={getBatteryColor(analytics.vehicles.avgBattery)} />
+                    <BoltIcon width={16} height={16} color={getBatteryColor(analytics.vehicles.avgBattery)} />
                     <span style={{ color: '#94a3b8', fontSize: '0.875rem' }}>Average Battery</span>
                   </div>
                   <span style={{
