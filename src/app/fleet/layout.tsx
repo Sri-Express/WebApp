@@ -15,6 +15,42 @@ import {
   XMarkIcon
 } from '@heroicons/react/24/outline';
 
+// Fleet-specific layout styles
+const fleetLayoutStyles = `
+  .desktop-nav {
+    display: flex;
+    gap: 1.5rem;
+  }
+  
+  .mobile-menu-btn {
+    display: none;
+  }
+  
+  .mobile-menu {
+    display: none;
+  }
+  
+  @media (max-width: 768px) {
+    .desktop-nav {
+      display: none;
+    }
+    
+    .mobile-menu-btn {
+      display: block;
+    }
+    
+    .mobile-menu {
+      display: block;
+    }
+  }
+  
+  @media (min-width: 769px) {
+    .mobile-menu {
+      display: none;
+    }
+  }
+`;
+
 interface User {
   name: string;
   email: string;
@@ -32,6 +68,11 @@ export default function FleetLayout({
   const pathname = usePathname();
 
   useEffect(() => {
+    // Skip authentication check for login page
+    if (pathname === '/fleet/login') {
+      return;
+    }
+
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
     
@@ -47,7 +88,7 @@ export default function FleetLayout({
       console.error('Invalid user data');
       router.push('/fleet/login');
     }
-  }, [router]);
+  }, [router, pathname]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -65,7 +106,7 @@ export default function FleetLayout({
 
   const isActive = (href: string) => pathname === href;
 
-  if (!user) {
+  if (!user && pathname !== '/fleet/login') {
     return (
       <div style={{ 
         display: 'flex', 
@@ -78,6 +119,11 @@ export default function FleetLayout({
         Loading...
       </div>
     );
+  }
+
+  // For login page, render without navigation
+  if (pathname === '/fleet/login') {
+    return <>{children}</>;
   }
 
   return (
@@ -116,9 +162,8 @@ export default function FleetLayout({
           }}>
             <div style={{ 
               display: 'flex', 
-              gap: '1.5rem',
-              '@media (max-width: 768px)': { display: 'none' }
-            }}>
+              gap: '1.5rem'
+            }} className="desktop-nav">
               {navigation.map((item) => (
                 <Link
                   key={item.name}
@@ -147,7 +192,7 @@ export default function FleetLayout({
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ color: '#f1f5f9', fontSize: '0.875rem', fontWeight: '600' }}>
-                  {user.name}
+                  {user?.name}
                 </div>
                 <div style={{ color: '#94a3b8', fontSize: '0.75rem' }}>
                   Fleet Manager
@@ -176,9 +221,8 @@ export default function FleetLayout({
             {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="mobile-menu-btn"
               style={{
-                display: 'none',
-                '@media (max-width: 768px)': { display: 'block' },
                 padding: '0.5rem',
                 borderRadius: '0.5rem',
                 border: 'none',
@@ -194,10 +238,9 @@ export default function FleetLayout({
 
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
-          <div style={{
+          <div className="mobile-menu" style={{
             borderTop: '1px solid #334155',
-            padding: '1rem 0',
-            '@media (min-width: 769px)': { display: 'none' }
+            padding: '1rem 0'
           }}>
             {navigation.map((item) => (
               <Link
@@ -222,6 +265,9 @@ export default function FleetLayout({
           </div>
         )}
       </nav>
+
+      {/* Add CSS styles */}
+      <style jsx>{fleetLayoutStyles}</style>
 
       {/* Main Content */}
       <main>

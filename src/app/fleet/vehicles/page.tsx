@@ -13,7 +13,7 @@ import {
   ExclamationTriangleIcon,
   CogIcon,
   SignalIcon,
-  BatteryIcon
+  Square3Stack3DIcon
 } from '@heroicons/react/24/outline';
 
 interface Vehicle {
@@ -366,7 +366,7 @@ export default function FleetVehiclesPage() {
                     gap: '0.25rem',
                     marginBottom: '0.5rem'
                   }}>
-                    <BatteryIcon width={16} height={16} color={getBatteryColor(vehicle.batteryLevel)} />
+                    <Square3Stack3DIcon width={16} height={16} color={getBatteryColor(vehicle.batteryLevel)} />
                     <span style={{
                       color: getBatteryColor(vehicle.batteryLevel),
                       fontSize: '0.875rem',

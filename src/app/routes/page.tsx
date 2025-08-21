@@ -50,18 +50,42 @@ export default function RoutesPage() {
 
   const apiCall = useCallback(async (endpoint: string, options: RequestInit = {}) => {
     const token = getToken();
-    if (!token) { router.push('/login'); return null; }
     
-    let baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    let baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
     if (baseURL.endsWith('/api')) baseURL = baseURL.slice(0, -4);
     
     const fullURL = `${baseURL}/api${endpoint}`;
     
     try {
-      const response = await fetch(fullURL, { ...options, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, ...options.headers } });
-      if (!response.ok) { if (response.status === 401) { localStorage.removeItem('token'); localStorage.removeItem('user'); router.push('/login'); return null; } throw new Error(`API Error: ${response.status}`); }
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        ...options.headers
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      const response = await fetch(fullURL, { 
+        ...options, 
+        headers 
+      });
+      
+      if (!response.ok) { 
+        if (response.status === 401 && token) { 
+          localStorage.removeItem('token'); 
+          localStorage.removeItem('user'); 
+          router.push('/login'); 
+          return null; 
+        } 
+        console.error(`API Error: ${response.status} - ${response.statusText}`);
+        throw new Error(`API Error: ${response.status}`); 
+      }
       return await response.json();
-    } catch (error) { console.error('API call error:', error); return null; }
+    } catch (error) { 
+      console.error('API call error:', error); 
+      return null; 
+    }
   }, [router]);
 
   const loadRoutes = useCallback(async () => {
