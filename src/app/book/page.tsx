@@ -162,37 +162,32 @@ export default function BookingPage() {
     return errors;
   };
 
-  const handleSubmit = async () => { /* ... Unchanged submission logic ... */
+  const handleSubmit = async () => {
     const errors = validateBookingData();
     if (errors.length > 0) { setValidationErrors(errors); setError(`Validation failed: ${errors.join(', ')}`); return; }
-    setSubmitting(true);
-    setError('');
-    setValidationErrors([]);
-    try {
-      const submitData = {
-        routeId: bookingData.routeId,
-        scheduleId: bookingData.scheduleId,
-        travelDate: bookingData.travelDate,
-        departureTime: bookingData.departureTime,
-        passengerInfo: { ...bookingData.passengerInfo },
-        seatInfo: { seatNumber: bookingData.seatInfo.seatNumber || `${Math.floor(Math.random() * 50) + 1}W`, seatType: bookingData.seatInfo.seatType, preferences: bookingData.seatInfo.preferences || [] },
-        paymentMethod: bookingData.paymentMethod
-      };
-      const response = await apiCall('/bookings', { method: 'POST', body: JSON.stringify(submitData) });
-      if (response && response.booking) {
-        const bookingId = response.booking._id || response.booking.bookingId;
-        alert(`✅ Booking confirmed! Booking ID: ${response.booking.bookingId || 'N/A'}`);
-        router.push(`/bookings/${bookingId}`);
-      } else { throw new Error('Invalid response from booking API'); }
-    } catch (error: unknown) {
-      let errorMessage = 'Failed to create booking. Please try again.';
-      if (error instanceof Error && error.message) {
-        if (error.message.includes('validation')) errorMessage = 'Please check all required fields and try again.';
-        else if (error.message.includes('seat')) errorMessage = 'Selected seat is no longer available. Please choose another seat.';
-        else errorMessage = error.message;
+    
+    // Redirect to payment gateway with booking data
+    const submitData = {
+      routeId: bookingData.routeId,
+      scheduleId: bookingData.scheduleId,
+      travelDate: bookingData.travelDate,
+      departureTime: bookingData.departureTime,
+      passengerInfo: { ...bookingData.passengerInfo },
+      seatInfo: { seatNumber: bookingData.seatInfo.seatNumber || `${Math.floor(Math.random() * 50) + 1}W`, seatType: bookingData.seatInfo.seatType, preferences: bookingData.seatInfo.preferences || [] },
+      paymentMethod: bookingData.paymentMethod,
+      pricing: {
+        basePrice: route?.pricing.basePrice || 0,
+        totalAmount: calculatePrice() + Math.round(calculatePrice() * 0.02),
+        taxes: Math.round(calculatePrice() * 0.02),
+        discounts: (route?.pricing.basePrice || 0) - calculatePrice()
       }
-      setError(errorMessage);
-    } finally { setSubmitting(false); }
+    };
+    
+    // Store booking data in localStorage for payment gateway
+    localStorage.setItem('pendingBooking', JSON.stringify(submitData));
+    
+    // Redirect to payment gateway
+    router.push('/payment-gateway');
   };
   
   // --- Helper and Render Functions ---

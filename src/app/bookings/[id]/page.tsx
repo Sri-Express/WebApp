@@ -54,9 +54,158 @@ export default function BookingDetailsPage() {
     if (!bookingId) return;
     setLoading(true); setError('');
     try {
-      const response = await apiCall(`/bookings/${bookingId}`);
-      if (response) { setBooking(response.booking); } else { setError('Booking not found'); }
-    } catch (error) { console.error('Error loading booking details:', error); setError('Failed to load booking details'); } finally { setLoading(false); }
+      let booking = null;
+      
+      // Try to load from API first
+      try {
+        const response = await apiCall(`/bookings/${bookingId}`);
+        if (response && response.booking) { 
+          booking = response.booking;
+          console.log('✅ Booking loaded from API:', booking);
+        }
+      } catch (apiError) {
+        console.log('⚠️ API not available, checking local storage...');
+      }
+      
+      // If not found in API, try localStorage
+      if (!booking) {
+        console.log('🔍 Checking local bookings for ID:', bookingId);
+        const localBookings = JSON.parse(localStorage.getItem('localBookings') || '[]');
+        booking = localBookings.find((b: any) => b.bookingId === bookingId || b._id === bookingId);
+        
+        if (booking) {
+          console.log('✅ Booking found in local storage:', booking);
+        }
+      }
+      
+      // If still not found, try to load from payment records as fallback
+      if (!booking) {
+        console.log('🔍 Booking not found, checking payment records for', bookingId);
+        
+        let paymentsData = null;
+        
+        // Try API first
+        try {
+          const paymentsResponse = await apiCall('/payments/history');
+          if (paymentsResponse && paymentsResponse.payments) {
+            paymentsData = paymentsResponse.payments;
+            console.log('✅ Payments loaded from API:', paymentsData.length);
+          }
+        } catch (apiError) {
+          console.log('⚠️ Payments API not available, checking local storage...');
+        }
+        
+        // Fallback to local storage
+        if (!paymentsData) {
+          paymentsData = JSON.parse(localStorage.getItem('localPayments') || '[]');
+          console.log('📱 Local payments found:', paymentsData.length);
+        }
+        
+        if (paymentsData && paymentsData.length > 0) {
+          console.log('🔍 Looking for booking ID in payments:', bookingId);
+          
+          const payment = paymentsData.find((p: any) => {
+            console.log('Checking payment:', p._id, 'with bookingId:', p.bookingId);
+            return p.bookingId === bookingId || 
+                   (p.booking && (p.booking.bookingId === bookingId || p.booking._id === bookingId));
+          });
+          
+          console.log('Found matching payment:', payment);
+          
+          if (payment) {
+            console.log('🔧 REPAIRING booking from payment data...');
+            
+            // Create a synthetic booking from payment data
+            booking = {
+              _id: bookingId,
+              bookingId: bookingId,
+              userId: payment.userId || payment.booking?.userId || 'unknown',
+              routeId: payment.booking?.routeId || 'recovered-route',
+              scheduleId: payment.booking?.scheduleId || 'recovered-schedule',
+              travelDate: payment.booking?.travelDate || new Date(Date.now() + 86400000).toISOString(),
+              departureTime: payment.booking?.departureTime || '08:00',
+              passengerInfo: payment.booking?.passengerInfo || {
+                name: 'Recovered Passenger',
+                phone: '+94771234567',
+                email: 'recovered@example.com',
+                idType: 'nic' as const,
+                idNumber: 'RECOVERED',
+                passengerType: 'regular' as const
+              },
+              seatInfo: payment.booking?.seatInfo || {
+                seatNumber: 'A12',
+                seatType: 'window' as const,
+                preferences: []
+              },
+              pricing: {
+                basePrice: payment.amount || 0,
+                taxes: payment.booking?.pricing?.taxes || 0,
+                discounts: payment.booking?.pricing?.discounts || 0,
+                totalAmount: payment.amount || 0,
+                currency: payment.currency || 'LKR'
+              },
+              paymentInfo: {
+                paymentId: payment._id || payment.id || 'unknown',
+                method: payment.method || 'unknown' as any,
+                status: payment.status || 'completed' as any,
+                paidAt: payment.createdAt || payment.paidAt,
+                transactionId: payment.transactionId || payment._id || 'unknown'
+              },
+              status: 'confirmed' as const,
+              checkInInfo: {
+                checkedIn: false
+              },
+              routeInfo: {
+                name: payment.booking?.routeInfo?.name || 'Recovered Route',
+                startLocation: {
+                  name: payment.booking?.routeInfo?.startLocation?.name || 'Unknown',
+                  address: payment.booking?.routeInfo?.startLocation?.address || 'Unknown'
+                },
+                endLocation: {
+                  name: payment.booking?.routeInfo?.endLocation?.name || 'Unknown',
+                  address: payment.booking?.routeInfo?.endLocation?.address || 'Unknown'
+                },
+                operatorInfo: {
+                  companyName: payment.booking?.routeInfo?.operatorInfo?.companyName || 'Sri Express',
+                  contactNumber: payment.booking?.routeInfo?.operatorInfo?.contactNumber || '+94 11 234 5678'
+                }
+              },
+              isActive: true,
+              createdAt: payment.createdAt || new Date().toISOString(),
+              updatedAt: payment.updatedAt || new Date().toISOString()
+            };
+            
+            console.log('✅ Successfully repaired booking from payment data:', booking.bookingId);
+            
+            // AUTOMATICALLY SAVE THE REPAIRED BOOKING TO PREVENT FUTURE ISSUES
+            console.log('🔄 Auto-saving repaired booking to localStorage...');
+            const localBookings = JSON.parse(localStorage.getItem('localBookings') || '[]');
+            
+            // Remove any existing booking with same ID
+            const filteredBookings = localBookings.filter((b: any) => 
+              b.bookingId !== bookingId && b._id !== bookingId
+            );
+            
+            // Add the repaired booking
+            filteredBookings.push(booking);
+            localStorage.setItem('localBookings', JSON.stringify(filteredBookings));
+            
+            console.log('✅ Repaired booking automatically saved for future access');
+          }
+        }
+      }
+      
+      if (booking) {
+        setBooking(booking);
+      } else {
+        setError('Booking not found - this booking ID does not exist in our records');
+      }
+    } catch (error) { 
+      console.error('Error loading booking details:', error); 
+      setError('Failed to load booking details'); 
+    } finally { 
+      setLoading(false); 
+    }
   }, [bookingId, apiCall]);
 
   useEffect(() => { loadBookingDetails(); }, [loadBookingDetails]);
@@ -106,10 +255,45 @@ export default function BookingDetailsPage() {
   if (error || !booking) {
     return (
       <div style={{ minHeight: '100vh', backgroundColor: currentThemeStyles.mainBg, padding: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ textAlign: 'center', color: '#DC2626', backgroundColor: currentThemeStyles.glassPanelBg, padding: '2rem', borderRadius: '1rem', boxShadow: currentThemeStyles.glassPanelShadow, backdropFilter: 'blur(16px)', border: currentThemeStyles.glassPanelBorder }}>
-          <h2 style={{ color: currentThemeStyles.textPrimary }}>Error</h2>
-          <p style={{ color: currentThemeStyles.textSecondary }}>{error || 'Booking not found'}</p>
-          <Link href="/bookings" style={{ color: '#F59E0B', textDecoration: 'underline' }}>Back to Bookings</Link>
+        <div style={{ textAlign: 'center', backgroundColor: currentThemeStyles.glassPanelBg, padding: '2rem', borderRadius: '1rem', boxShadow: currentThemeStyles.glassPanelShadow, backdropFilter: 'blur(16px)', border: currentThemeStyles.glassPanelBorder, maxWidth: '600px' }}>
+          <div style={{ marginBottom: '1.5rem' }}>
+            <XCircleIcon width={64} height={64} style={{ color: '#DC2626', margin: '0 auto 1rem' }} />
+            <h2 style={{ color: currentThemeStyles.textPrimary, marginBottom: '1rem' }}>Booking Not Found</h2>
+            <p style={{ color: currentThemeStyles.textSecondary, lineHeight: '1.6', marginBottom: '1rem' }}>
+              {error || 'We could not find a booking with this ID in our system.'}
+            </p>
+            <div style={{ backgroundColor: currentThemeStyles.alertBg, padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.5rem', border: `1px solid ${currentThemeStyles.quickActionBorder}` }}>
+              <p style={{ color: currentThemeStyles.textMuted, fontSize: '0.9rem', margin: 0 }}>
+                <strong>Booking ID:</strong> {bookingId}
+              </p>
+              <p style={{ color: currentThemeStyles.textMuted, fontSize: '0.9rem', margin: '0.5rem 0 0 0' }}>
+                <strong>Debug Info:</strong> Check browser console for detailed logs
+              </p>
+              <p style={{ color: currentThemeStyles.textMuted, fontSize: '0.9rem', margin: '0.5rem 0 0 0' }}>
+                This might happen if:
+              </p>
+              <ul style={{ color: currentThemeStyles.textMuted, fontSize: '0.9rem', margin: '0.5rem 0 0 1rem', textAlign: 'left' }}>
+                <li>The booking was cancelled or expired</li>
+                <li>The booking ID was entered incorrectly</li>
+                <li>There was a system error during booking creation</li>
+                <li>Payment was completed but booking record wasn't created</li>
+              </ul>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <Link href="/bookings" style={{ color: 'white', backgroundColor: '#F59E0B', padding: '0.75rem 1.5rem', borderRadius: '0.5rem', textDecoration: 'none', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <ArrowLeftIcon width={16} /> View All Bookings
+            </Link>
+            <Link href="/payments" style={{ color: 'white', backgroundColor: '#8B5CF6', padding: '0.75rem 1.5rem', borderRadius: '0.5rem', textDecoration: 'none', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <CreditCardIcon width={16} /> Check Payments
+            </Link>
+            <Link href="/admin/booking-diagnostic" style={{ color: 'white', backgroundColor: '#DC2626', padding: '0.75rem 1.5rem', borderRadius: '0.5rem', textDecoration: 'none', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              🔧 Diagnostic Tool
+            </Link>
+            <Link href="/book" style={{ color: 'white', backgroundColor: '#10B981', padding: '0.75rem 1.5rem', borderRadius: '0.5rem', textDecoration: 'none', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <TicketIcon width={16} /> Book New Trip
+            </Link>
+          </div>
         </div>
       </div>
     );

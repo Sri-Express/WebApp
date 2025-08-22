@@ -125,6 +125,29 @@ export default function AdminPage() {
           </button>
 
           <Link
+            href="/admin/booking-diagnostic"
+            style={{
+              backgroundColor: '#8B5CF6',
+              color: 'white',
+              padding: '0.75rem 1.5rem',
+              border: 'none',
+              borderRadius: '0.5rem',
+              fontWeight: '600',
+              textDecoration: 'none',
+              transition: 'all 0.3s',
+              display: 'inline-block'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.backgroundColor = '#7C3AED';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.backgroundColor = '#8B5CF6';
+            }}
+          >
+            🔧 Booking Diagnostics
+          </Link>
+
+          <Link
             href="/"
             style={{
               backgroundColor: 'white',

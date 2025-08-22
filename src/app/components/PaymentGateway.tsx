@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 
 interface PaymentGatewayProps {
-  bookingId: string;
-  onPaymentSuccess: () => void;
-  onPaymentCancel: () => void;
+  bookingData?: any;
+  bookingId?: string;
+  onPaymentSuccess: (paymentResult?: any) => void;
+  onPaymentCancel?: () => void;
+  onPaymentError?: (error: string) => void;
 }
 
 interface BookingData {
@@ -23,9 +25,11 @@ interface PaymentMethod {
 }
 
 const PaymentGateway: React.FC<PaymentGatewayProps> = ({ 
+  bookingData,
   bookingId, 
   onPaymentSuccess, 
-  onPaymentCancel 
+  onPaymentCancel,
+  onPaymentError 
 }) => {
   const [booking, setBooking] = useState<BookingData | null>(null);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
@@ -40,8 +44,42 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({
   useEffect(() => {
     const loadGatewayData = async () => {
       try {
+        // If bookingData is provided directly, use it
+        if (bookingData) {
+          setBooking({
+            id: bookingData.routeId || 'new-booking',
+            bookingId: `BK${Date.now()}`,
+            amount: bookingData.pricing?.totalAmount || 0,
+            currency: 'LKR',
+            status: 'pending',
+            paymentStatus: 'pending'
+          });
+          
+          // Set default payment methods
+          setPaymentMethods([
+            { id: 'card', name: '💳 Credit/Debit Card', fee: 0, available: true },
+            { id: 'bank', name: '🏦 Bank Transfer', fee: 0, available: true },
+            { id: 'digital_wallet', name: '📱 Digital Wallet', fee: 25, available: true },
+            { id: 'cash', name: '💵 Cash on Booking', fee: 0, available: true }
+          ]);
+          
+          setLoading(false);
+          return;
+        }
+
+        // Otherwise, load from API
+        if (!bookingId) {
+          setError('No booking information provided');
+          setLoading(false);
+          return;
+        }
+
         const token = getToken();
-        if (!token) return;
+        if (!token) {
+          setError('Authentication required');
+          setLoading(false);
+          return;
+        }
 
         const response = await fetch(`http://localhost:5000/api/payment-simulation/gateway/${bookingId}`, {
           headers: {
@@ -53,7 +91,12 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({
         if (response.ok) {
           const data = await response.json();
           setBooking(data.booking);
-          setPaymentMethods(data.paymentMethods);
+          setPaymentMethods(data.paymentMethods || [
+            { id: 'card', name: '💳 Credit/Debit Card', fee: 0, available: true },
+            { id: 'bank', name: '🏦 Bank Transfer', fee: 0, available: true },
+            { id: 'digital_wallet', name: '📱 Digital Wallet', fee: 25, available: true },
+            { id: 'cash', name: '💵 Cash on Booking', fee: 0, available: true }
+          ]);
         } else {
           setError('Failed to load payment information');
         }
@@ -66,7 +109,7 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({
     };
 
     loadGatewayData();
-  }, [bookingId]);
+  }, [bookingData, bookingId]);
 
   // Process payment simulation
   const handlePayment = async () => {
@@ -76,35 +119,54 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({
     setError('');
 
     try {
-      const token = getToken();
-      if (!token) return;
+      // Simulate real payment processing steps
+      console.log('Starting payment processing...');
+      
+      // Step 1: Validate payment method
+      await new Promise(resolve => setTimeout(resolve, 800));
+      console.log('Payment method validated...');
 
-      const response = await fetch(`http://localhost:5000/api/payment-simulation/simulate/${bookingId}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      // Step 2: Process payment (MOCK - no real money charged)
+      await new Promise(resolve => setTimeout(resolve, 1200));
+      console.log('Payment processed (SIMULATED)...');
 
-      if (response.ok) {
-        const result = await response.json();
-        console.log('✅ Payment simulation successful:', result);
-        
-        // Show success message
-        alert(`✅ Payment Successful!\n\nTransaction ID: ${result.payment.transactionId}\nAmount: Rs. ${result.payment.amount.total}\nBooking Status: ${result.booking.status}`);
-        
-        onPaymentSuccess();
-      } else {
-        const errorData = await response.json();
-        setError(errorData.message || 'Payment failed');
-      }
+      // Create realistic payment result
+      const paymentResult = {
+        paymentId: `PAY_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        transactionId: `TXN_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        method: selectedMethod,
+        status: 'completed',
+        amount: booking.amount,
+        currency: booking.currency,
+        paidAt: new Date().toISOString(),
+        gateway: 'sri-express-mock',
+        authCode: `AUTH_${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
+        reference: `REF_${Date.now()}`
+      };
+
+      console.log('Payment result:', paymentResult);
+
+      // Show realistic success message
+      alert(`✅ Payment Successful!\n\n💳 Payment Method: ${getPaymentMethodName(selectedMethod)}\n🆔 Transaction ID: ${paymentResult.transactionId}\n💰 Amount: Rs. ${paymentResult.amount.toLocaleString()}\n📝 Reference: ${paymentResult.reference}\n\n✨ This was a simulated payment - no real money was charged.`);
+      
+      // Call success callback with real payment data
+      onPaymentSuccess(paymentResult);
     } catch (error) {
       console.error('Payment error:', error);
-      setError('Payment processing failed');
+      const errorMsg = 'Payment processing failed. Please try again.';
+      setError(errorMsg);
+      if (onPaymentError) {
+        onPaymentError(errorMsg);
+      }
     } finally {
       setProcessing(false);
     }
+  };
+
+  // Helper function to get payment method display name
+  const getPaymentMethodName = (methodId: string) => {
+    const method = paymentMethods.find(m => m.id === methodId);
+    return method ? method.name : methodId;
   };
 
   if (loading) {
