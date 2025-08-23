@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useTheme } from '@/app/context/ThemeContext';
 import ThemeSwitcher from '@/app/components/ThemeSwitcher';
@@ -91,16 +91,16 @@ export default function BookingDiagnosticPage() {
 
   const currentThemeStyles = theme === 'dark' ? darkTheme : lightTheme;
 
-  const log = (message: string, type: DiagnosticLog['type'] = 'info') => {
+  const log = useCallback((message: string, type: DiagnosticLog['type'] = 'info') => {
     const timestamp = new Date().toLocaleTimeString();
     setLogs(prev => [...prev, { timestamp, message, type }]);
-  };
+  }, []);
 
   const clearLogs = () => {
     setLogs([]);
   };
 
-  const refreshStorageStatus = () => {
+  const refreshStorageStatus = useCallback(() => {
     log('🔄 Refreshing storage status...', 'info');
     
     const bookings = JSON.parse(localStorage.getItem('localBookings') || '[]');
@@ -110,9 +110,9 @@ export default function BookingDiagnosticPage() {
     setLocalPayments(payments);
     
     log(`📊 Storage status refreshed - Bookings: ${bookings.length}, Payments: ${payments.length}`, 'success');
-  };
+  }, [log]);
 
-  const investigateBookingId = () => {
+  const investigateBookingId = useCallback(() => {
     if (!targetBookingId) {
       log('❌ Please enter a booking ID to investigate', 'error');
       return;
@@ -168,7 +168,7 @@ export default function BookingDiagnosticPage() {
     
     log(`🏁 Investigation completed for ${targetBookingId}`, 'info');
     setIsLoading(false);
-  };
+  }, [targetBookingId, localBookings, localPayments, log]);
 
   const repairBookingFromPayment = () => {
     if (!targetBookingId) {
@@ -452,7 +452,7 @@ export default function BookingDiagnosticPage() {
     log('🔍 Booking Diagnostic Tool initialized', 'info');
     refreshStorageStatus();
     investigateBookingId();
-  }, []);
+  }, [investigateBookingId, refreshStorageStatus, log]);
 
   const getStatusColor = (type: DiagnosticLog['type']) => {
     switch (type) {

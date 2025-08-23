@@ -85,7 +85,27 @@ export default function RouteDetailsPage() {
     const token = getToken();
     const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
     const fullURL = `${baseURL}/api${endpoint}`;
-    const headers: Record<string, string> = { 'Content-Type': 'application/json', ...options.headers };
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    
+    // Add any additional headers from options
+    if (options.headers) {
+      const optionsHeaders = options.headers;
+      if (optionsHeaders instanceof Headers) {
+        optionsHeaders.forEach((value, key) => {
+          headers[key] = value;
+        });
+      } else if (Array.isArray(optionsHeaders)) {
+        optionsHeaders.forEach(([key, value]) => {
+          headers[key] = value;
+        });
+      } else {
+        Object.entries(optionsHeaders).forEach(([key, value]) => {
+          if (typeof value === 'string') {
+            headers[key] = value;
+          }
+        });
+      }
+    }
     
     // Add auth header only if token exists
     if (token) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -12,7 +12,7 @@ export default function MockPaymentGatewayPage() {
   const [bookingData, setBookingData] = useState<any>(null);
 
   // Mock booking data for testing
-  const mockBookingData = {
+  const mockBookingData = useMemo(() => ({
     routeId: 'RT001',
     scheduleId: 'SCH001',
     travelDate: '2024-12-25',
@@ -52,7 +52,7 @@ export default function MockPaymentGatewayPage() {
         contactNumber: '+94 11 234 5678'
       }
     }
-  };
+  }), []);
 
   useEffect(() => {
     // Try to get booking data from localStorage, otherwise use mock data
@@ -66,7 +66,7 @@ export default function MockPaymentGatewayPage() {
     } else {
       setBookingData(mockBookingData);
     }
-  }, []);
+  }, [mockBookingData]);
 
   const processPayment = async (paymentMethod: string) => {
     setLoading(true);
