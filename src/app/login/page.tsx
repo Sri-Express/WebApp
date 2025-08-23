@@ -83,7 +83,12 @@ export default function LoginPage() {
         throw new Error(data.message || 'Login failed');
       }
 
+      // Store both token and user data
       localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      
+      console.log('Login successful:', data.user); // Debug log
+      
       router.push('/dashboard'); // Redirect to the admin dashboard
     } catch (err: unknown) {
       if (err instanceof Error) {

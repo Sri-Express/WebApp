@@ -39,7 +39,9 @@ export default function PaymentGatewayPage() {
     if (!bookingData) return;
 
     try {
-      // Get token for API call
+      console.log('🎉 Payment successful, processing booking...');
+      
+      // Get token for API calls
       const token = localStorage.getItem('token');
       if (!token) {
         router.push('/login');
@@ -48,48 +50,39 @@ export default function PaymentGatewayPage() {
 
       // Generate a unique booking ID
       const bookingId = `BK${Date.now()}${Math.floor(Math.random() * 1000)}`;
+      const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
-      // Create booking with real data from form + payment information
+      console.log('🎫 Generated booking ID:', bookingId);
+
+      // Step 1: Create booking with payment info (confirmed status)
       const bookingWithPayment = {
         ...bookingData,
-        _id: bookingId,
         bookingId: bookingId,
         paymentInfo: {
           paymentId: paymentResult.paymentId,
           transactionId: paymentResult.transactionId,
           method: paymentResult.method,
-          status: 'completed',
-          paidAt: paymentResult.paidAt,
-          authCode: paymentResult.authCode,
-          reference: paymentResult.reference,
-          gateway: paymentResult.gateway
+          status: 'completed', // ✅ Payment completed
+          paidAt: paymentResult.paidAt
         },
-        status: 'confirmed', // Set booking as confirmed after payment
+        status: 'confirmed', // ✅ Booking confirmed
         checkInInfo: {
           checkedIn: false
         },
-        isActive: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        isActive: true
       };
 
-      console.log('🎟️ Creating booking with payment info:', { bookingId, amount: bookingData.pricing.totalAmount });
-
-      // CRITICAL: Always store booking locally first to ensure it exists
-      console.log('📱 Storing booking locally (primary backup)...');
+      // Step 2: Store locally FIRST (ensures data safety)
+      console.log('💾 Storing booking locally (primary backup)...');
       const existingBookings = JSON.parse(localStorage.getItem('localBookings') || '[]');
-      
-      // Remove any existing booking with same ID (cleanup)
       const filteredBookings = existingBookings.filter((b: any) => 
         b.bookingId !== bookingId && b._id !== bookingId
       );
-      
-      // Add the new booking
       filteredBookings.push(bookingWithPayment);
       localStorage.setItem('localBookings', JSON.stringify(filteredBookings));
-      console.log('✅ Booking guaranteed to be stored locally');
+      console.log('✅ Booking safely stored locally');
 
-      // Create comprehensive payment record with full booking data
+      // Step 3: Create payment record locally
       const paymentRecord = {
         _id: `payment_${Date.now()}`,
         bookingId: bookingId,
@@ -99,27 +92,23 @@ export default function PaymentGatewayPage() {
         status: 'completed',
         transactionId: paymentResult.transactionId,
         paymentId: paymentResult.paymentId,
-        authCode: paymentResult.authCode,
-        reference: paymentResult.reference,
-        gateway: paymentResult.gateway,
         userId: bookingData.userId,
         createdAt: paymentResult.paidAt,
-        updatedAt: new Date().toISOString(),
-        booking: bookingWithPayment // Include FULL booking data for recovery
+        booking: bookingWithPayment // Full booking data for recovery
       };
 
-      // Store payment record locally first (backup)
-      console.log('💳 Storing payment record locally (primary backup)...');
       const existingPayments = JSON.parse(localStorage.getItem('localPayments') || '[]');
       existingPayments.push(paymentRecord);
       localStorage.setItem('localPayments', JSON.stringify(existingPayments));
-      console.log('✅ Payment record guaranteed to be stored locally');
+      console.log('✅ Payment record safely stored locally');
 
-      // Try to sync with API (best effort, don't fail if API is down)
+      // Step 4: Try to sync with backend (best effort)
+      let backendSyncSuccess = false;
+      
       try {
-        const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+        console.log('🔄 Attempting backend sync...');
         
-        // Try to create booking via API
+        // 4a. Create booking via API
         const bookingResponse = await fetch(`${baseURL}/api/bookings`, {
           method: 'POST',
           headers: {
@@ -130,60 +119,64 @@ export default function PaymentGatewayPage() {
         });
 
         if (bookingResponse.ok) {
-          const result = await bookingResponse.json();
-          console.log('✅ Booking synced to API successfully:', result);
-        } else {
-          console.warn('⚠️ API booking sync failed, but booking is safe in localStorage');
-        }
+          const bookingResult = await bookingResponse.json();
+          console.log('✅ Booking synced to backend:', bookingResult.booking?.bookingId);
+          
+          // 4b. Confirm payment via API to ensure status is updated
+          const paymentConfirmResponse = await fetch(`${baseURL}/api/payments/confirm`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              bookingId: bookingId,
+              transactionId: paymentResult.transactionId,
+              paymentData: paymentResult
+            })
+          });
 
-        // Try to create payment record via API
-        const paymentResponse = await fetch(`${baseURL}/api/payments`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify(paymentRecord)
-        });
-        
-        if (paymentResponse.ok) {
-          console.log('✅ Payment record synced to API successfully');
+          if (paymentConfirmResponse.ok) {
+            console.log('✅ Payment status confirmed in backend');
+            backendSyncSuccess = true;
+          } else {
+            console.warn('⚠️ Payment confirmation failed, but booking exists');
+          }
         } else {
-          console.warn('⚠️ API payment sync failed, but payment is safe in localStorage');
+          console.warn('⚠️ Backend booking creation failed, using local storage');
         }
       } catch (apiError) {
-        console.warn('⚠️ API not available for sync, but data is safely stored locally:', apiError);
+        console.warn('⚠️ Backend sync failed, but data is safe locally:', apiError);
       }
 
-      // Clear pending booking from localStorage
+      // Step 5: Clean up and navigate
       localStorage.removeItem('pendingBooking');
-
-      console.log('🎉 Payment and booking creation completed successfully!');
-      console.log('📊 Final booking ID:', bookingId);
-
-      // Small delay to ensure storage operations complete
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      // Verify booking was stored correctly
-      const verifyBookings = JSON.parse(localStorage.getItem('localBookings') || '[]');
-      const foundBooking = verifyBookings.find((b: any) => b.bookingId === bookingId || b._id === bookingId);
       
-      if (foundBooking) {
-        console.log('✅ Booking verification successful, proceeding to details page');
-        router.push(`/bookings/${bookingId}`);
-      } else {
-        console.error('❌ Booking verification failed!');
-        setError(`Booking was created but verification failed. Your booking ID is: ${bookingId}. Please contact support.`);
-      }
+      console.log('🎊 Booking process completed!');
+      console.log('📊 Backend sync status:', backendSyncSuccess ? 'Success' : 'Failed (using local storage)');
+      console.log('🎫 Final booking ID:', bookingId);
+
+      // Small delay to ensure all operations complete
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      // Navigate to booking details
+      router.push(`/bookings/${bookingId}`);
+
     } catch (error) {
-      console.error('❌ Critical error in payment processing:', error);
+      console.error('💥 Critical error in payment processing:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       setError(`Payment processing failed: ${errorMessage}. Please contact support with your payment reference: ${paymentResult?.reference || 'N/A'}`);
     }
   };
 
   const handlePaymentError = (error: string) => {
+    console.error('💥 Payment error:', error);
     setError(error);
+  };
+
+  const handlePaymentCancel = () => {
+    console.log('❌ Payment cancelled by user');
+    router.push('/book');
   };
 
   if (error) {
@@ -191,7 +184,7 @@ export default function PaymentGatewayPage() {
       <div style={{ minHeight: '100vh', backgroundColor: currentThemeStyles.mainBg, padding: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center', backgroundColor: currentThemeStyles.glassPanelBg, padding: '2rem', borderRadius: '1rem', border: currentThemeStyles.glassPanelBorder, boxShadow: currentThemeStyles.glassPanelShadow, backdropFilter: 'blur(12px)', maxWidth: '500px' }}>
           <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>❌</div>
-          <h2 style={{ color: '#DC2626', marginBottom: '1rem' }}>Booking Not Found</h2>
+          <h2 style={{ color: '#DC2626', marginBottom: '1rem' }}>Booking Error</h2>
           <p style={{ color: currentThemeStyles.textSecondary, marginBottom: '1.5rem' }}>{error}</p>
           
           <div style={{ backgroundColor: '#FEF3C7', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.5rem', border: '1px solid #F59E0B' }}>
@@ -227,7 +220,7 @@ export default function PaymentGatewayPage() {
             }}>
               🔍 Search Routes
             </Link>
-            <Link href="/debug-booking-data.html" style={{ 
+            <Link href="/bookings" style={{ 
               backgroundColor: '#8B5CF6', 
               color: 'white', 
               padding: '0.75rem 1.5rem', 
@@ -236,7 +229,7 @@ export default function PaymentGatewayPage() {
               fontWeight: '600',
               display: 'inline-block'
             }}>
-              🐛 Debug Tool (Testing)
+              📋 View Existing Bookings
             </Link>
           </div>
         </div>
@@ -273,6 +266,9 @@ export default function PaymentGatewayPage() {
           </Link>
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
             <ThemeSwitcher />
+            <Link href="/book" style={{ color: '#d1d5db', textDecoration: 'none', fontWeight: '500' }}>
+              ← Back to Booking
+            </Link>
           </div>
         </div>
       </nav>
@@ -282,6 +278,7 @@ export default function PaymentGatewayPage() {
         <PaymentGateway
           bookingData={bookingData}
           onPaymentSuccess={handlePaymentSuccess}
+          onPaymentCancel={handlePaymentCancel}
           onPaymentError={handlePaymentError}
         />
       </div>

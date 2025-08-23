@@ -83,12 +83,26 @@ export default function RouteDetailsPage() {
 
   const apiCall = useCallback(async (endpoint: string, options: RequestInit = {}) => {
     const token = getToken();
-    if (!token) { router.push('/login'); return null; }
     const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
     const fullURL = `${baseURL}/api${endpoint}`;
+    const headers: Record<string, string> = { 'Content-Type': 'application/json', ...options.headers };
+    
+    // Add auth header only if token exists
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
     try {
-      const response = await fetch(fullURL, { ...options, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, ...options.headers } });
-      if (!response.ok) { if (response.status === 401) { localStorage.removeItem('token'); localStorage.removeItem('user'); router.push('/login'); return null; } throw new Error(`API Error: ${response.status}`); }
+      const response = await fetch(fullURL, { ...options, headers });
+      if (!response.ok) { 
+        if (response.status === 401 && token) { 
+          localStorage.removeItem('token'); 
+          localStorage.removeItem('user'); 
+          router.push('/login'); 
+          return null; 
+        } 
+        throw new Error(`API Error: ${response.status}`); 
+      }
       return await response.json();
     } catch (error) { console.error('API call error:', error); return null; }
   }, [router]);
