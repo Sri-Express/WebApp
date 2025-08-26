@@ -1,4 +1,4 @@
-// src/app/bookings/page.tsx - THE COMPLETE, FINAL, AND FULLY STYLED VERSION
+// src/app/bookings/page.tsx - ENHANCED VERSION WITH LOCAL STORAGE FALLBACK
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -10,14 +10,54 @@ import AnimatedBackground from '@/app/components/AnimatedBackground';
 import { ShieldCheckIcon, TicketIcon, CheckCircleIcon, ClockIcon, XCircleIcon, QrCodeIcon, CalendarDaysIcon, CurrencyDollarIcon, UserIcon, DevicePhoneMobileIcon, AtSymbolIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
 
 // --- Data Interfaces ---
-interface Booking { _id: string; bookingId: string; routeId: string; routeName?: string; travelDate: string; departureTime: string; passengerInfo: { name: string; phone: string; email: string; passengerType: string; }; seatInfo: { seatNumber: string; seatType: string; }; pricing: { totalAmount: number; currency: string; }; paymentInfo: { method: string; status: 'pending' | 'completed' | 'failed' | 'refunded'; transactionId: string; }; status: 'confirmed' | 'pending' | 'cancelled' | 'completed' | 'no_show'; qrCode?: string; checkInInfo: { checkedIn: boolean; checkInTime?: string; }; createdAt: string; updatedAt: string; }
-interface BookingStats { totalBookings: number; confirmedBookings: number; completedBookings: number; cancelledBookings: number; }
+interface Booking { 
+  _id: string; 
+  bookingId: string; 
+  routeId: string; 
+  routeName?: string; 
+  travelDate: string; 
+  departureTime: string; 
+  passengerInfo: { 
+    name: string; 
+    phone: string; 
+    email: string; 
+    passengerType: string; 
+  }; 
+  seatInfo: { 
+    seatNumber: string; 
+    seatType: string; 
+  }; 
+  pricing: { 
+    totalAmount: number; 
+    currency: string; 
+  }; 
+  paymentInfo: { 
+    method: string; 
+    status: 'pending' | 'completed' | 'failed' | 'refunded'; 
+    transactionId: string; 
+  }; 
+  status: 'confirmed' | 'pending' | 'cancelled' | 'completed' | 'no_show'; 
+  qrCode?: string; 
+  checkInInfo: { 
+    checkedIn: boolean; 
+    checkInTime?: string; 
+  }; 
+  createdAt: string; 
+  updatedAt: string;
+}
+
+interface BookingStats { 
+  totalBookings: number; 
+  confirmedBookings: number; 
+  completedBookings: number; 
+  cancelledBookings: number; 
+}
 
 export default function BookingsPage() {
   const router = useRouter();
   const { theme } = useTheme();
   
-  // --- State Management ---
+  // State Management
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [stats, setStats] = useState<BookingStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -36,66 +76,177 @@ export default function BookingsPage() {
 
   // --- API and Data Logic ---
   const getToken = () => typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  
   const apiCall = useCallback(async (endpoint: string, options: RequestInit = {}) => {
     const token = getToken();
-    if (!token) { router.push('/login'); return null; }
+    if (!token) { 
+      console.log('No token found, redirecting to login');
+      router.push('/login'); 
+      return null; 
+    }
+    
     const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
     const fullURL = `${baseURL}/api${endpoint}`;
+    
+    console.log('Making API call to:', fullURL);
+    console.log('Request options:', {
+      method: options.method || 'GET',
+      hasToken: !!token,
+      tokenLength: token?.length || 0
+    });
+    
     try {
-      const response = await fetch(fullURL, { ...options, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, ...options.headers } });
+      const response = await fetch(fullURL, { 
+        ...options, 
+        headers: { 
+          'Content-Type': 'application/json', 
+          'Authorization': `Bearer ${token}`, 
+          ...options.headers 
+        } 
+      });
+      
+      console.log('API response status:', response.status);
+      console.log('API response ok:', response.ok);
+      
       if (!response.ok) {
-        if (response.status === 401) { localStorage.removeItem('token'); localStorage.removeItem('user'); router.push('/login'); return null; }
-        throw new Error(`API Error: ${response.status}`);
+        const errorText = await response.text();
+        console.error('API Error Response:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText
+        });
+        
+        if (response.status === 401) { 
+          console.log('Unauthorized, clearing auth and redirecting');
+          localStorage.removeItem('token'); 
+          localStorage.removeItem('user'); 
+          router.push('/login'); 
+          return null; 
+        }
+        throw new Error(`API Error: ${response.status} - ${errorText}`);
       }
-      return await response.json();
-    } catch (error) { console.error('API call error:', error); return null; }
+      
+      const data = await response.json();
+      console.log('API response data keys:', Object.keys(data));
+      console.log('Bookings count in response:', data.bookings?.length || 0);
+      
+      return data;
+    } catch (error) { 
+      console.error('API call error:', {
+        endpoint: fullURL,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : 'No stack'
+      }); 
+      throw error;
+    }
   }, [router]);
 
+  // Simple loadBookings function - just API call
   const loadBookings = useCallback(async () => {
-    setLoading(true); setError('');
+    console.log('Loading bookings...');
+    setLoading(true); 
+    setError('');
+
     try {
       const params = new URLSearchParams({ sortBy, sortOrder: 'desc' });
       if (filter !== 'all') params.append('status', filter);
+      
       const response = await apiCall(`/bookings?${params.toString()}`);
-      if (response) { setBookings(response.bookings || []); setStats(response.stats || null); } 
-      else { setError('Failed to load bookings'); }
-    } catch (error) { console.error('Error loading bookings:', error); setError('Failed to load bookings'); } 
-    finally { setLoading(false); }
+      
+      if (response) {
+        console.log('Bookings loaded:', response.bookings?.length || 0);
+        console.log('Sample booking statuses:', response.bookings?.slice(0, 3).map((b: any) => ({
+          id: b.bookingId,
+          status: b.status,
+          paymentStatus: b.paymentInfo?.status
+        })) || []);
+        
+        setBookings(response.bookings || []);
+        setStats(response.stats || null);
+      } else {
+        setError('Failed to load bookings');
+      }
+    } catch (apiError) {
+      console.error('Failed to load bookings:', apiError);
+      setError(`Failed to load bookings: ${apiError instanceof Error ? apiError.message : 'Unknown error'}`);
+    } finally {
+      setLoading(false);
+    }
   }, [filter, sortBy, apiCall]);
 
-  useEffect(() => { loadBookings(); }, [loadBookings]);
+  useEffect(() => { 
+    loadBookings(); 
+  }, [loadBookings]);
 
   const handleCancelBooking = async (bookingId: string) => {
-    setCancelling(true); setError('');
+    console.log('=== CANCEL BOOKING REQUEST ===');
+    console.log('Booking ID:', bookingId);
+    
+    setCancelling(true); 
+    setError('');
+    
     try {
-      const response = await apiCall(`/bookings/${bookingId}/cancel`, { method: 'PUT', body: JSON.stringify({ reason: 'User requested cancellation' }) });
-      if (response) { setShowCancelModal(false); setBookingToCancel(null); loadBookings(); } 
-      else { setError('Failed to cancel booking'); }
-    } catch (error) { console.error('Error cancelling booking:', error); setError('Failed to cancel booking'); } 
-    finally { setCancelling(false); }
+      const response = await apiCall(`/bookings/${bookingId}/cancel`, { 
+        method: 'PUT', 
+        body: JSON.stringify({ reason: 'User requested cancellation' }) 
+      });
+      
+      if (response) { 
+        console.log('Booking cancelled successfully via API');
+        setShowCancelModal(false); 
+        setBookingToCancel(null); 
+        loadBookings(); 
+      } else {
+        setError('Failed to cancel booking');
+      }
+    } catch (error) { 
+      console.error('Cancellation failed:', error);
+      setError('Failed to cancel booking');
+    } finally { 
+      setCancelling(false); 
+    }
   };
 
   const handleGenerateQR = async (bookingId: string) => {
-    const response = await apiCall(`/bookings/${bookingId}/qr`, { method: 'POST' });
-    if (response && response.qrCode) {
-      const newWindow = window.open('', '_blank');
-      if (newWindow) newWindow.document.write(`<html><body style="text-align: center; padding: 2rem; font-family: sans-serif; background: #f0f0f0;"><h2>Your Ticket QR Code</h2><img src="${response.qrCode}" alt="QR Code" style="max-width: 300px;" /><p>Show this to the conductor</p><button onclick="window.print()">Print</button></body></html>`);
-    } else { alert('Failed to generate QR code'); }
+    console.log('=== GENERATE QR CODE REQUEST ===');
+    console.log('Booking ID:', bookingId);
+    
+    // Navigate to dedicated QR page
+    router.push(`/qr/${bookingId}`);
   };
 
   // --- Helper Functions ---
   const getStatusStyle = (status: string) => {
-    const styles = { confirmed: { color: '#10B981', label: 'Confirmed' }, pending: { color: '#F59E0B', label: 'Pending' }, cancelled: { color: '#EF4444', label: 'Cancelled' }, completed: { color: '#3B82F6', label: 'Completed' }, no_show: { color: '#6B7280', label: 'No Show' } };
+    const styles = { 
+      confirmed: { color: '#10B981', label: 'Confirmed' }, 
+      pending: { color: '#F59E0B', label: 'Pending' }, 
+      cancelled: { color: '#EF4444', label: 'Cancelled' }, 
+      completed: { color: '#3B82F6', label: 'Completed' }, 
+      no_show: { color: '#6B7280', label: 'No Show' } 
+    };
     return styles[status as keyof typeof styles] || { color: '#6B7280', label: 'Unknown' };
   };
+  
   const getPaymentStatusStyle = (status: string) => {
-    const styles = { completed: { color: '#10B981' }, pending: { color: '#F59E0B' }, failed: { color: '#EF4444' }, refunded: { color: '#8B5CF6' } };
+    const styles = { 
+      completed: { color: '#10B981' }, 
+      pending: { color: '#F59E0B' }, 
+      failed: { color: '#EF4444' }, 
+      refunded: { color: '#8B5CF6' } 
+    };
     return styles[status as keyof typeof styles] || { color: '#6B7280' };
   };
+  
   const formatPrice = (price: number) => `Rs. ${price.toLocaleString()}`;
   const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString();
   const formatDateTime = (dateString: string) => new Date(dateString).toLocaleString();
-  const canCancelBooking = (booking: Booking) => new Date(booking.travelDate).getTime() - new Date().getTime() > 7200000 && booking.status === 'confirmed';
+  const canCancelBooking = (booking: Booking) => {
+    try {
+      return new Date(booking.travelDate).getTime() - new Date().getTime() > 7200000 && booking.status === 'confirmed';
+    } catch {
+      return false;
+    }
+  };
 
   if (loading && bookings.length === 0) {
     return (
@@ -118,10 +269,8 @@ export default function BookingsPage() {
         @media (max-width: 768px) { .nav-links { display: none; } .stats-grid { grid-template-columns: 1fr 1fr !important; } .booking-card-grid { grid-template-columns: 1fr !important; } }
       `}</style>
       
-      {/* --- Animated Background Component --- */}
       <AnimatedBackground currentThemeStyles={currentThemeStyles} />
 
-      {/* --- Main Content --- */}
       <div style={{ position: 'relative', zIndex: 10 }}>
         <nav style={{ backgroundColor: 'rgba(30, 41, 59, 0.92)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(251, 191, 36, 0.3)', padding: '1rem 0' }}>
           <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -171,23 +320,59 @@ export default function BookingsPage() {
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: currentThemeStyles.textSecondary }}>Filter by Status</label>
                 <select value={filter} onChange={(e) => setFilter(e.target.value)} className="form-select" style={{ backgroundColor: currentThemeStyles.alertBg, color: currentThemeStyles.textPrimary, border: `1px solid ${currentThemeStyles.quickActionBorder}` }}>
-                  <option value="all">All Bookings</option><option value="confirmed">Confirmed</option><option value="pending">Pending</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option>
+                  <option value="all">All Bookings</option>
+                  <option value="confirmed">Confirmed</option>
+                  <option value="pending">Pending</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
                 </select>
               </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: currentThemeStyles.textSecondary }}>Sort By</label>
                 <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="form-select" style={{ backgroundColor: currentThemeStyles.alertBg, color: currentThemeStyles.textPrimary, border: `1px solid ${currentThemeStyles.quickActionBorder}` }}>
-                  <option value="date">Travel Date</option><option value="created">Booking Date</option><option value="amount">Amount</option>
+                  <option value="date">Travel Date</option>
+                  <option value="created">Booking Date</option>
+                  <option value="amount">Amount</option>
                 </select>
+              </div>
+              <div style={{ marginLeft: 'auto' }}>
+                <button 
+                  onClick={loadBookings} 
+                  disabled={loading}
+                  style={{ 
+                    backgroundColor: loading ? '#9CA3AF' : '#F59E0B', 
+                    color: 'white', 
+                    padding: '0.75rem 1rem', 
+                    border: 'none', 
+                    borderRadius: '0.5rem', 
+                    cursor: loading ? 'not-allowed' : 'pointer', 
+                    fontSize: '0.9rem', 
+                    fontWeight: '500' 
+                  }}
+                >
+                  {loading ? '🔄 Refreshing...' : '🔄 Refresh'}
+                </button>
               </div>
             </div>
 
-            {error && <div style={{ backgroundColor: 'rgba(254, 226, 226, 0.8)', color: '#DC2626', padding: '1rem', borderRadius: '0.5rem', border: '1px solid #FCA5A5', marginBottom: '2rem', backdropFilter: 'blur(5px)' }}>{error}</div>}
+            {error && (
+              <div style={{ backgroundColor: 'rgba(254, 226, 226, 0.8)', color: '#DC2626', padding: '1rem', borderRadius: '0.5rem', border: '1px solid #FCA5A5', marginBottom: '2rem', backdropFilter: 'blur(5px)' }}>
+                <strong>Note:</strong> {error}
+              </div>
+            )}
 
             {bookings.length > 0 ? (
               <div style={{ display: 'grid', gap: '1.5rem' }}>
                 {bookings.map((booking) => (
-                  <div key={booking._id} style={{ backgroundColor: currentThemeStyles.glassPanelBg, padding: '1.5rem', borderRadius: '1rem', boxShadow: currentThemeStyles.glassPanelShadow, backdropFilter: 'blur(16px)', border: currentThemeStyles.glassPanelBorder }}>
+                  <div key={booking._id} style={{ 
+                    backgroundColor: currentThemeStyles.glassPanelBg, 
+                    padding: '1.5rem', 
+                    borderRadius: '1rem', 
+                    boxShadow: currentThemeStyles.glassPanelShadow, 
+                    backdropFilter: 'blur(16px)', 
+                    border: currentThemeStyles.glassPanelBorder,
+                    position: 'relative'
+                  }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem', flexWrap: 'wrap' }}>
                       <div>
                         <h3 style={{ fontSize: '1.2rem', fontWeight: '600', color: currentThemeStyles.textPrimary, margin: '0 0 0.5rem 0' }}>Booking #{booking.bookingId}</h3>
@@ -227,10 +412,27 @@ export default function BookingsPage() {
                         </div>
                       </div>
                     </div>
-                    <div style={{ display: 'flex', gap: '0.5rem', paddingTop: '1rem', borderTop: `1px solid ${currentThemeStyles.quickActionBorder}` }}>
-                      <Link href={`/bookings/${booking._id}`} style={{ backgroundColor: 'rgba(59, 130, 246, 0.8)', color: 'white', padding: '0.5rem 1rem', borderRadius: '0.5rem', textDecoration: 'none', fontSize: '0.9rem', fontWeight: '500' }}>View Details</Link>
-                      {booking.status === 'confirmed' && <button onClick={() => handleGenerateQR(booking._id)} style={{ backgroundColor: 'rgba(16, 185, 129, 0.8)', color: 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', fontSize: '0.9rem', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><QrCodeIcon width={16} /> Get QR Code</button>}
-                      {canCancelBooking(booking) && <button onClick={() => { setBookingToCancel(booking._id); setShowCancelModal(true); }} style={{ backgroundColor: 'rgba(239, 68, 68, 0.8)', color: 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', fontSize: '0.9rem', fontWeight: '500' }}>Cancel</button>}
+                    <div style={{ display: 'flex', gap: '0.5rem', paddingTop: '1rem', borderTop: `1px solid ${currentThemeStyles.quickActionBorder}`, flexWrap: 'wrap' }}>
+                      <Link href={`/bookings/${booking.bookingId || booking._id}`} style={{ backgroundColor: 'rgba(59, 130, 246, 0.8)', color: 'white', padding: '0.5rem 1rem', borderRadius: '0.5rem', textDecoration: 'none', fontSize: '0.9rem', fontWeight: '500' }}>View Details</Link>
+                      {booking.status === 'confirmed' && (
+                        <button 
+                          onClick={() => handleGenerateQR(booking.bookingId || booking._id)} 
+                          style={{ backgroundColor: 'rgba(16, 185, 129, 0.8)', color: 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', fontSize: '0.9rem', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                        >
+                          <QrCodeIcon width={16} /> Get QR Code
+                        </button>
+                      )}
+                      {canCancelBooking(booking) && (
+                        <button 
+                          onClick={() => { 
+                            setBookingToCancel(booking.bookingId || booking._id); 
+                            setShowCancelModal(true); 
+                          }} 
+                          style={{ backgroundColor: 'rgba(239, 68, 68, 0.8)', color: 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', fontSize: '0.9rem', fontWeight: '500' }}
+                        >
+                          Cancel
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}
