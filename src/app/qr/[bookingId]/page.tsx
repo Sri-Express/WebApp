@@ -7,6 +7,7 @@ import { useTheme } from '@/app/context/ThemeContext';
 import ThemeSwitcher from '@/app/components/ThemeSwitcher';
 import AnimatedBackground from '@/app/components/AnimatedBackground';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ShieldCheckIcon, ArrowDownTrayIcon, EnvelopeIcon, PrinterIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
 
 interface Booking {
@@ -348,9 +349,11 @@ export default function QRCodePage() {
             {/* QR Code Section */}
             <div style={{ padding: '2rem', textAlign: 'center' }}>
               <div style={{ display: 'inline-block', padding: '1rem', background: 'white', borderRadius: '12px', border: '3px solid #F59E0B', boxShadow: '0 4px 12px rgba(245, 158, 11, 0.2)' }}>
-                <img 
+                <Image 
                   src={qrCode} 
                   alt="Ticket QR Code" 
+                  width={250}
+                  height={250}
                   style={{ maxWidth: '250px', width: '100%', height: 'auto', display: 'block' }}
                 />
               </div>

@@ -16,8 +16,7 @@ import {
   TrashIcon,
   ClockIcon,
   MapPinIcon,
-  WifiIcon,
-  BatteryIcon
+  WifiIcon
 } from '@heroicons/react/24/outline';
 import AnimatedBackground from '@/app/fleet/components/AnimatedBackground';
 
