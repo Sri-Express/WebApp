@@ -1,4 +1,4 @@
-// src/app/fleet/vehicles/add/page.tsx - Add New Vehicle
+// src/app/fleet/vehicles/add/page.tsx - Add New Vehicle (UPDATED WITH ANIMATED BACKGROUND)
 "use client";
 
 import { useState } from 'react';
@@ -11,6 +11,7 @@ import {
   CheckCircleIcon,
   ArrowLeftIcon
 } from '@heroicons/react/24/outline';
+import AnimatedBackground from '@/app/fleet/components/AnimatedBackground';
 
 interface VehicleFormData {
   vehicleNumber: string;
@@ -30,6 +31,21 @@ export default function AddVehiclePage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const router = useRouter();
+
+  // Theme styles matching admin dashboard
+  const currentThemeStyles = {
+    mainBg: '#0f172a',
+    bgGradient: 'linear-gradient(to bottom right, #0f172a, #1e293b, #334155)',
+    glassPanelBg: 'rgba(30, 41, 59, 0.8)',
+    glassPanelBorder: '1px solid rgba(251, 191, 36, 0.3)',
+    glassPanelShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35), 0 10px 20px -5px rgba(0, 0, 0, 0.2)',
+    textPrimary: '#f9fafb',
+    textSecondary: '#9ca3af',
+    textMuted: '#9ca3af',
+    quickActionBg: 'rgba(51, 65, 85, 0.8)',
+    quickActionBorder: '1px solid rgba(75, 85, 99, 0.5)',
+    alertBg: 'rgba(51, 65, 85, 0.6)'
+  };
 
   const vehicleTypes = [
     { value: 'bus', label: 'Bus' },
@@ -127,18 +143,35 @@ export default function AddVehiclePage() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#0f172a' }}>
+    <div style={{ 
+      minHeight: '100vh', 
+      backgroundColor: currentThemeStyles.mainBg, 
+      position: 'relative', 
+      overflow: 'hidden' 
+    }}>
+      <AnimatedBackground currentThemeStyles={currentThemeStyles} />
+      
       <div style={{
         maxWidth: '800px',
         margin: '0 auto',
-        padding: '2rem 1.5rem'
+        padding: '2rem 1.5rem',
+        position: 'relative',
+        zIndex: 10
       }}>
         {/* Header */}
-        <div style={{ marginBottom: '2rem' }}>
+        <div style={{ 
+          marginBottom: '2rem',
+          backgroundColor: currentThemeStyles.glassPanelBg,
+          padding: '2rem',
+          borderRadius: '1rem',
+          boxShadow: currentThemeStyles.glassPanelShadow,
+          backdropFilter: 'blur(12px)',
+          border: currentThemeStyles.glassPanelBorder
+        }}>
           <Link
             href="/fleet/vehicles"
             style={{
-              color: '#94a3b8',
+              color: currentThemeStyles.textSecondary,
               textDecoration: 'none',
               fontSize: '0.875rem',
               display: 'flex',
@@ -161,14 +194,14 @@ export default function AddVehiclePage() {
             <h1 style={{
               fontSize: '2rem',
               fontWeight: 'bold',
-              color: '#f1f5f9',
+              color: currentThemeStyles.textPrimary,
               margin: 0
             }}>
               Add New Vehicle
             </h1>
           </div>
           <p style={{
-            color: '#94a3b8',
+            color: currentThemeStyles.textSecondary,
             margin: 0
           }}>
             Register a new vehicle in your fleet for monitoring and management
@@ -178,14 +211,15 @@ export default function AddVehiclePage() {
         {/* Success Message */}
         {success && (
           <div style={{
-            backgroundColor: '#064e3b',
+            backgroundColor: 'rgba(6, 78, 59, 0.8)',
             border: '1px solid #059669',
             borderRadius: '0.5rem',
             padding: '1rem',
             marginBottom: '2rem',
             display: 'flex',
             alignItems: 'center',
-            gap: '0.5rem'
+            gap: '0.5rem',
+            backdropFilter: 'blur(12px)'
           }}>
             <CheckCircleIcon width={20} height={20} color="#a7f3d0" />
             <span style={{ color: '#a7f3d0' }}>{success}</span>
@@ -195,14 +229,15 @@ export default function AddVehiclePage() {
         {/* Error Message */}
         {error && (
           <div style={{
-            backgroundColor: '#7f1d1d',
+            backgroundColor: 'rgba(127, 29, 29, 0.8)',
             border: '1px solid #991b1b',
             borderRadius: '0.5rem',
             padding: '1rem',
             marginBottom: '2rem',
             display: 'flex',
             alignItems: 'center',
-            gap: '0.5rem'
+            gap: '0.5rem',
+            backdropFilter: 'blur(12px)'
           }}>
             <ExclamationCircleIcon width={20} height={20} color="#fca5a5" />
             <span style={{ color: '#fecaca' }}>{error}</span>
@@ -211,13 +246,15 @@ export default function AddVehiclePage() {
 
         {/* Form */}
         <div style={{
-          backgroundColor: '#1e293b',
+          backgroundColor: currentThemeStyles.glassPanelBg,
           padding: '2rem',
           borderRadius: '0.75rem',
-          border: '1px solid #334155'
+          border: currentThemeStyles.glassPanelBorder,
+          boxShadow: currentThemeStyles.glassPanelShadow,
+          backdropFilter: 'blur(12px)'
         }}>
           <h2 style={{
-            color: '#f1f5f9',
+            color: currentThemeStyles.textPrimary,
             fontSize: '1.25rem',
             fontWeight: 'bold',
             marginBottom: '1.5rem',
@@ -240,7 +277,7 @@ export default function AddVehiclePage() {
               <div>
                 <label style={{
                   display: 'block',
-                  color: '#f1f5f9',
+                  color: currentThemeStyles.textPrimary,
                   fontSize: '0.875rem',
                   fontWeight: '500',
                   marginBottom: '0.5rem'
@@ -258,14 +295,15 @@ export default function AddVehiclePage() {
                     width: '100%',
                     padding: '0.75rem',
                     borderRadius: '0.5rem',
-                    border: '1px solid #475569',
-                    backgroundColor: '#334155',
-                    color: '#f1f5f9',
-                    fontSize: '0.875rem'
+                    border: '1px solid rgba(75, 85, 99, 0.5)',
+                    backgroundColor: 'rgba(51, 65, 85, 0.6)',
+                    color: currentThemeStyles.textPrimary,
+                    fontSize: '0.875rem',
+                    backdropFilter: 'blur(8px)'
                   }}
                 />
                 <p style={{
-                  color: '#94a3b8',
+                  color: currentThemeStyles.textSecondary,
                   fontSize: '0.75rem',
                   margin: '0.5rem 0 0 0'
                 }}>
@@ -277,7 +315,7 @@ export default function AddVehiclePage() {
               <div>
                 <label style={{
                   display: 'block',
-                  color: '#f1f5f9',
+                  color: currentThemeStyles.textPrimary,
                   fontSize: '0.875rem',
                   fontWeight: '500',
                   marginBottom: '0.5rem'
@@ -293,21 +331,22 @@ export default function AddVehiclePage() {
                     width: '100%',
                     padding: '0.75rem',
                     borderRadius: '0.5rem',
-                    border: '1px solid #475569',
-                    backgroundColor: '#334155',
-                    color: '#f1f5f9',
+                    border: '1px solid rgba(75, 85, 99, 0.5)',
+                    backgroundColor: 'rgba(51, 65, 85, 0.6)',
+                    color: currentThemeStyles.textPrimary,
                     fontSize: '0.875rem',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    backdropFilter: 'blur(8px)'
                   }}
                 >
                   {vehicleTypes.map(type => (
-                    <option key={type.value} value={type.value}>
+                    <option key={type.value} value={type.value} style={{ backgroundColor: '#1e293b' }}>
                       {type.label}
                     </option>
                   ))}
                 </select>
                 <p style={{
-                  color: '#94a3b8',
+                  color: currentThemeStyles.textSecondary,
                   fontSize: '0.75rem',
                   margin: '0.5rem 0 0 0'
                 }}>
@@ -319,7 +358,7 @@ export default function AddVehiclePage() {
               <div>
                 <label style={{
                   display: 'block',
-                  color: '#f1f5f9',
+                  color: currentThemeStyles.textPrimary,
                   fontSize: '0.875rem',
                   fontWeight: '500',
                   marginBottom: '0.5rem'
@@ -337,14 +376,15 @@ export default function AddVehiclePage() {
                     width: '100%',
                     padding: '0.75rem',
                     borderRadius: '0.5rem',
-                    border: '1px solid #475569',
-                    backgroundColor: '#334155',
-                    color: '#f1f5f9',
-                    fontSize: '0.875rem'
+                    border: '1px solid rgba(75, 85, 99, 0.5)',
+                    backgroundColor: 'rgba(51, 65, 85, 0.6)',
+                    color: currentThemeStyles.textPrimary,
+                    fontSize: '0.875rem',
+                    backdropFilter: 'blur(8px)'
                   }}
                 />
                 <p style={{
-                  color: '#94a3b8',
+                  color: currentThemeStyles.textSecondary,
                   fontSize: '0.75rem',
                   margin: '0.5rem 0 0 0'
                 }}>
@@ -356,7 +396,7 @@ export default function AddVehiclePage() {
               <div>
                 <label style={{
                   display: 'block',
-                  color: '#f1f5f9',
+                  color: currentThemeStyles.textPrimary,
                   fontSize: '0.875rem',
                   fontWeight: '500',
                   marginBottom: '0.5rem'
@@ -373,15 +413,16 @@ export default function AddVehiclePage() {
                     width: '100%',
                     padding: '0.75rem',
                     borderRadius: '0.5rem',
-                    border: '1px solid #475569',
-                    backgroundColor: '#334155',
-                    color: '#f1f5f9',
+                    border: '1px solid rgba(75, 85, 99, 0.5)',
+                    backgroundColor: 'rgba(51, 65, 85, 0.6)',
+                    color: currentThemeStyles.textPrimary,
                     fontSize: '0.875rem',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    backdropFilter: 'blur(8px)'
                   }}
                 />
                 <p style={{
-                  color: '#94a3b8',
+                  color: currentThemeStyles.textSecondary,
                   fontSize: '0.75rem',
                   margin: '0.5rem 0 0 0'
                 }}>
@@ -392,11 +433,12 @@ export default function AddVehiclePage() {
 
             {/* Information Box */}
             <div style={{
-              backgroundColor: '#0f172a',
-              border: '1px solid #334155',
+              backgroundColor: 'rgba(15, 23, 42, 0.8)',
+              border: currentThemeStyles.glassPanelBorder,
               borderRadius: '0.5rem',
               padding: '1rem',
-              marginBottom: '2rem'
+              marginBottom: '2rem',
+              backdropFilter: 'blur(8px)'
             }}>
               <div style={{
                 display: 'flex',
@@ -414,7 +456,7 @@ export default function AddVehiclePage() {
                     Important Information
                   </h4>
                   <ul style={{
-                    color: '#94a3b8',
+                    color: currentThemeStyles.textSecondary,
                     fontSize: '0.875rem',
                     margin: 0,
                     paddingLeft: '1rem',
@@ -496,14 +538,16 @@ export default function AddVehiclePage() {
 
         {/* Additional Information */}
         <div style={{
-          backgroundColor: '#1e293b',
+          backgroundColor: currentThemeStyles.glassPanelBg,
           padding: '1.5rem',
           borderRadius: '0.75rem',
-          border: '1px solid #334155',
+          border: currentThemeStyles.glassPanelBorder,
+          boxShadow: currentThemeStyles.glassPanelShadow,
+          backdropFilter: 'blur(12px)',
           marginTop: '2rem'
         }}>
           <h3 style={{
-            color: '#f1f5f9',
+            color: currentThemeStyles.textPrimary,
             fontSize: '1rem',
             fontWeight: '600',
             marginBottom: '1rem'
@@ -514,20 +558,20 @@ export default function AddVehiclePage() {
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
             gap: '1rem',
-            color: '#94a3b8',
+            color: currentThemeStyles.textSecondary,
             fontSize: '0.875rem',
             lineHeight: '1.5'
           }}>
             <div>
-              <strong style={{ color: '#f1f5f9' }}>1. Device Setup</strong><br />
+              <strong style={{ color: currentThemeStyles.textPrimary }}>1. Device Setup</strong><br />
               Install and configure the GPS tracking device in your vehicle
             </div>
             <div>
-              <strong style={{ color: '#f1f5f9' }}>2. Testing</strong><br />
+              <strong style={{ color: currentThemeStyles.textPrimary }}>2. Testing</strong><br />
               Test the device connectivity and location reporting
             </div>
             <div>
-              <strong style={{ color: '#f1f5f9' }}>3. Route Assignment</strong><br />
+              <strong style={{ color: currentThemeStyles.textPrimary }}>3. Route Assignment</strong><br />
               Assign the vehicle to specific routes for operations
             </div>
           </div>

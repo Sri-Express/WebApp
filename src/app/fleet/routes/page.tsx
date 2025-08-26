@@ -1,4 +1,4 @@
-// src/app/fleet/routes/page.tsx - Fleet Route Assignment Management (FIXED - ASSIGNMENT ONLY)
+// src/app/fleet/routes/page.tsx - Fleet Route Assignment Management (UPDATED WITH ANIMATED BACKGROUND)
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -15,6 +15,7 @@ import {
   CurrencyDollarIcon,
   BuildingOfficeIcon
 } from '@heroicons/react/24/outline';
+import AnimatedBackground from '@/app/fleet/components/AnimatedBackground';
 
 interface Route {
   _id: string;
@@ -80,6 +81,21 @@ export default function FleetRoutesPage() {
   const [selectedRoute, setSelectedRoute] = useState<Route | null>(null);
   const [showAssignModal, setShowAssignModal] = useState<Route | null>(null);
   const [selectedVehicleIds, setSelectedVehicleIds] = useState<string[]>([]);
+
+  // Theme styles matching admin dashboard
+  const currentThemeStyles = {
+    mainBg: '#0f172a',
+    bgGradient: 'linear-gradient(to bottom right, #0f172a, #1e293b, #334155)',
+    glassPanelBg: 'rgba(30, 41, 59, 0.8)',
+    glassPanelBorder: '1px solid rgba(251, 191, 36, 0.3)',
+    glassPanelShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35), 0 10px 20px -5px rgba(0, 0, 0, 0.2)',
+    textPrimary: '#f9fafb',
+    textSecondary: '#9ca3af',
+    textMuted: '#9ca3af',
+    quickActionBg: 'rgba(51, 65, 85, 0.8)',
+    quickActionBorder: '1px solid rgba(75, 85, 99, 0.5)',
+    alertBg: 'rgba(51, 65, 85, 0.6)'
+  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -224,10 +240,22 @@ export default function FleetRoutesPage() {
         justifyContent: 'center', 
         alignItems: 'center', 
         minHeight: '100vh',
-        backgroundColor: '#0f172a',
-        color: '#f1f5f9'
+        backgroundColor: currentThemeStyles.mainBg,
+        color: currentThemeStyles.textPrimary
       }}>
-        Loading routes and vehicles...
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ 
+            width: '40px', 
+            height: '40px', 
+            border: '4px solid #374151', 
+            borderTop: '4px solid #10b981', 
+            borderRadius: '50%', 
+            animation: 'spin 1s linear infinite', 
+            margin: '0 auto 1rem' 
+          }}></div>
+          Loading routes and vehicles...
+        </div>
+        <style jsx>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
@@ -235,24 +263,39 @@ export default function FleetRoutesPage() {
   const approvedVehicles = vehicles.filter(v => v.approvalStatus === 'approved');
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#0f172a' }}>
+    <div style={{ 
+      minHeight: '100vh', 
+      backgroundColor: currentThemeStyles.mainBg, 
+      position: 'relative', 
+      overflow: 'hidden' 
+    }}>
+      <AnimatedBackground currentThemeStyles={currentThemeStyles} />
+      
       <div style={{
         maxWidth: '1400px',
         margin: '0 auto',
-        padding: '2rem 1.5rem'
+        padding: '2rem 1.5rem',
+        position: 'relative',
+        zIndex: 10
       }}>
         {/* Header */}
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'flex-start',
-          marginBottom: '2rem'
+          marginBottom: '2rem',
+          backgroundColor: currentThemeStyles.glassPanelBg,
+          padding: '2rem',
+          borderRadius: '1rem',
+          boxShadow: currentThemeStyles.glassPanelShadow,
+          backdropFilter: 'blur(12px)',
+          border: currentThemeStyles.glassPanelBorder
         }}>
           <div>
             <h1 style={{
               fontSize: '2rem',
               fontWeight: 'bold',
-              color: '#f1f5f9',
+              color: currentThemeStyles.textPrimary,
               margin: '0 0 0.5rem 0',
               display: 'flex',
               alignItems: 'center',
@@ -262,7 +305,7 @@ export default function FleetRoutesPage() {
               Route Assignments
             </h1>
             <p style={{
-              color: '#94a3b8',
+              color: currentThemeStyles.textSecondary,
               margin: 0,
               fontSize: '1rem'
             }}>
@@ -295,14 +338,15 @@ export default function FleetRoutesPage() {
         {/* Error Display */}
         {error && (
           <div style={{
-            backgroundColor: '#7f1d1d',
+            backgroundColor: 'rgba(127, 29, 29, 0.8)',
             border: '1px solid #991b1b',
             borderRadius: '0.5rem',
             padding: '1rem',
             marginBottom: '2rem',
             display: 'flex',
             alignItems: 'center',
-            gap: '0.5rem'
+            gap: '0.5rem',
+            backdropFilter: 'blur(12px)'
           }}>
             <ExclamationTriangleIcon width={20} height={20} color="#fca5a5" />
             <span style={{ color: '#fecaca' }}>{error}</span>
@@ -317,10 +361,12 @@ export default function FleetRoutesPage() {
           marginBottom: '2rem'
         }}>
           <div style={{
-            backgroundColor: '#1e293b',
+            backgroundColor: currentThemeStyles.glassPanelBg,
             padding: '1.5rem',
             borderRadius: '0.75rem',
-            border: '1px solid #334155'
+            border: currentThemeStyles.glassPanelBorder,
+            boxShadow: currentThemeStyles.glassPanelShadow,
+            backdropFilter: 'blur(12px)'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
               <MapIcon width={32} height={32} color="#3b82f6" />
@@ -328,16 +374,18 @@ export default function FleetRoutesPage() {
                 <h3 style={{ color: '#3b82f6', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>
                   {routes.length}
                 </h3>
-                <p style={{ color: '#94a3b8', margin: '0.5rem 0 0 0' }}>Available Routes</p>
+                <p style={{ color: currentThemeStyles.textSecondary, margin: '0.5rem 0 0 0' }}>Available Routes</p>
               </div>
             </div>
           </div>
 
           <div style={{
-            backgroundColor: '#1e293b',
+            backgroundColor: currentThemeStyles.glassPanelBg,
             padding: '1.5rem',
             borderRadius: '0.75rem',
-            border: '1px solid #334155'
+            border: currentThemeStyles.glassPanelBorder,
+            boxShadow: currentThemeStyles.glassPanelShadow,
+            backdropFilter: 'blur(12px)'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
               <CheckCircleIcon width={32} height={32} color="#10b981" />
@@ -345,16 +393,18 @@ export default function FleetRoutesPage() {
                 <h3 style={{ color: '#10b981', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>
                   {approvedVehicles.length}
                 </h3>
-                <p style={{ color: '#94a3b8', margin: '0.5rem 0 0 0' }}>Approved Vehicles</p>
+                <p style={{ color: currentThemeStyles.textSecondary, margin: '0.5rem 0 0 0' }}>Approved Vehicles</p>
               </div>
             </div>
           </div>
 
           <div style={{
-            backgroundColor: '#1e293b',
+            backgroundColor: currentThemeStyles.glassPanelBg,
             padding: '1.5rem',
             borderRadius: '0.75rem',
-            border: '1px solid #334155'
+            border: currentThemeStyles.glassPanelBorder,
+            boxShadow: currentThemeStyles.glassPanelShadow,
+            backdropFilter: 'blur(12px)'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
               <TruckIcon width={32} height={32} color="#f59e0b" />
@@ -362,16 +412,18 @@ export default function FleetRoutesPage() {
                 <h3 style={{ color: '#f59e0b', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>
                   {assignments.filter(a => a.status === 'active').length}
                 </h3>
-                <p style={{ color: '#94a3b8', margin: '0.5rem 0 0 0' }}>Active Assignments</p>
+                <p style={{ color: currentThemeStyles.textSecondary, margin: '0.5rem 0 0 0' }}>Active Assignments</p>
               </div>
             </div>
           </div>
 
           <div style={{
-            backgroundColor: '#1e293b',
+            backgroundColor: currentThemeStyles.glassPanelBg,
             padding: '1.5rem',
             borderRadius: '0.75rem',
-            border: '1px solid #334155'
+            border: currentThemeStyles.glassPanelBorder,
+            boxShadow: currentThemeStyles.glassPanelShadow,
+            backdropFilter: 'blur(12px)'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
               <BuildingOfficeIcon width={32} height={32} color="#8b5cf6" />
@@ -379,7 +431,7 @@ export default function FleetRoutesPage() {
                 <h3 style={{ color: '#8b5cf6', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>
                   {vehicles.filter(v => v.status === 'online').length}
                 </h3>
-                <p style={{ color: '#94a3b8', margin: '0.5rem 0 0 0' }}>Vehicles Online</p>
+                <p style={{ color: currentThemeStyles.textSecondary, margin: '0.5rem 0 0 0' }}>Vehicles Online</p>
               </div>
             </div>
           </div>
@@ -388,11 +440,13 @@ export default function FleetRoutesPage() {
         {/* Information Box */}
         {approvedVehicles.length === 0 && (
           <div style={{
-            backgroundColor: '#0f172a',
-            border: '1px solid #334155',
+            backgroundColor: currentThemeStyles.glassPanelBg,
+            border: currentThemeStyles.glassPanelBorder,
             borderRadius: '0.75rem',
             padding: '1.5rem',
-            marginBottom: '2rem'
+            marginBottom: '2rem',
+            boxShadow: currentThemeStyles.glassPanelShadow,
+            backdropFilter: 'blur(12px)'
           }}>
             <div style={{
               display: 'flex',
@@ -405,10 +459,10 @@ export default function FleetRoutesPage() {
                 No Approved Vehicles Available
               </h3>
             </div>
-            <p style={{ color: '#94a3b8', margin: '0 0 1rem 0' }}>
+            <p style={{ color: currentThemeStyles.textSecondary, margin: '0 0 1rem 0' }}>
               You need approved vehicles before you can assign them to routes. Make sure you have:
             </p>
-            <ul style={{ color: '#94a3b8', margin: 0, paddingLeft: '1.5rem' }}>
+            <ul style={{ color: currentThemeStyles.textSecondary, margin: 0, paddingLeft: '1.5rem' }}>
               <li>Added vehicles to your fleet</li>
               <li>Received admin approval for your vehicles</li>
               <li>Vehicles are in working condition (not in maintenance)</li>
@@ -434,13 +488,15 @@ export default function FleetRoutesPage() {
 
         {/* Available Routes */}
         <div style={{
-          backgroundColor: '#1e293b',
+          backgroundColor: currentThemeStyles.glassPanelBg,
           padding: '2rem',
           borderRadius: '0.75rem',
-          border: '1px solid #334155'
+          border: currentThemeStyles.glassPanelBorder,
+          boxShadow: currentThemeStyles.glassPanelShadow,
+          backdropFilter: 'blur(12px)'
         }}>
           <h2 style={{
-            color: '#f1f5f9',
+            color: currentThemeStyles.textPrimary,
             fontSize: '1.25rem',
             fontWeight: 'bold',
             marginBottom: '1.5rem',
@@ -464,10 +520,11 @@ export default function FleetRoutesPage() {
               
               return (
                 <div key={route._id} style={{
-                  backgroundColor: '#334155',
+                  backgroundColor: 'rgba(51, 65, 85, 0.8)',
                   padding: '1.5rem',
                   borderRadius: '0.75rem',
-                  border: '1px solid #475569'
+                  border: '1px solid rgba(75, 85, 99, 0.5)',
+                  backdropFilter: 'blur(8px)'
                 }}>
                   {/* Route Header */}
                   <div style={{
@@ -478,7 +535,7 @@ export default function FleetRoutesPage() {
                   }}>
                     <div style={{ flex: 1 }}>
                       <h3 style={{
-                        color: '#f1f5f9',
+                        color: currentThemeStyles.textPrimary,
                         fontSize: '1.1rem',
                         fontWeight: 'bold',
                         margin: '0 0 0.5rem 0'
@@ -486,7 +543,7 @@ export default function FleetRoutesPage() {
                         {route.name}
                       </h3>
                       <p style={{
-                        color: '#94a3b8',
+                        color: currentThemeStyles.textSecondary,
                         fontSize: '0.875rem',
                         margin: 0
                       }}>
@@ -515,50 +572,52 @@ export default function FleetRoutesPage() {
                     gap: '1rem',
                     marginBottom: '1rem',
                     padding: '1rem',
-                    backgroundColor: '#1e293b',
-                    borderRadius: '0.5rem'
+                    backgroundColor: 'rgba(30, 41, 59, 0.8)',
+                    borderRadius: '0.5rem',
+                    backdropFilter: 'blur(8px)'
                   }}>
                     <div style={{ textAlign: 'center' }}>
                       <div style={{
-                        color: '#f1f5f9',
+                        color: currentThemeStyles.textPrimary,
                         fontSize: '0.875rem',
                         fontWeight: '600',
                         marginBottom: '0.25rem'
                       }}>
                         {route.distance} km
                       </div>
-                      <div style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Distance</div>
+                      <div style={{ color: currentThemeStyles.textSecondary, fontSize: '0.75rem' }}>Distance</div>
                     </div>
                     <div style={{ textAlign: 'center' }}>
                       <div style={{
-                        color: '#f1f5f9',
+                        color: currentThemeStyles.textPrimary,
                         fontSize: '0.875rem',
                         fontWeight: '600',
                         marginBottom: '0.25rem'
                       }}>
                         {formatDuration(route.estimatedDuration)}
                       </div>
-                      <div style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Duration</div>
+                      <div style={{ color: currentThemeStyles.textSecondary, fontSize: '0.75rem' }}>Duration</div>
                     </div>
                     <div style={{ textAlign: 'center' }}>
                       <div style={{
-                        color: '#f1f5f9',
+                        color: currentThemeStyles.textPrimary,
                         fontSize: '0.875rem',
                         fontWeight: '600',
                         marginBottom: '0.25rem'
                       }}>
                         {route.vehicleInfo.capacity} seats
                       </div>
-                      <div style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Capacity</div>
+                      <div style={{ color: currentThemeStyles.textSecondary, fontSize: '0.75rem' }}>Capacity</div>
                     </div>
                   </div>
 
                   {/* Pricing */}
                   <div style={{
-                    backgroundColor: '#1e293b',
+                    backgroundColor: 'rgba(30, 41, 59, 0.8)',
                     padding: '1rem',
                     borderRadius: '0.5rem',
-                    marginBottom: '1rem'
+                    marginBottom: '1rem',
+                    backdropFilter: 'blur(8px)'
                   }}>
                     <div style={{
                       display: 'flex',
@@ -566,14 +625,14 @@ export default function FleetRoutesPage() {
                       alignItems: 'center'
                     }}>
                       <div>
-                        <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Base Price: </span>
-                        <span style={{ color: '#f1f5f9', fontSize: '0.875rem', fontWeight: '600' }}>
+                        <span style={{ color: currentThemeStyles.textSecondary, fontSize: '0.75rem' }}>Base Price: </span>
+                        <span style={{ color: currentThemeStyles.textPrimary, fontSize: '0.875rem', fontWeight: '600' }}>
                           {formatCurrency(route.pricing.basePrice)}
                         </span>
                       </div>
                       <div>
-                        <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Per KM: </span>
-                        <span style={{ color: '#f1f5f9', fontSize: '0.875rem', fontWeight: '600' }}>
+                        <span style={{ color: currentThemeStyles.textSecondary, fontSize: '0.75rem' }}>Per KM: </span>
+                        <span style={{ color: currentThemeStyles.textPrimary, fontSize: '0.875rem', fontWeight: '600' }}>
                           {formatCurrency(route.pricing.pricePerKm)}
                         </span>
                       </div>
@@ -582,10 +641,11 @@ export default function FleetRoutesPage() {
 
                   {/* Assigned Vehicles */}
                   <div style={{
-                    backgroundColor: '#1e293b',
+                    backgroundColor: 'rgba(30, 41, 59, 0.8)',
                     padding: '1rem',
                     borderRadius: '0.5rem',
-                    marginBottom: '1rem'
+                    marginBottom: '1rem',
+                    backdropFilter: 'blur(8px)'
                   }}>
                     <div style={{
                       display: 'flex',
@@ -593,7 +653,7 @@ export default function FleetRoutesPage() {
                       alignItems: 'center',
                       marginBottom: assignedVehicles.length > 0 ? '1rem' : 0
                     }}>
-                      <span style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: '500' }}>
+                      <span style={{ color: currentThemeStyles.textSecondary, fontSize: '0.75rem', fontWeight: '500' }}>
                         Assigned Vehicles ({assignedVehicles.length})
                       </span>
                     </div>
@@ -605,9 +665,10 @@ export default function FleetRoutesPage() {
                             display: 'flex',
                             justifyContent: 'space-between',
                             alignItems: 'center',
-                            backgroundColor: '#334155',
+                            backgroundColor: 'rgba(51, 65, 85, 0.8)',
                             padding: '0.75rem',
-                            borderRadius: '0.5rem'
+                            borderRadius: '0.5rem',
+                            backdropFilter: 'blur(8px)'
                           }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                               <div style={{
@@ -616,10 +677,10 @@ export default function FleetRoutesPage() {
                                 borderRadius: '50%',
                                 backgroundColor: vehicle.status === 'online' ? '#10b981' : '#6b7280'
                               }} />
-                              <span style={{ color: '#f1f5f9', fontSize: '0.875rem', fontWeight: '500' }}>
+                              <span style={{ color: currentThemeStyles.textPrimary, fontSize: '0.875rem', fontWeight: '500' }}>
                                 {vehicle.vehicleNumber}
                               </span>
-                              <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>
+                              <span style={{ color: currentThemeStyles.textSecondary, fontSize: '0.75rem' }}>
                                 ({vehicle.status})
                               </span>
                             </div>
@@ -656,12 +717,13 @@ export default function FleetRoutesPage() {
                   {/* Amenities */}
                   {route.vehicleInfo.amenities.length > 0 && (
                     <div style={{
-                      backgroundColor: '#1e293b',
+                      backgroundColor: 'rgba(30, 41, 59, 0.8)',
                       padding: '1rem',
                       borderRadius: '0.5rem',
-                      marginBottom: '1rem'
+                      marginBottom: '1rem',
+                      backdropFilter: 'blur(8px)'
                     }}>
-                      <span style={{ color: '#94a3b8', fontSize: '0.75rem', marginBottom: '0.5rem', display: 'block' }}>
+                      <span style={{ color: currentThemeStyles.textSecondary, fontSize: '0.75rem', marginBottom: '0.5rem', display: 'block' }}>
                         Required Amenities:
                       </span>
                       <div style={{
@@ -671,11 +733,12 @@ export default function FleetRoutesPage() {
                       }}>
                         {route.vehicleInfo.amenities.map((amenity, index) => (
                           <span key={index} style={{
-                            backgroundColor: '#334155',
-                            color: '#f1f5f9',
+                            backgroundColor: 'rgba(51, 65, 85, 0.8)',
+                            color: currentThemeStyles.textPrimary,
                             padding: '0.25rem 0.75rem',
                             borderRadius: '0.25rem',
-                            fontSize: '0.75rem'
+                            fontSize: '0.75rem',
+                            backdropFilter: 'blur(8px)'
                           }}>
                             {amenity}
                           </span>
@@ -744,10 +807,10 @@ export default function FleetRoutesPage() {
             <div style={{
               textAlign: 'center',
               padding: '3rem',
-              color: '#94a3b8'
+              color: currentThemeStyles.textSecondary
             }}>
               <MapIcon width={48} height={48} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
-              <h3 style={{ color: '#f1f5f9', marginBottom: '0.5rem' }}>No Routes Available</h3>
+              <h3 style={{ color: currentThemeStyles.textPrimary, marginBottom: '0.5rem' }}>No Routes Available</h3>
               <p>No approved routes are available for vehicle assignment at this time.</p>
               <p style={{ fontSize: '0.875rem', marginTop: '1rem' }}>
                 Routes are created by system administrators. Please contact admin if you need new routes.
@@ -772,10 +835,12 @@ export default function FleetRoutesPage() {
           zIndex: 1000
         }}>
           <div style={{
-            backgroundColor: '#1e293b',
+            backgroundColor: currentThemeStyles.glassPanelBg,
             padding: '2rem',
             borderRadius: '0.75rem',
-            border: '1px solid #334155',
+            border: currentThemeStyles.glassPanelBorder,
+            boxShadow: currentThemeStyles.glassPanelShadow,
+            backdropFilter: 'blur(12px)',
             maxWidth: '600px',
             width: '90%',
             maxHeight: '80vh',
@@ -788,7 +853,7 @@ export default function FleetRoutesPage() {
               marginBottom: '1.5rem'
             }}>
               <h3 style={{
-                color: '#f1f5f9',
+                color: currentThemeStyles.textPrimary,
                 fontSize: '1.25rem',
                 fontWeight: 'bold',
                 margin: 0
@@ -799,7 +864,7 @@ export default function FleetRoutesPage() {
                 onClick={() => setSelectedRoute(null)}
                 style={{
                   backgroundColor: 'transparent',
-                  color: '#94a3b8',
+                  color: currentThemeStyles.textSecondary,
                   border: 'none',
                   cursor: 'pointer',
                   fontSize: '1.5rem'
@@ -815,24 +880,25 @@ export default function FleetRoutesPage() {
               gap: '1.5rem'
             }}>
               <div style={{
-                backgroundColor: '#334155',
+                backgroundColor: 'rgba(51, 65, 85, 0.6)',
                 padding: '1rem',
-                borderRadius: '0.5rem'
+                borderRadius: '0.5rem',
+                backdropFilter: 'blur(8px)'
               }}>
-                <h4 style={{ color: '#f1f5f9', marginBottom: '1rem' }}>Route Information</h4>
+                <h4 style={{ color: currentThemeStyles.textPrimary, marginBottom: '1rem' }}>Route Information</h4>
                 <div style={{ marginBottom: '0.5rem' }}>
-                  <span style={{ color: '#94a3b8', fontSize: '0.875rem' }}>Route ID:</span>
-                  <span style={{ color: '#f1f5f9', marginLeft: '0.5rem' }}>{selectedRoute.routeId}</span>
+                  <span style={{ color: currentThemeStyles.textSecondary, fontSize: '0.875rem' }}>Route ID:</span>
+                  <span style={{ color: currentThemeStyles.textPrimary, marginLeft: '0.5rem' }}>{selectedRoute.routeId}</span>
                 </div>
                 <div style={{ marginBottom: '0.5rem' }}>
-                  <span style={{ color: '#94a3b8', fontSize: '0.875rem' }}>Start:</span>
-                  <p style={{ color: '#f1f5f9', margin: '0.25rem 0 0 0', fontSize: '0.875rem' }}>
+                  <span style={{ color: currentThemeStyles.textSecondary, fontSize: '0.875rem' }}>Start:</span>
+                  <p style={{ color: currentThemeStyles.textPrimary, margin: '0.25rem 0 0 0', fontSize: '0.875rem' }}>
                     {selectedRoute.startLocation.address}
                   </p>
                 </div>
                 <div style={{ marginBottom: '0.5rem' }}>
-                  <span style={{ color: '#94a3b8', fontSize: '0.875rem' }}>End:</span>
-                  <p style={{ color: '#f1f5f9', margin: '0.25rem 0 0 0', fontSize: '0.875rem' }}>
+                  <span style={{ color: currentThemeStyles.textSecondary, fontSize: '0.875rem' }}>End:</span>
+                  <p style={{ color: currentThemeStyles.textPrimary, margin: '0.25rem 0 0 0', fontSize: '0.875rem' }}>
                     {selectedRoute.endLocation.address}
                   </p>
                 </div>
@@ -878,15 +944,17 @@ export default function FleetRoutesPage() {
           zIndex: 1001
         }}>
           <div style={{
-            backgroundColor: '#1e293b',
+            backgroundColor: currentThemeStyles.glassPanelBg,
             padding: '2rem',
             borderRadius: '0.75rem',
-            border: '1px solid #334155',
+            border: currentThemeStyles.glassPanelBorder,
+            boxShadow: currentThemeStyles.glassPanelShadow,
+            backdropFilter: 'blur(12px)',
             maxWidth: '500px',
             width: '90%'
           }}>
             <h3 style={{
-              color: '#f1f5f9',
+              color: currentThemeStyles.textPrimary,
               fontSize: '1.25rem',
               fontWeight: 'bold',
               marginBottom: '1rem'
@@ -907,10 +975,11 @@ export default function FleetRoutesPage() {
                   alignItems: 'center',
                   gap: '0.75rem',
                   padding: '0.75rem',
-                  backgroundColor: '#334155',
+                  backgroundColor: 'rgba(51, 65, 85, 0.6)',
                   borderRadius: '0.5rem',
                   marginBottom: '0.5rem',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  backdropFilter: 'blur(8px)'
                 }}>
                   <input
                     type="checkbox"
@@ -925,10 +994,10 @@ export default function FleetRoutesPage() {
                     style={{ accentColor: '#10b981' }}
                   />
                   <div style={{ flex: 1 }}>
-                    <div style={{ color: '#f1f5f9', fontWeight: '500' }}>
+                    <div style={{ color: currentThemeStyles.textPrimary, fontWeight: '500' }}>
                       {vehicle.vehicleNumber}
                     </div>
-                    <div style={{ color: '#94a3b8', fontSize: '0.875rem' }}>
+                    <div style={{ color: currentThemeStyles.textSecondary, fontSize: '0.875rem' }}>
                       {vehicle.vehicleType} • {vehicle.status}
                     </div>
                   </div>

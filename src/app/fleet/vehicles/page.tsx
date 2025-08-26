@@ -1,4 +1,4 @@
-// src/app/fleet/vehicles/page.tsx - Fleet Vehicle Management (UPDATED - View Details + No Edit)
+// src/app/fleet/vehicles/page.tsx - Fleet Vehicle Management (UPDATED WITH ANIMATED BACKGROUND)
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -19,6 +19,7 @@ import {
   WifiIcon,
   BatteryIcon
 } from '@heroicons/react/24/outline';
+import AnimatedBackground from '@/app/fleet/components/AnimatedBackground';
 
 interface Vehicle {
   _id: string;
@@ -60,6 +61,21 @@ export default function FleetVehiclesPage() {
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState<Vehicle | null>(null);
+
+  // Theme styles matching admin dashboard
+  const currentThemeStyles = {
+    mainBg: '#0f172a',
+    bgGradient: 'linear-gradient(to bottom right, #0f172a, #1e293b, #334155)',
+    glassPanelBg: 'rgba(30, 41, 59, 0.8)',
+    glassPanelBorder: '1px solid rgba(251, 191, 36, 0.3)',
+    glassPanelShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35), 0 10px 20px -5px rgba(0, 0, 0, 0.2)',
+    textPrimary: '#f9fafb',
+    textSecondary: '#9ca3af',
+    textMuted: '#9ca3af',
+    quickActionBg: 'rgba(51, 65, 85, 0.8)',
+    quickActionBorder: '1px solid rgba(75, 85, 99, 0.5)',
+    alertBg: 'rgba(51, 65, 85, 0.6)'
+  };
 
   useEffect(() => {
     const loadVehicles = async () => {
@@ -201,39 +217,66 @@ export default function FleetVehiclesPage() {
         justifyContent: 'center', 
         alignItems: 'center', 
         minHeight: '100vh',
-        backgroundColor: '#0f172a',
-        color: '#f1f5f9'
+        backgroundColor: currentThemeStyles.mainBg,
+        color: currentThemeStyles.textPrimary
       }}>
-        Loading vehicles...
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ 
+            width: '40px', 
+            height: '40px', 
+            border: '4px solid #374151', 
+            borderTop: '4px solid #10b981', 
+            borderRadius: '50%', 
+            animation: 'spin 1s linear infinite', 
+            margin: '0 auto 1rem' 
+          }}></div>
+          Loading vehicles...
+        </div>
+        <style jsx>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#0f172a' }}>
+    <div style={{ 
+      minHeight: '100vh', 
+      backgroundColor: currentThemeStyles.mainBg, 
+      position: 'relative', 
+      overflow: 'hidden' 
+    }}>
+      <AnimatedBackground currentThemeStyles={currentThemeStyles} />
+      
       <div style={{
         maxWidth: '1400px',
         margin: '0 auto',
-        padding: '2rem 1.5rem'
+        padding: '2rem 1.5rem',
+        position: 'relative',
+        zIndex: 10
       }}>
         {/* Header */}
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: '2rem'
+          marginBottom: '2rem',
+          backgroundColor: currentThemeStyles.glassPanelBg,
+          padding: '2rem',
+          borderRadius: '1rem',
+          boxShadow: currentThemeStyles.glassPanelShadow,
+          backdropFilter: 'blur(12px)',
+          border: currentThemeStyles.glassPanelBorder
         }}>
           <div>
             <h1 style={{
               fontSize: '2rem',
               fontWeight: 'bold',
-              color: '#f1f5f9',
+              color: currentThemeStyles.textPrimary,
               margin: '0 0 0.5rem 0'
             }}>
               Vehicle Management
             </h1>
             <p style={{
-              color: '#94a3b8',
+              color: currentThemeStyles.textSecondary,
               margin: 0
             }}>
               Monitor and manage your fleet vehicles
@@ -263,12 +306,13 @@ export default function FleetVehiclesPage() {
         {/* Error Display */}
         {error && (
           <div style={{
-            backgroundColor: '#7f1d1d',
+            backgroundColor: 'rgba(127, 29, 29, 0.8)',
             border: '1px solid #991b1b',
             borderRadius: '0.5rem',
             padding: '1rem',
             marginBottom: '2rem',
-            color: '#fecaca'
+            color: '#fecaca',
+            backdropFilter: 'blur(12px)'
           }}>
             {error}
           </div>
@@ -283,10 +327,12 @@ export default function FleetVehiclesPage() {
             marginBottom: '2rem'
           }}>
             <div style={{
-              backgroundColor: '#1e293b',
+              backgroundColor: currentThemeStyles.glassPanelBg,
               padding: '1.5rem',
               borderRadius: '0.75rem',
-              border: '1px solid #334155'
+              border: currentThemeStyles.glassPanelBorder,
+              boxShadow: currentThemeStyles.glassPanelShadow,
+              backdropFilter: 'blur(12px)'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <TruckIcon width={32} height={32} color="#3b82f6" />
@@ -294,16 +340,18 @@ export default function FleetVehiclesPage() {
                   <h3 style={{ color: '#3b82f6', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>
                     {stats.total}
                   </h3>
-                  <p style={{ color: '#94a3b8', margin: '0.5rem 0 0 0' }}>Total Vehicles</p>
+                  <p style={{ color: currentThemeStyles.textSecondary, margin: '0.5rem 0 0 0' }}>Total Vehicles</p>
                 </div>
               </div>
             </div>
 
             <div style={{
-              backgroundColor: '#1e293b',
+              backgroundColor: currentThemeStyles.glassPanelBg,
               padding: '1.5rem',
               borderRadius: '0.75rem',
-              border: '1px solid #334155'
+              border: currentThemeStyles.glassPanelBorder,
+              boxShadow: currentThemeStyles.glassPanelShadow,
+              backdropFilter: 'blur(12px)'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <CheckCircleIcon width={32} height={32} color="#10b981" />
@@ -311,16 +359,18 @@ export default function FleetVehiclesPage() {
                   <h3 style={{ color: '#10b981', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>
                     {stats.online}
                   </h3>
-                  <p style={{ color: '#94a3b8', margin: '0.5rem 0 0 0' }}>Online</p>
+                  <p style={{ color: currentThemeStyles.textSecondary, margin: '0.5rem 0 0 0' }}>Online</p>
                 </div>
               </div>
             </div>
 
             <div style={{
-              backgroundColor: '#1e293b',
+              backgroundColor: currentThemeStyles.glassPanelBg,
               padding: '1.5rem',
               borderRadius: '0.75rem',
-              border: '1px solid #334155'
+              border: currentThemeStyles.glassPanelBorder,
+              boxShadow: currentThemeStyles.glassPanelShadow,
+              backdropFilter: 'blur(12px)'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <XCircleIcon width={32} height={32} color="#6b7280" />
@@ -328,16 +378,18 @@ export default function FleetVehiclesPage() {
                   <h3 style={{ color: '#6b7280', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>
                     {stats.offline}
                   </h3>
-                  <p style={{ color: '#94a3b8', margin: '0.5rem 0 0 0' }}>Offline</p>
+                  <p style={{ color: currentThemeStyles.textSecondary, margin: '0.5rem 0 0 0' }}>Offline</p>
                 </div>
               </div>
             </div>
 
             <div style={{
-              backgroundColor: '#1e293b',
+              backgroundColor: currentThemeStyles.glassPanelBg,
               padding: '1.5rem',
               borderRadius: '0.75rem',
-              border: '1px solid #334155'
+              border: currentThemeStyles.glassPanelBorder,
+              boxShadow: currentThemeStyles.glassPanelShadow,
+              backdropFilter: 'blur(12px)'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <CogIcon width={32} height={32} color="#f59e0b" />
@@ -345,7 +397,7 @@ export default function FleetVehiclesPage() {
                   <h3 style={{ color: '#f59e0b', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>
                     {stats.maintenance}
                   </h3>
-                  <p style={{ color: '#94a3b8', margin: '0.5rem 0 0 0' }}>Maintenance</p>
+                  <p style={{ color: currentThemeStyles.textSecondary, margin: '0.5rem 0 0 0' }}>Maintenance</p>
                 </div>
               </div>
             </div>
@@ -360,10 +412,12 @@ export default function FleetVehiclesPage() {
         }}>
           {vehicles.map((vehicle) => (
             <div key={vehicle._id} style={{
-              backgroundColor: '#1e293b',
+              backgroundColor: currentThemeStyles.glassPanelBg,
               padding: '1.5rem',
               borderRadius: '0.75rem',
-              border: '1px solid #334155'
+              border: currentThemeStyles.glassPanelBorder,
+              boxShadow: currentThemeStyles.glassPanelShadow,
+              backdropFilter: 'blur(12px)'
             }}>
               {/* Vehicle Header */}
               <div style={{
@@ -374,7 +428,7 @@ export default function FleetVehiclesPage() {
               }}>
                 <div>
                   <h3 style={{
-                    color: '#f1f5f9',
+                    color: currentThemeStyles.textPrimary,
                     fontSize: '1.1rem',
                     fontWeight: 'bold',
                     margin: '0 0 0.5rem 0'
@@ -382,7 +436,7 @@ export default function FleetVehiclesPage() {
                     {vehicle.vehicleNumber}
                   </h3>
                   <p style={{
-                    color: '#94a3b8',
+                    color: currentThemeStyles.textSecondary,
                     fontSize: '0.875rem',
                     margin: 0,
                     textTransform: 'capitalize'
@@ -441,8 +495,9 @@ export default function FleetVehiclesPage() {
                 gap: '1rem',
                 marginBottom: '1rem',
                 padding: '1rem',
-                backgroundColor: '#334155',
-                borderRadius: '0.5rem'
+                backgroundColor: 'rgba(51, 65, 85, 0.6)',
+                borderRadius: '0.5rem',
+                backdropFilter: 'blur(8px)'
               }}>
                 {/* Battery */}
                 <div style={{ textAlign: 'center' }}>
@@ -462,7 +517,7 @@ export default function FleetVehiclesPage() {
                       {vehicle.batteryLevel}%
                     </span>
                   </div>
-                  <div style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Battery</div>
+                  <div style={{ color: currentThemeStyles.textSecondary, fontSize: '0.75rem' }}>Battery</div>
                 </div>
 
                 {/* Signal */}
@@ -478,36 +533,37 @@ export default function FleetVehiclesPage() {
                       {getSignalBars(vehicle.signalStrength)}
                     </div>
                     <span style={{
-                      color: '#f1f5f9',
+                      color: currentThemeStyles.textPrimary,
                       fontSize: '0.875rem',
                       fontWeight: '600'
                     }}>
                       {vehicle.signalStrength}/5
                     </span>
                   </div>
-                  <div style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Signal</div>
+                  <div style={{ color: currentThemeStyles.textSecondary, fontSize: '0.75rem' }}>Signal</div>
                 </div>
 
                 {/* Last Seen */}
                 <div style={{ textAlign: 'center' }}>
                   <div style={{
-                    color: '#f1f5f9',
+                    color: currentThemeStyles.textPrimary,
                     fontSize: '0.875rem',
                     fontWeight: '600',
                     marginBottom: '0.5rem'
                   }}>
                     {formatLastSeen(vehicle.lastSeen)}
                   </div>
-                  <div style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Last Seen</div>
+                  <div style={{ color: currentThemeStyles.textSecondary, fontSize: '0.75rem' }}>Last Seen</div>
                 </div>
               </div>
 
               {/* Location */}
               <div style={{
-                backgroundColor: '#334155',
+                backgroundColor: 'rgba(51, 65, 85, 0.6)',
                 padding: '1rem',
                 borderRadius: '0.5rem',
-                marginBottom: '1rem'
+                marginBottom: '1rem',
+                backdropFilter: 'blur(8px)'
               }}>
                 <div style={{
                   display: 'flex',
@@ -521,9 +577,9 @@ export default function FleetVehiclesPage() {
                     borderRadius: '50%',
                     backgroundColor: vehicle.status === 'online' ? '#10b981' : '#6b7280'
                   }} />
-                  <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Current Location</span>
+                  <span style={{ color: currentThemeStyles.textSecondary, fontSize: '0.75rem' }}>Current Location</span>
                 </div>
-                <p style={{ color: '#f1f5f9', fontSize: '0.875rem', margin: 0 }}>
+                <p style={{ color: currentThemeStyles.textPrimary, fontSize: '0.875rem', margin: 0 }}>
                   {vehicle.location.address}
                 </p>
               </div>
@@ -531,11 +587,12 @@ export default function FleetVehiclesPage() {
               {/* Alerts */}
               {vehicle.alerts.count > 0 && (
                 <div style={{
-                  backgroundColor: '#7f1d1d',
+                  backgroundColor: 'rgba(127, 29, 29, 0.8)',
                   border: '1px solid #991b1b',
                   borderRadius: '0.5rem',
                   padding: '0.75rem',
-                  marginBottom: '1rem'
+                  marginBottom: '1rem',
+                  backdropFilter: 'blur(8px)'
                 }}>
                   <div style={{
                     display: 'flex',
@@ -614,13 +671,15 @@ export default function FleetVehiclesPage() {
           <div style={{
             textAlign: 'center',
             padding: '3rem',
-            backgroundColor: '#1e293b',
+            backgroundColor: currentThemeStyles.glassPanelBg,
             borderRadius: '0.75rem',
-            border: '1px solid #334155'
+            border: currentThemeStyles.glassPanelBorder,
+            boxShadow: currentThemeStyles.glassPanelShadow,
+            backdropFilter: 'blur(12px)'
           }}>
-            <TruckIcon width={48} height={48} style={{ margin: '0 auto 1rem', opacity: 0.5, color: '#94a3b8' }} />
-            <h3 style={{ color: '#f1f5f9', marginBottom: '0.5rem' }}>No vehicles found</h3>
-            <p style={{ color: '#94a3b8', marginBottom: '1.5rem' }}>
+            <TruckIcon width={48} height={48} style={{ margin: '0 auto 1rem', opacity: 0.5, color: currentThemeStyles.textSecondary }} />
+            <h3 style={{ color: currentThemeStyles.textPrimary, marginBottom: '0.5rem' }}>No vehicles found</h3>
+            <p style={{ color: currentThemeStyles.textSecondary, marginBottom: '1.5rem' }}>
               Add your first vehicle to start monitoring your fleet.
             </p>
             <Link
@@ -658,10 +717,12 @@ export default function FleetVehiclesPage() {
           zIndex: 1000
         }}>
           <div style={{
-            backgroundColor: '#1e293b',
+            backgroundColor: currentThemeStyles.glassPanelBg,
             padding: '2rem',
             borderRadius: '0.75rem',
-            border: '1px solid #334155',
+            border: currentThemeStyles.glassPanelBorder,
+            boxShadow: currentThemeStyles.glassPanelShadow,
+            backdropFilter: 'blur(12px)',
             maxWidth: '800px',
             width: '90%',
             maxHeight: '80vh',
@@ -674,7 +735,7 @@ export default function FleetVehiclesPage() {
               marginBottom: '2rem'
             }}>
               <h3 style={{
-                color: '#f1f5f9',
+                color: currentThemeStyles.textPrimary,
                 fontSize: '1.5rem',
                 fontWeight: 'bold',
                 margin: 0
@@ -685,7 +746,7 @@ export default function FleetVehiclesPage() {
                 onClick={() => setSelectedVehicle(null)}
                 style={{
                   backgroundColor: 'transparent',
-                  color: '#94a3b8',
+                  color: currentThemeStyles.textSecondary,
                   border: 'none',
                   cursor: 'pointer',
                   fontSize: '1.5rem'
@@ -702,26 +763,27 @@ export default function FleetVehiclesPage() {
             }}>
               {/* Vehicle Information */}
               <div>
-                <h4 style={{ color: '#f1f5f9', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <h4 style={{ color: currentThemeStyles.textPrimary, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <TruckIcon width={20} height={20} />
                   Vehicle Information
                 </h4>
                 <div style={{
-                  backgroundColor: '#334155',
+                  backgroundColor: 'rgba(51, 65, 85, 0.6)',
                   padding: '1.5rem',
                   borderRadius: '0.5rem',
-                  marginBottom: '1rem'
+                  marginBottom: '1rem',
+                  backdropFilter: 'blur(8px)'
                 }}>
                   <div style={{ marginBottom: '1rem' }}>
-                    <span style={{ color: '#94a3b8', fontSize: '0.875rem', display: 'block', marginBottom: '0.25rem' }}>Vehicle Number:</span>
-                    <span style={{ color: '#f1f5f9', fontSize: '1.1rem', fontWeight: '600' }}>{selectedVehicle.vehicleNumber}</span>
+                    <span style={{ color: currentThemeStyles.textSecondary, fontSize: '0.875rem', display: 'block', marginBottom: '0.25rem' }}>Vehicle Number:</span>
+                    <span style={{ color: currentThemeStyles.textPrimary, fontSize: '1.1rem', fontWeight: '600' }}>{selectedVehicle.vehicleNumber}</span>
                   </div>
                   <div style={{ marginBottom: '1rem' }}>
-                    <span style={{ color: '#94a3b8', fontSize: '0.875rem', display: 'block', marginBottom: '0.25rem' }}>Vehicle Type:</span>
-                    <span style={{ color: '#f1f5f9', textTransform: 'capitalize' }}>{selectedVehicle.vehicleType}</span>
+                    <span style={{ color: currentThemeStyles.textSecondary, fontSize: '0.875rem', display: 'block', marginBottom: '0.25rem' }}>Vehicle Type:</span>
+                    <span style={{ color: currentThemeStyles.textPrimary, textTransform: 'capitalize' }}>{selectedVehicle.vehicleType}</span>
                   </div>
                   <div style={{ marginBottom: '1rem' }}>
-                    <span style={{ color: '#94a3b8', fontSize: '0.875rem', display: 'block', marginBottom: '0.25rem' }}>Approval Status:</span>
+                    <span style={{ color: currentThemeStyles.textSecondary, fontSize: '0.875rem', display: 'block', marginBottom: '0.25rem' }}>Approval Status:</span>
                     <span style={{ 
                       color: getApprovalStatusColor(selectedVehicle.approvalStatus), 
                       fontWeight: '600',
@@ -731,7 +793,7 @@ export default function FleetVehiclesPage() {
                     </span>
                   </div>
                   <div>
-                    <span style={{ color: '#94a3b8', fontSize: '0.875rem', display: 'block', marginBottom: '0.25rem' }}>Operational Status:</span>
+                    <span style={{ color: currentThemeStyles.textSecondary, fontSize: '0.875rem', display: 'block', marginBottom: '0.25rem' }}>Operational Status:</span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <span style={{ color: getStatusColor(selectedVehicle.status) }}>
                         {getStatusIcon(selectedVehicle.status)}
@@ -746,45 +808,47 @@ export default function FleetVehiclesPage() {
 
               {/* Device Information */}
               <div>
-                <h4 style={{ color: '#f1f5f9', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <h4 style={{ color: currentThemeStyles.textPrimary, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <WifiIcon width={20} height={20} />
                   Device Information
                 </h4>
                 <div style={{
-                  backgroundColor: '#334155',
+                  backgroundColor: 'rgba(51, 65, 85, 0.6)',
                   padding: '1.5rem',
                   borderRadius: '0.5rem',
-                  marginBottom: '1rem'
+                  marginBottom: '1rem',
+                  backdropFilter: 'blur(8px)'
                 }}>
                   <div style={{ marginBottom: '1rem' }}>
-                    <span style={{ color: '#94a3b8', fontSize: '0.875rem', display: 'block', marginBottom: '0.25rem' }}>Device ID:</span>
-                    <span style={{ color: '#f1f5f9', fontFamily: 'monospace' }}>{selectedVehicle.deviceId}</span>
+                    <span style={{ color: currentThemeStyles.textSecondary, fontSize: '0.875rem', display: 'block', marginBottom: '0.25rem' }}>Device ID:</span>
+                    <span style={{ color: currentThemeStyles.textPrimary, fontFamily: 'monospace' }}>{selectedVehicle.deviceId}</span>
                   </div>
                   <div style={{ marginBottom: '1rem' }}>
-                    <span style={{ color: '#94a3b8', fontSize: '0.875rem', display: 'block', marginBottom: '0.25rem' }}>Firmware Version:</span>
-                    <span style={{ color: '#f1f5f9' }}>v{selectedVehicle.firmwareVersion}</span>
+                    <span style={{ color: currentThemeStyles.textSecondary, fontSize: '0.875rem', display: 'block', marginBottom: '0.25rem' }}>Firmware Version:</span>
+                    <span style={{ color: currentThemeStyles.textPrimary }}>v{selectedVehicle.firmwareVersion}</span>
                   </div>
                   <div style={{ marginBottom: '1rem' }}>
-                    <span style={{ color: '#94a3b8', fontSize: '0.875rem', display: 'block', marginBottom: '0.25rem' }}>Install Date:</span>
-                    <span style={{ color: '#f1f5f9' }}>{formatDateTime(selectedVehicle.installDate)}</span>
+                    <span style={{ color: currentThemeStyles.textSecondary, fontSize: '0.875rem', display: 'block', marginBottom: '0.25rem' }}>Install Date:</span>
+                    <span style={{ color: currentThemeStyles.textPrimary }}>{formatDateTime(selectedVehicle.installDate)}</span>
                   </div>
                   <div>
-                    <span style={{ color: '#94a3b8', fontSize: '0.875rem', display: 'block', marginBottom: '0.25rem' }}>Registration Date:</span>
-                    <span style={{ color: '#f1f5f9' }}>{formatDateTime(selectedVehicle.createdAt)}</span>
+                    <span style={{ color: currentThemeStyles.textSecondary, fontSize: '0.875rem', display: 'block', marginBottom: '0.25rem' }}>Registration Date:</span>
+                    <span style={{ color: currentThemeStyles.textPrimary }}>{formatDateTime(selectedVehicle.createdAt)}</span>
                   </div>
                 </div>
               </div>
 
               {/* Current Status */}
               <div>
-                <h4 style={{ color: '#f1f5f9', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <h4 style={{ color: currentThemeStyles.textPrimary, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <SignalIcon width={20} height={20} />
                   Current Status
                 </h4>
                 <div style={{
-                  backgroundColor: '#334155',
+                  backgroundColor: 'rgba(51, 65, 85, 0.6)',
                   padding: '1.5rem',
-                  borderRadius: '0.5rem'
+                  borderRadius: '0.5rem',
+                  backdropFilter: 'blur(8px)'
                 }}>
                   <div style={{
                     display: 'grid',
@@ -796,19 +860,19 @@ export default function FleetVehiclesPage() {
                       <div style={{ color: getBatteryColor(selectedVehicle.batteryLevel), fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.25rem' }}>
                         {selectedVehicle.batteryLevel}%
                       </div>
-                      <div style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Battery</div>
+                      <div style={{ color: currentThemeStyles.textSecondary, fontSize: '0.75rem' }}>Battery</div>
                     </div>
                     <div style={{ textAlign: 'center' }}>
-                      <div style={{ color: '#f1f5f9', fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.25rem' }}>
+                      <div style={{ color: currentThemeStyles.textPrimary, fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.25rem' }}>
                         {selectedVehicle.signalStrength}/5
                       </div>
-                      <div style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Signal</div>
+                      <div style={{ color: currentThemeStyles.textSecondary, fontSize: '0.75rem' }}>Signal</div>
                     </div>
                     <div style={{ textAlign: 'center' }}>
-                      <div style={{ color: '#f1f5f9', fontSize: '1rem', fontWeight: 'bold', marginBottom: '0.25rem' }}>
+                      <div style={{ color: currentThemeStyles.textPrimary, fontSize: '1rem', fontWeight: 'bold', marginBottom: '0.25rem' }}>
                         {formatLastSeen(selectedVehicle.lastSeen)}
                       </div>
-                      <div style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Last Seen</div>
+                      <div style={{ color: currentThemeStyles.textSecondary, fontSize: '0.75rem' }}>Last Seen</div>
                     </div>
                   </div>
                 </div>
@@ -816,27 +880,28 @@ export default function FleetVehiclesPage() {
 
               {/* Location */}
               <div>
-                <h4 style={{ color: '#f1f5f9', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <h4 style={{ color: currentThemeStyles.textPrimary, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <MapPinIcon width={20} height={20} />
                   Location
                 </h4>
                 <div style={{
-                  backgroundColor: '#334155',
+                  backgroundColor: 'rgba(51, 65, 85, 0.6)',
                   padding: '1.5rem',
-                  borderRadius: '0.5rem'
+                  borderRadius: '0.5rem',
+                  backdropFilter: 'blur(8px)'
                 }}>
                   <div style={{ marginBottom: '1rem' }}>
-                    <span style={{ color: '#94a3b8', fontSize: '0.875rem', display: 'block', marginBottom: '0.5rem' }}>Current Location:</span>
-                    <p style={{ color: '#f1f5f9', margin: 0, marginBottom: '0.5rem' }}>
+                    <span style={{ color: currentThemeStyles.textSecondary, fontSize: '0.875rem', display: 'block', marginBottom: '0.5rem' }}>Current Location:</span>
+                    <p style={{ color: currentThemeStyles.textPrimary, margin: 0, marginBottom: '0.5rem' }}>
                       {selectedVehicle.location.address}
                     </p>
-                    <div style={{ color: '#94a3b8', fontSize: '0.75rem' }}>
+                    <div style={{ color: currentThemeStyles.textSecondary, fontSize: '0.75rem' }}>
                       Coordinates: {selectedVehicle.location.latitude.toFixed(6)}, {selectedVehicle.location.longitude.toFixed(6)}
                     </div>
                   </div>
                   <div>
-                    <span style={{ color: '#94a3b8', fontSize: '0.875rem', display: 'block', marginBottom: '0.25rem' }}>Last Updated:</span>
-                    <span style={{ color: '#f1f5f9', fontSize: '0.875rem' }}>{formatDateTime(selectedVehicle.location.lastUpdated)}</span>
+                    <span style={{ color: currentThemeStyles.textSecondary, fontSize: '0.875rem', display: 'block', marginBottom: '0.25rem' }}>Last Updated:</span>
+                    <span style={{ color: currentThemeStyles.textPrimary, fontSize: '0.875rem' }}>{formatDateTime(selectedVehicle.location.lastUpdated)}</span>
                   </div>
                 </div>
               </div>
@@ -845,15 +910,16 @@ export default function FleetVehiclesPage() {
             {/* Alerts Section */}
             {selectedVehicle.alerts.count > 0 && (
               <div style={{ marginTop: '2rem' }}>
-                <h4 style={{ color: '#f1f5f9', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <h4 style={{ color: currentThemeStyles.textPrimary, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <ExclamationTriangleIcon width={20} height={20} color="#ef4444" />
                   Active Alerts ({selectedVehicle.alerts.count})
                 </h4>
                 <div style={{
-                  backgroundColor: '#7f1d1d',
+                  backgroundColor: 'rgba(127, 29, 29, 0.8)',
                   border: '1px solid #991b1b',
                   borderRadius: '0.5rem',
-                  padding: '1rem'
+                  padding: '1rem',
+                  backdropFilter: 'blur(8px)'
                 }}>
                   {selectedVehicle.alerts.messages.map((message, index) => (
                     <div key={index} style={{ color: '#fecaca', marginBottom: '0.5rem' }}>
@@ -867,17 +933,18 @@ export default function FleetVehiclesPage() {
             {/* Note about editing */}
             {selectedVehicle.approvalStatus === 'approved' && (
               <div style={{
-                backgroundColor: '#0f172a',
-                border: '1px solid #334155',
+                backgroundColor: 'rgba(15, 23, 42, 0.8)',
+                border: currentThemeStyles.glassPanelBorder,
                 borderRadius: '0.5rem',
                 padding: '1rem',
-                marginTop: '1.5rem'
+                marginTop: '1.5rem',
+                backdropFilter: 'blur(8px)'
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
                   <CheckCircleIcon width={16} height={16} color="#10b981" />
                   <span style={{ color: '#10b981', fontSize: '0.875rem', fontWeight: '600' }}>Approved Vehicle</span>
                 </div>
-                <p style={{ color: '#94a3b8', fontSize: '0.875rem', margin: 0 }}>
+                <p style={{ color: currentThemeStyles.textSecondary, fontSize: '0.875rem', margin: 0 }}>
                   This vehicle has been approved by admin. Vehicle details cannot be modified. Contact admin for any changes needed.
                 </p>
               </div>
@@ -922,22 +989,24 @@ export default function FleetVehiclesPage() {
           zIndex: 1001
         }}>
           <div style={{
-            backgroundColor: '#1e293b',
+            backgroundColor: currentThemeStyles.glassPanelBg,
             padding: '2rem',
             borderRadius: '0.75rem',
-            border: '1px solid #334155',
+            border: currentThemeStyles.glassPanelBorder,
+            boxShadow: currentThemeStyles.glassPanelShadow,
+            backdropFilter: 'blur(12px)',
             maxWidth: '400px',
             width: '90%'
           }}>
             <h3 style={{
-              color: '#f1f5f9',
+              color: currentThemeStyles.textPrimary,
               fontSize: '1.25rem',
               fontWeight: 'bold',
               marginBottom: '1rem'
             }}>
               Delete Vehicle
             </h3>
-            <p style={{ color: '#94a3b8', marginBottom: '1.5rem' }}>
+            <p style={{ color: currentThemeStyles.textSecondary, marginBottom: '1.5rem' }}>
               Are you sure you want to delete <strong>{showDeleteModal.vehicleNumber}</strong>? This action cannot be undone.
             </p>
             <div style={{
