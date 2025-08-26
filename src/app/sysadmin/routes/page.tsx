@@ -1,4 +1,4 @@
-// src/app/sysadmin/routes/page.tsx - Admin Route Management with Approval Workflow
+// src/app/sysadmin/routes/page.tsx - Admin Route Management with Approval Workflow + Route Creation
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -14,7 +14,8 @@ import {
   BuildingOfficeIcon,
   CurrencyDollarIcon,
   UsersIcon,
-  TruckIcon
+  TruckIcon,
+  PlusIcon
 } from '@heroicons/react/24/outline';
 
 interface Route {
@@ -316,6 +317,26 @@ export default function AdminRoutesPage() {
               <option value="approved">Approved</option>
               <option value="rejected">Rejected</option>
             </select>
+            
+            {/* NEW CREATE ROUTE BUTTON */}
+            <Link href="/sysadmin/routes/add">
+              <button style={{
+                backgroundColor: '#10b981',
+                color: 'white',
+                padding: '0.5rem 1rem',
+                borderRadius: '0.5rem',
+                border: 'none',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                textDecoration: 'none'
+              }}>
+                <PlusIcon width={16} height={16} />
+                Create Route
+              </button>
+            </Link>
+            
             <button
               onClick={() => window.location.reload()}
               style={{
