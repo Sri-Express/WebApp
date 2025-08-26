@@ -1,4 +1,4 @@
-// src/app/fleet/routes/page.tsx - Fleet Route Assignment Management
+// src/app/fleet/routes/page.tsx - Fleet Route Assignment Management (FIXED - ASSIGNMENT ONLY)
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -39,7 +39,7 @@ interface Route {
     basePrice: number;
     pricePerKm: number;
   };
-  assignedVehicles?: string[]; // Vehicle IDs assigned to this route
+  assignedVehicles?: number; // Count of assigned vehicles
 }
 
 interface Vehicle {
@@ -52,8 +52,20 @@ interface Vehicle {
 }
 
 interface RouteAssignment {
-  routeId: string;
-  vehicleId: string;
+  _id: string;
+  routeId: {
+    _id: string;
+    name: string;
+    routeId: string;
+    startLocation: { name: string };
+    endLocation: { name: string };
+  };
+  vehicleId: {
+    _id: string;
+    vehicleNumber: string;
+    vehicleType: string;
+    status: string;
+  };
   assignedAt: string;
   status: 'active' | 'inactive';
 }
@@ -79,7 +91,7 @@ export default function FleetRoutesPage() {
           'Content-Type': 'application/json'
         };
 
-        // Load available routes (approved routes that accept buses)
+        // Load available routes (admin-created, approved routes)
         const routesResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/fleet/routes/available`, {
           headers
         });
@@ -89,8 +101,8 @@ export default function FleetRoutesPage() {
         }
         const routesData = await routesResponse.json();
 
-        // Load approved vehicles
-        const vehiclesResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/fleet/vehicles?status=approved`, {
+        // Load approved vehicles for assignment
+        const vehiclesResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/fleet/vehicles`, {
           headers
         });
         
@@ -110,57 +122,11 @@ export default function FleetRoutesPage() {
         const assignmentsData = await assignmentsResponse.json();
 
         setRoutes(routesData.routes || []);
-        setVehicles(vehiclesData.vehicles || []);
+        setVehicles(vehiclesData.vehicles?.filter((v: Vehicle) => v.approvalStatus === 'approved') || []);
         setAssignments(assignmentsData.assignments || []);
       } catch (error) {
         console.error('Load data error:', error);
         setError(error instanceof Error ? error.message : 'Failed to load data');
-        
-        // Fallback data for development
-        setRoutes([
-          {
-            _id: '1',
-            routeId: 'RT001',
-            name: 'Padukka to Colombo Express',
-            startLocation: { name: 'Padukka Bus Station', address: 'Main Street, Padukka' },
-            endLocation: { name: 'Colombo Fort', address: 'Fort Railway Station, Colombo 01' },
-            distance: 45.5,
-            estimatedDuration: 120,
-            vehicleInfo: { type: 'bus', capacity: 50, amenities: ['AC', 'WiFi'] },
-            pricing: { basePrice: 50, pricePerKm: 2.5 },
-            assignedVehicles: []
-          },
-          {
-            _id: '2',
-            routeId: 'RT002',
-            name: 'Kandy to Galle Highway',
-            startLocation: { name: 'Kandy Central', address: 'Temple Street, Kandy' },
-            endLocation: { name: 'Galle Bus Terminal', address: 'Main Road, Galle' },
-            distance: 156.2,
-            estimatedDuration: 180,
-            vehicleInfo: { type: 'bus', capacity: 45, amenities: ['AC', 'Entertainment'] },
-            pricing: { basePrice: 75, pricePerKm: 3.0 },
-            assignedVehicles: []
-          }
-        ]);
-        setVehicles([
-          {
-            _id: 'v1',
-            vehicleNumber: 'BUS-001',
-            vehicleType: 'bus',
-            status: 'online',
-            approvalStatus: 'approved',
-            assignedRoutes: []
-          },
-          {
-            _id: 'v2',
-            vehicleNumber: 'BUS-002',
-            vehicleType: 'bus',
-            status: 'offline',
-            approvalStatus: 'approved',
-            assignedRoutes: []
-          }
-        ]);
       } finally {
         setLoading(false);
       }
@@ -169,18 +135,14 @@ export default function FleetRoutesPage() {
     loadData();
   }, []);
 
-  const getVehicleAssignments = (vehicleId: string) => {
-    return assignments.filter(a => a.vehicleId === vehicleId && a.status === 'active');
-  };
-
   const getRouteAssignments = (routeId: string) => {
-    return assignments.filter(a => a.routeId === routeId && a.status === 'active');
+    return assignments.filter(a => a.routeId._id === routeId && a.status === 'active');
   };
 
-  const getAvailableVehicles = () => {
+  const getAvailableVehiclesForRoute = (route: Route) => {
     return vehicles.filter(v => 
       v.approvalStatus === 'approved' && 
-      v.vehicleType === 'bus' && 
+      v.vehicleType === route.vehicleInfo.type && 
       v.status !== 'maintenance'
     );
   };
@@ -206,14 +168,10 @@ export default function FleetRoutesPage() {
         throw new Error('Failed to assign vehicles');
       }
 
-      const newAssignments = vehicleIds.map(vehicleId => ({
-        routeId,
-        vehicleId,
-        assignedAt: new Date().toISOString(),
-        status: 'active' as const
-      }));
+      const result = await response.json();
 
-      setAssignments(prev => [...prev, ...newAssignments]);
+      // Update assignments state
+      setAssignments(prev => [...prev, ...result.assignments]);
       setShowAssignModal(null);
       setSelectedVehicleIds([]);
     } catch (error) {
@@ -242,7 +200,7 @@ export default function FleetRoutesPage() {
       }
 
       setAssignments(prev => 
-        prev.filter(a => !(a.routeId === routeId && a.vehicleId === vehicleId))
+        prev.filter(a => !(a.routeId._id === routeId && a.vehicleId._id === vehicleId))
       );
     } catch (error) {
       console.error('Unassign vehicle error:', error);
@@ -274,7 +232,7 @@ export default function FleetRoutesPage() {
     );
   }
 
-  const approvedVehicles = getAvailableVehicles();
+  const approvedVehicles = vehicles.filter(v => v.approvalStatus === 'approved');
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#0f172a' }}>
@@ -501,8 +459,8 @@ export default function FleetRoutesPage() {
           }}>
             {routes.map((route) => {
               const routeAssignments = getRouteAssignments(route._id);
-              const assignedVehicleIds = routeAssignments.map(a => a.vehicleId);
-              const assignedVehicles = vehicles.filter(v => assignedVehicleIds.includes(v._id));
+              const assignedVehicles = routeAssignments.map(a => a.vehicleId);
+              const availableVehicles = getAvailableVehiclesForRoute(route);
               
               return (
                 <div key={route._id} style={{
@@ -751,7 +709,7 @@ export default function FleetRoutesPage() {
                       View Details
                     </button>
                     
-                    {approvedVehicles.length > 0 && (
+                    {availableVehicles.length > 0 && (
                       <button
                         onClick={() => {
                           setShowAssignModal(route);
@@ -791,6 +749,9 @@ export default function FleetRoutesPage() {
               <MapIcon width={48} height={48} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
               <h3 style={{ color: '#f1f5f9', marginBottom: '0.5rem' }}>No Routes Available</h3>
               <p>No approved routes are available for vehicle assignment at this time.</p>
+              <p style={{ fontSize: '0.875rem', marginTop: '1rem' }}>
+                Routes are created by system administrators. Please contact admin if you need new routes.
+              </p>
             </div>
           )}
         </div>
@@ -938,8 +899,8 @@ export default function FleetRoutesPage() {
               overflowY: 'auto',
               marginBottom: '1.5rem'
             }}>
-              {approvedVehicles
-                .filter(v => !getRouteAssignments(showAssignModal._id).some(a => a.vehicleId === v._id))
+              {getAvailableVehiclesForRoute(showAssignModal)
+                .filter(v => !getRouteAssignments(showAssignModal._id).some(a => a.vehicleId._id === v._id))
                 .map((vehicle) => (
                 <label key={vehicle._id} style={{
                   display: 'flex',
