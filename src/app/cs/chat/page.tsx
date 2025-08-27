@@ -1,17 +1,17 @@
-// app/cs/chat/page.tsx - REFACTORED VERSION
+// app/cs/chat/page.tsx - COMPLETE FIXED VERSION
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTheme } from '@/app/context/ThemeContext';
 import ThemeSwitcher from '@/app/components/ThemeSwitcher';
-import AnimatedBackground from '@/app/cs/components/AnimatedBackground'; // IMPORT THE NEW COMPONENT
+import AnimatedBackground from '@/app/cs/components/AnimatedBackground';
 import { 
   ShieldCheckIcon, ChatBubbleOvalLeftEllipsisIcon, ClockIcon, ListBulletIcon, ChartBarIcon, 
   CheckBadgeIcon, PaperAirplaneIcon, UserCircleIcon, ArrowUturnLeftIcon, PowerIcon,
-  CpuChipIcon, Cog6ToothIcon
+  CpuChipIcon, Cog6ToothIcon, CheckCircleIcon
 } from '@heroicons/react/24/outline';
 
-// --- Data Interfaces (Unchanged) ---
+// --- FIXED Data Interfaces ---
 interface ChatSession {
   _id: string;
   sessionId: string;
@@ -34,29 +34,38 @@ interface ChatSession {
 }
 
 interface ChatMessage {
-  _id: string;
-  sender: 'customer' | 'agent' | 'ai' | 'system';
-  message: string;
+  messageId: string;
+  sender: 'customer' | 'agent' | 'ai_bot' | 'system';
+  senderId?: string;
+  content: string;
   timestamp: string;
-  readBy?: string[];
+  isRead?: boolean;
+  messageType?: string;
+  aiGenerated?: boolean;
 }
 
+// FIXED: Enhanced interface to match backend
 interface QueueStats {
   active: number;
   waiting: number;
   ended: number;
   total: number;
+  resolved: number;
+  resolutionRate: number;
   avgWaitTime: string;
-  avgResponseTime: string;
+  avgResolutionTime: string;
   satisfactionRate: string;
+  avgRating: number;
+  totalFeedback: number;
+  positiveRatings: number;
+  queueHealth: 'healthy' | 'moderate' | 'high-load';
+  responseEfficiency: 'excellent' | 'good' | 'needs-improvement';
 }
 
-// --- Main Component ---
 export default function CSChat() {
   const router = useRouter();
   const { theme } = useTheme();
   
-  // --- State Management (Original Logic) ---
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
   const [queueStats, setQueueStats] = useState<QueueStats | null>(null);
   const [selectedChat, setSelectedChat] = useState<ChatSession | null>(null);
@@ -68,19 +77,49 @@ export default function CSChat() {
   const [autoRefresh] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // --- Theme and Style Definitions ---
+  // Theme styles
   const lightTheme = { mainBg: '#fffbeb', bgGradient: 'linear-gradient(to bottom right, #fffbeb, #fef3c7, #fde68a)', glassPanelBg: 'rgba(255, 255, 255, 0.92)', glassPanelBorder: '1px solid rgba(251, 191, 36, 0.3)', glassPanelShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 10px 20px -5px rgba(0, 0, 0, 0.1)', textPrimary: '#1f2937', textSecondary: '#4B5563', textMuted: '#6B7280', quickActionBg: 'rgba(249, 250, 251, 0.8)', quickActionBorder: '1px solid rgba(209, 213, 219, 0.5)', alertBg: 'rgba(249, 250, 251, 0.6)' };
   const darkTheme = { mainBg: '#0f172a', bgGradient: 'linear-gradient(to bottom right, #0f172a, #1e293b, #334155)', glassPanelBg: 'rgba(30, 41, 59, 0.8)', glassPanelBorder: '1px solid rgba(251, 191, 36, 0.3)', glassPanelShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35), 0 10px 20px -5px rgba(0, 0, 0, 0.2)', textPrimary: '#f9fafb', textSecondary: '#9ca3af', textMuted: '#9ca3af', quickActionBg: 'rgba(51, 65, 85, 0.8)', quickActionBorder: '1px solid rgba(75, 85, 99, 0.5)', alertBg: 'rgba(51, 65, 85, 0.6)' };
   const currentThemeStyles = theme === 'dark' ? darkTheme : lightTheme;
   
-  // --- Animation Styles for UI elements ---
   const animationStyles = `
     @keyframes fade-in-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     .chat-item:hover { background-color: ${theme === 'dark' ? 'rgba(75, 85, 99, 0.5)' : 'rgba(243, 244, 246, 0.7)'} !important; }
   `;
 
-  // --- Data Fetching and Actions (Original Logic - Unchanged) ---
+  // Message polling for active chat
+  useEffect(() => {
+    if (!selectedChat) return;
+    
+    const token = localStorage.getItem('cs_token');
+    if (!token) return;
+
+    const pollMessages = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/cs/chat/sessions/${selectedChat._id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.data.chat) {
+            const newMessages = data.data.chat.messages || [];
+            if (JSON.stringify(messages) !== JSON.stringify(newMessages)) {
+              setMessages(newMessages);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Failed to poll messages:', error);
+      }
+    };
+
+    const interval = setInterval(pollMessages, 2000);
+    return () => clearInterval(interval);
+  }, [selectedChat, messages]);
+
+  // Main data fetching
   useEffect(() => {
     const token = localStorage.getItem('cs_token');
     if (!token) {
@@ -118,8 +157,11 @@ export default function CSChat() {
         statsRes.json()
       ]);
 
+      console.log('Sessions Data:', sessionsData);
+      console.log('Stats Data:', statsData);
+
       if (sessionsData.success && statsData.success) {
-        setChatSessions(sessionsData.data.chats || sessionsData.data.sessions || []);
+        setChatSessions(sessionsData.data.sessions || sessionsData.data.chats || []);
         setQueueStats(statsData.data || null);
       } else {
         throw new Error(sessionsData.message || statsData.message || 'Unknown error');
@@ -145,8 +187,8 @@ export default function CSChat() {
       
       if (response.ok) {
         const data = await response.json();
-        if (data.success) {
-          setMessages(data.data.messages || []);
+        if (data.success && data.data.chat) {
+          setMessages(data.data.chat.messages || []);
         }
       } else {
         setError('Failed to load chat messages');
@@ -162,8 +204,9 @@ export default function CSChat() {
 
     const token = localStorage.getItem('cs_token');
     if (!token) return;
+    
     const messageData = {
-      message: newMessage,
+      content: newMessage,
       sender: 'agent'
     };
 
@@ -181,9 +224,9 @@ export default function CSChat() {
         const data = await response.json();
         if (data.success) {
           const newMsg: ChatMessage = {
-            _id: data.data.messageId || Date.now().toString(),
+            messageId: data.data.messageId || Date.now().toString(),
             sender: 'agent',
-            message: newMessage,
+            content: newMessage,
             timestamp: new Date().toISOString()
           };
           setMessages(prev => [...prev, newMsg]);
@@ -286,7 +329,6 @@ export default function CSChat() {
     }
   };
 
-  // --- Loading State ---
   if (loading) {
     return (
       <div style={{ backgroundColor: currentThemeStyles.mainBg, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -299,12 +341,10 @@ export default function CSChat() {
     );
   }
 
-  // --- Main Render ---
   return (
     <div style={{ backgroundColor: currentThemeStyles.mainBg, minHeight: '100vh', position: 'relative', overflow: 'hidden', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       <style jsx>{animationStyles}</style>
       
-      {/* --- Use the Animated Background Component --- */}
       <AnimatedBackground currentThemeStyles={currentThemeStyles} />
 
       <div style={{ position: 'relative', zIndex: 10, display: 'flex', flexDirection: 'column', height: '100vh', padding: '0 1.5rem 1.5rem 1.5rem' }}>
@@ -329,6 +369,9 @@ export default function CSChat() {
                 </select>
               </div>
               <span style={{ color: '#94a3b8' }}>Support Agent</span>
+              <button onClick={() => router.push('/cs/dashboard')} style={{ backgroundColor: '#3b82f6', color: '#ffffff', padding: '0.5rem 1rem', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <ChartBarIcon width={16} /> Dashboard
+              </button>
               <button onClick={() => { localStorage.removeItem('cs_token'); router.push('/cs/login'); }} style={{ backgroundColor: '#374151', color: '#f9fafb', padding: '0.5rem 1rem', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <PowerIcon width={16} /> Logout
               </button>
@@ -337,21 +380,24 @@ export default function CSChat() {
         </nav>
 
         <main style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1.5rem', paddingTop: '1.5rem', overflow: 'hidden' }}>
-          {/* Stats */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1.5rem' }}>
+          {/* FIXED: Enhanced Metrics Dashboard - Always 8 Cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem' }}>
             {[
               { label: 'Active Chats', value: queueStats?.active || 0, icon: ChatBubbleOvalLeftEllipsisIcon, color: '#22c55e' },
-              { label: 'Waiting in Queue', value: queueStats?.waiting || 0, icon: ClockIcon, color: '#f59e0b' },
-              { label: 'Total Today', value: queueStats?.total || 0, icon: ListBulletIcon, color: '#3b82f6' },
-              { label: 'Avg Wait Time', value: queueStats?.avgWaitTime || '0m', icon: ChartBarIcon, color: '#8b5cf6' },
-              { label: 'Satisfaction', value: queueStats?.satisfactionRate || '0%', icon: CheckBadgeIcon, color: '#14b8a6' },
+              { label: 'In Queue', value: queueStats?.waiting || 0, icon: ClockIcon, color: '#f59e0b' },
+              { label: 'Resolved Today', value: queueStats?.resolved || 0, icon: CheckCircleIcon, color: '#3b82f6' },
+              { label: 'Total Today', value: queueStats?.total || 0, icon: ListBulletIcon, color: '#8b5cf6' },
+              { label: 'Resolution Rate', value: `${queueStats?.resolutionRate || 0}%`, icon: ChartBarIcon, color: '#06b6d4' },
+              { label: 'Avg Wait', value: queueStats?.avgWaitTime || '0m', icon: ClockIcon, color: '#f97316' },
+              { label: 'Avg Resolution', value: queueStats?.avgResolutionTime || '0m', icon: ChartBarIcon, color: '#84cc16' },
+              { label: 'Satisfaction', value: queueStats?.satisfactionRate || '0%', icon: CheckBadgeIcon, color: queueStats?.responseEfficiency === 'excellent' ? '#10b981' : queueStats?.responseEfficiency === 'good' ? '#f59e0b' : '#ef4444' },
             ].map((metric, index) => (
-              <div key={metric.label} style={{ backgroundColor: currentThemeStyles.glassPanelBg, padding: '1.5rem', borderRadius: '1rem', boxShadow: currentThemeStyles.glassPanelShadow, backdropFilter: 'blur(12px)', border: currentThemeStyles.glassPanelBorder, animation: `fade-in-up 0.6s ease-out ${index * 0.1}s both` }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <metric.icon width={24} height={24} color={metric.color} />
+              <div key={metric.label} style={{ backgroundColor: currentThemeStyles.glassPanelBg, padding: '1.2rem', borderRadius: '1rem', boxShadow: currentThemeStyles.glassPanelShadow, backdropFilter: 'blur(12px)', border: currentThemeStyles.glassPanelBorder, animation: `fade-in-up 0.6s ease-out ${index * 0.1}s both` }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <metric.icon width={20} height={20} color={metric.color} />
                   <div>
-                    <h3 style={{ color: metric.color, fontSize: '1.75rem', fontWeight: 'bold', margin: 0 }}>{metric.value}</h3>
-                    <p style={{ color: currentThemeStyles.textPrimary, margin: '0.25rem 0 0 0', fontWeight: '500', fontSize: '0.875rem' }}>{metric.label}</p>
+                    <h3 style={{ color: metric.color, fontSize: '1.5rem', fontWeight: 'bold', margin: 0 }}>{metric.value}</h3>
+                    <p style={{ color: currentThemeStyles.textPrimary, margin: '0.25rem 0 0 0', fontWeight: '500', fontSize: '0.8rem' }}>{metric.label}</p>
                   </div>
                 </div>
               </div>
@@ -377,7 +423,7 @@ export default function CSChat() {
                   <div key={chat._id} onClick={() => selectChat(chat)} className="chat-item" style={{ padding: '1rem', margin: '0.5rem', borderRadius: '0.75rem', cursor: 'pointer', transition: 'all 0.2s ease', backgroundColor: selectedChat?._id === chat._id ? 'rgba(59, 130, 246, 0.2)' : 'transparent', borderLeft: `4px solid ${selectedChat?._id === chat._id ? '#3b82f6' : 'transparent'}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                       <strong style={{ color: currentThemeStyles.textPrimary }}>{chat.customerInfo.name}</strong>
-                      <span style={{ padding: '0.125rem 0.5rem', fontSize: '0.7rem', fontWeight: '600', borderRadius: '999px', backgroundColor: getPriorityColor(chat.priority) + '30', color: getPriorityColor(chat.priority) }}>{chat.priority}</span>
+                      <span style={{ padding: '0.125rem 0.5rem', fontSize: '0.7rem', fontWeight: '600', borderRadius: '999px', backgroundColor: getPriorityColor(chat.priority || 'normal') + '30', color: getPriorityColor(chat.priority || 'normal') }}>{chat.priority || 'normal'}</span>
                     </div>
                     <p style={{ fontSize: '0.8rem', color: currentThemeStyles.textSecondary, margin: '0 0 0.5rem 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{chat.lastMessage || 'New chat session started...'}</p>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', color: currentThemeStyles.textMuted }}>
@@ -414,14 +460,14 @@ export default function CSChat() {
                   </div>
                   <div style={{ flex: 1, padding: '1rem', overflowY: 'auto', backgroundColor: currentThemeStyles.quickActionBg }}>
                     {messages.map(message => (
-                      <div key={message._id} style={{ marginBottom: '1rem', display: 'flex', justifyContent: message.sender === 'agent' ? 'flex-end' : 'flex-start' }}>
-                        <div style={{ maxWidth: '75%', padding: '0.75rem 1rem', borderRadius: '1rem', backgroundColor: message.sender === 'agent' ? '#3b82f6' : message.sender === 'ai' ? '#14b8a6' : message.sender === 'system' ? currentThemeStyles.textSecondary : currentThemeStyles.alertBg, color: message.sender === 'customer' ? currentThemeStyles.textPrimary : 'white', border: message.sender === 'customer' ? currentThemeStyles.quickActionBorder : 'none', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+                      <div key={message.messageId} style={{ marginBottom: '1rem', display: 'flex', justifyContent: message.sender === 'agent' ? 'flex-end' : 'flex-start' }}>
+                        <div style={{ maxWidth: '75%', padding: '0.75rem 1rem', borderRadius: '1rem', backgroundColor: message.sender === 'agent' ? '#3b82f6' : message.sender === 'ai_bot' ? '#14b8a6' : message.sender === 'system' ? currentThemeStyles.textSecondary : currentThemeStyles.alertBg, color: message.sender === 'customer' ? currentThemeStyles.textPrimary : 'white', border: message.sender === 'customer' ? currentThemeStyles.quickActionBorder : 'none', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
                           <div style={{ fontSize: '0.7rem', marginBottom: '0.25rem', opacity: 0.8, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                            {message.sender === 'agent' ? <UserCircleIcon width={12}/> : message.sender === 'ai' ? <CpuChipIcon width={12}/> : message.sender === 'system' ? <Cog6ToothIcon width={12}/> : <UserCircleIcon width={12}/>}
-                            {message.sender === 'agent' ? 'You' : message.sender === 'ai' ? 'AI Assistant' : message.sender === 'system' ? 'System' : selectedChat.customerInfo.name}
+                            {message.sender === 'agent' ? <UserCircleIcon width={12}/> : message.sender === 'ai_bot' ? <CpuChipIcon width={12}/> : message.sender === 'system' ? <Cog6ToothIcon width={12}/> : <UserCircleIcon width={12}/>}
+                            {message.sender === 'agent' ? 'You' : message.sender === 'ai_bot' ? 'AI Assistant' : message.sender === 'system' ? 'System' : selectedChat.customerInfo.name}
                             <span style={{ marginLeft: '0.5rem' }}>{new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                           </div>
-                          <div style={{ lineHeight: 1.5 }}>{message.message}</div>
+                          <div style={{ lineHeight: 1.5 }}>{message.content}</div>
                         </div>
                       </div>
                     ))}
@@ -438,10 +484,10 @@ export default function CSChat() {
                 </>
               ) : (
                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: currentThemeStyles.textSecondary, textAlign: 'center' }}>
-                  <div>
-                    <ChatBubbleOvalLeftEllipsisIcon width={64} height={64} style={{ marginBottom: '1rem', opacity: 0.5 }} />
-                    <h3 style={{ color: currentThemeStyles.textPrimary, fontSize: '1.25rem' }}>Select a chat to begin</h3>
-                    <p>Your conversations will appear here.</p>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                    <ChatBubbleOvalLeftEllipsisIcon width={64} height={64} style={{ marginBottom: '1rem', opacity: 0.5, display: 'block', margin: '0 auto 1rem auto' }} />
+                    <h3 style={{ color: currentThemeStyles.textPrimary, fontSize: '1.25rem', margin: '0 0 0.5rem 0' }}>Select a chat to begin</h3>
+                    <p style={{ margin: 0 }}>Your conversations will appear here.</p>
                   </div>
                 </div>
               )}

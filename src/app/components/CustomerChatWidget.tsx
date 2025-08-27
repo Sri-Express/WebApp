@@ -1,8 +1,8 @@
-// src/components/CustomerChatWidget.tsx (or your path)
+// src/components/CustomerChatWidget.tsx - Enhanced with Satisfaction Rating
 'use client';
 import { useState, useEffect, useRef } from 'react';
 
-// --- Interfaces (Unchanged) ---
+// --- Interfaces (Enhanced) ---
 interface Message {
   messageId: string;
   sender: 'customer' | 'agent' | 'ai_bot' | 'system';
@@ -21,7 +21,12 @@ interface ChatSession {
     email: string;
   };
   assignedAgent?: {
-    name:string;
+    name: string;
+  };
+  feedback?: {
+    rating: number;
+    comment?: string;
+    submittedAt: string;
   };
 }
 
@@ -38,9 +43,16 @@ export default function CustomerChatWidget({ userId, userName, userEmail }: Cust
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [error, setError] = useState<string | null>(null);
+  
+  // Rating states
+  const [showRating, setShowRating] = useState(false);
+  const [selectedRating, setSelectedRating] = useState(0);
+  const [ratingComment, setRatingComment] = useState('');
+  const [isSubmittingRating, setIsSubmittingRating] = useState(false);
+  const [ratingSubmitted, setRatingSubmitted] = useState(false);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // --- Logic and Functions (Largely Unchanged) ---
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -48,6 +60,13 @@ export default function CustomerChatWidget({ userId, userName, userEmail }: Cust
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Monitor chat status for rating prompt
+  useEffect(() => {
+    if (chatSession?.status === 'ended' && !ratingSubmitted && !chatSession.feedback) {
+      setShowRating(true);
+    }
+  }, [chatSession?.status, ratingSubmitted]);
 
   useEffect(() => {
     if (!chatSession || !isOpen) return;
@@ -58,7 +77,6 @@ export default function CustomerChatWidget({ userId, userName, userEmail }: Cust
         if (response.ok) {
           const data = await response.json();
           if (data.success && data.data.chat) {
-            // Only update if there are new messages to prevent re-renders
             if (JSON.stringify(messages) !== JSON.stringify(data.data.chat.messages)) {
               setMessages(data.data.chat.messages || []);
             }
@@ -132,14 +150,48 @@ export default function CustomerChatWidget({ userId, userName, userEmail }: Cust
       });
 
       if (!response.ok) throw new Error('Failed to send message');
-      
-      // The polling will handle updating the message list, removing the temp message
     } catch (error) {
       console.error('Send message error:', error);
       setError('Failed to send message');
       setMessages(prev => prev.filter(m => m.messageId !== tempMessage.messageId));
     } finally {
       setIsConnecting(false);
+    }
+  };
+
+  const submitRating = async () => {
+    if (!selectedRating || !chatSession) return;
+
+    setIsSubmittingRating(true);
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/cs/chat/sessions/${chatSession._id}/feedback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          rating: selectedRating,
+          comment: ratingComment.trim()
+        })
+      });
+
+      if (response.ok) {
+        setRatingSubmitted(true);
+        setShowRating(false);
+        setChatSession(prev => prev ? {
+          ...prev,
+          feedback: {
+            rating: selectedRating,
+            comment: ratingComment.trim(),
+            submittedAt: new Date().toISOString()
+          }
+        } : null);
+      } else {
+        throw new Error('Failed to submit rating');
+      }
+    } catch (error) {
+      console.error('Rating submission error:', error);
+      setError('Failed to submit rating');
+    } finally {
+      setIsSubmittingRating(false);
     }
   };
 
@@ -160,7 +212,17 @@ export default function CustomerChatWidget({ userId, userName, userEmail }: Cust
     }
   };
 
-  // ✅ STYLE: Added a style tag for pseudo-elements like scrollbars and focus rings
+  const getRatingEmoji = (rating: number) => {
+    switch (rating) {
+      case 1: return '😞';
+      case 2: return '🙁';
+      case 3: return '😐';
+      case 4: return '🙂';
+      case 5: return '😄';
+      default: return '⭐';
+    }
+  };
+
   const customStyles = `
     .chat-messages::-webkit-scrollbar {
       width: 6px;
@@ -178,12 +240,19 @@ export default function CustomerChatWidget({ userId, userName, userEmail }: Cust
       box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3) !important;
       outline: none;
     }
+    .rating-star {
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 1.5rem;
+    }
+    .rating-star:hover {
+      transform: scale(1.1);
+    }
   `;
 
   if (!isOpen) {
     return (
       <div style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 1000 }}>
-        {/* ✅ STYLE: Glassy chat bubble button */}
         <button
           onClick={() => setIsOpen(true)}
           style={{
@@ -218,7 +287,6 @@ export default function CustomerChatWidget({ userId, userName, userEmail }: Cust
       right: '20px',
       width: '370px',
       height: 'clamp(500px, 80vh, 600px)',
-      // ✅ STYLE: Main glass container
       backgroundColor: 'rgba(30, 41, 59, 0.75)',
       backdropFilter: 'blur(16px)',
       borderRadius: '16px',
@@ -232,7 +300,8 @@ export default function CustomerChatWidget({ userId, userName, userEmail }: Cust
       fontFamily: 'sans-serif'
     }}>
       <style>{customStyles}</style>
-      {/* ✅ STYLE: Glassy Header */}
+      
+      {/* Header */}
       <div style={{
         padding: '16px',
         display: 'flex',
@@ -258,7 +327,7 @@ export default function CustomerChatWidget({ userId, userName, userEmail }: Cust
         </button>
       </div>
 
-      {/* ✅ STYLE: Transparent Messages Area */}
+      {/* Messages Area */}
       <div className="chat-messages" style={{
         flex: 1,
         padding: '16px',
@@ -308,7 +377,6 @@ export default function CustomerChatWidget({ userId, userName, userEmail }: Cust
                   maxWidth: '80%',
                   padding: '8px 12px',
                   borderRadius: '12px',
-                  // ✅ STYLE: Glassy message bubbles
                   backgroundColor: message.sender === 'customer' ? 'rgba(59, 130, 246, 0.8)' : 
                                    message.sender === 'agent' ? 'rgba(16, 185, 129, 0.7)' : 
                                    message.sender === 'ai_bot' ? 'rgba(8, 145, 178, 0.7)' : 'rgba(107, 114, 128, 0.7)',
@@ -329,6 +397,25 @@ export default function CustomerChatWidget({ userId, userName, userEmail }: Cust
                 </div>
               </div>
             ))}
+            
+            {/* Chat ended message with rating prompt */}
+            {chatSession.status === 'ended' && ratingSubmitted && (
+              <div style={{
+                backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                color: '#6ee7b7',
+                padding: '12px',
+                borderRadius: '8px',
+                textAlign: 'center',
+                border: '1px solid rgba(16, 185, 129, 0.3)'
+              }}>
+                <div style={{ fontSize: '1.2rem', marginBottom: '4px' }}>🙏</div>
+                <div style={{ fontWeight: '600', marginBottom: '4px' }}>Thanks for your feedback!</div>
+                <div style={{ fontSize: '12px', opacity: 0.8 }}>
+                  You rated this conversation {getRatingEmoji(chatSession.feedback?.rating || 0)} {chatSession.feedback?.rating}/5
+                </div>
+              </div>
+            )}
+            
             <div ref={messagesEndRef} />
           </>
         )}
@@ -348,8 +435,8 @@ export default function CustomerChatWidget({ userId, userName, userEmail }: Cust
         )}
       </div>
 
-      {/* ✅ STYLE: Glassy Input Area */}
-      {chatSession && (
+      {/* Input Area */}
+      {chatSession && chatSession.status !== 'ended' && (
         <div style={{
           padding: '16px',
           borderTop: '1px solid rgba(255, 255, 255, 0.1)',
@@ -363,7 +450,7 @@ export default function CustomerChatWidget({ userId, userName, userEmail }: Cust
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Type your message..."
-              disabled={isConnecting || chatSession.status === 'ended'}
+              disabled={isConnecting}
               style={{
                 flex: 1,
                 padding: '10px 14px',
@@ -372,21 +459,20 @@ export default function CustomerChatWidget({ userId, userName, userEmail }: Cust
                 fontSize: '14px',
                 backgroundColor: 'rgba(0,0,0,0.2)',
                 color: '#f1f5f9',
-                transition: 'all 0.2s ease',
-                opacity: chatSession.status === 'ended' ? 0.5 : 1
+                transition: 'all 0.2s ease'
               }}
             />
             <button
               onClick={sendMessage}
-              disabled={!newMessage.trim() || isConnecting || chatSession.status === 'ended'}
+              disabled={!newMessage.trim() || isConnecting}
               style={{
                 backgroundColor: 'rgba(59, 130, 246, 0.8)',
                 color: 'white',
                 border: '1px solid rgba(255,255,255,0.2)',
                 padding: '8px 16px',
                 borderRadius: '8px',
-                cursor: (!newMessage.trim() || isConnecting || chatSession.status === 'ended') ? 'not-allowed' : 'pointer',
-                opacity: (!newMessage.trim() || isConnecting || chatSession.status === 'ended') ? 0.5 : 1,
+                cursor: (!newMessage.trim() || isConnecting) ? 'not-allowed' : 'pointer',
+                opacity: (!newMessage.trim() || isConnecting) ? 0.5 : 1,
                 fontSize: '16px',
                 transition: 'all 0.2s ease'
               }}
@@ -394,11 +480,104 @@ export default function CustomerChatWidget({ userId, userName, userEmail }: Cust
               {isConnecting ? '⏳' : '➤'}
             </button>
           </div>
-          {chatSession.status === 'ended' && (
-            <p style={{ margin: '8px 0 0 0', fontSize: '12px', color: '#9ca3af', textAlign: 'center' }}>
-              This chat has ended.
+        </div>
+      )}
+
+      {/* Rating Modal */}
+      {showRating && (
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px',
+          borderRadius: '16px'
+        }}>
+          <div style={{
+            backgroundColor: 'rgba(30, 41, 59, 0.95)',
+            padding: '24px',
+            borderRadius: '12px',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            maxWidth: '320px',
+            width: '100%',
+            textAlign: 'center'
+          }}>
+            <h3 style={{ margin: '0 0 16px 0', color: '#f1f5f9' }}>
+              Rate Your Experience
+            </h3>
+            <p style={{ margin: '0 0 20px 0', fontSize: '14px', color: '#9ca3af' }}>
+              How satisfied are you with our support?
             </p>
-          )}
+            
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '16px' }}>
+              {[1, 2, 3, 4, 5].map(rating => (
+                <span
+                  key={rating}
+                  className="rating-star"
+                  onClick={() => setSelectedRating(rating)}
+                  style={{
+                    color: rating <= selectedRating ? '#fbbf24' : '#6b7280'
+                  }}
+                >
+                  {getRatingEmoji(rating)}
+                </span>
+              ))}
+            </div>
+            
+            <textarea
+              value={ratingComment}
+              onChange={(e) => setRatingComment(e.target.value)}
+              placeholder="Tell us more about your experience (optional)"
+              style={{
+                width: '100%',
+                height: '60px',
+                padding: '8px',
+                borderRadius: '6px',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                backgroundColor: 'rgba(0,0,0,0.2)',
+                color: '#f1f5f9',
+                fontSize: '14px',
+                resize: 'none',
+                marginBottom: '16px'
+              }}
+            />
+            
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+              <button
+                onClick={() => setShowRating(false)}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: 'transparent',
+                  color: '#9ca3af',
+                  border: '1px solid rgba(156, 163, 175, 0.3)',
+                  borderRadius: '6px',
+                  cursor: 'pointer'
+                }}
+              >
+                Skip
+              </button>
+              <button
+                onClick={submitRating}
+                disabled={!selectedRating || isSubmittingRating}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: selectedRating ? 'rgba(59, 130, 246, 0.8)' : 'rgba(75, 85, 99, 0.8)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: selectedRating ? 'pointer' : 'not-allowed',
+                  fontWeight: '600'
+                }}
+              >
+                {isSubmittingRating ? 'Submitting...' : 'Submit'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
