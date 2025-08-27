@@ -292,21 +292,21 @@ export default function FleetDashboardPage() {
         <div style={{ fontSize: '1.25rem', fontWeight: 'bold', textAlign: 'center' }}>
           Error: {error}
         </div>
-        <button 
-          onClick={handleRefresh}
+        <Link 
+          href="/dashboard"
           style={{
-            backgroundColor: '#F59E0B',
+            backgroundColor: '#6b7280',
             color: 'white',
             padding: '0.75rem 1.5rem',
             borderRadius: '0.5rem',
-            border: 'none',
+            textDecoration: 'none',
             fontSize: '0.875rem',
             fontWeight: '600',
             cursor: 'pointer'
           }}
         >
-          Try Again
-        </button>
+          Back to Dashboard
+        </Link>
       </div>
     );
   }
@@ -386,31 +386,6 @@ export default function FleetDashboardPage() {
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <button
-                onClick={handleRefresh}
-                disabled={refreshing}
-                className="refresh-btn"
-                style={{
-                  backgroundColor: currentThemeStyles.quickActionBg,
-                  color: currentThemeStyles.textPrimary,
-                  padding: '0.75rem',
-                  borderRadius: '0.5rem',
-                  border: currentThemeStyles.quickActionBorder,
-                  fontSize: '0.875rem',
-                  fontWeight: '600',
-                  cursor: refreshing ? 'not-allowed' : 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  opacity: refreshing ? 0.7 : 1,
-                  transition: 'all 0.2s ease',
-                  backdropFilter: 'blur(12px)'
-                }}
-              >
-                <ArrowPathIcon width={16} height={16} className={refreshing ? 'animate-spin' : ''} />
-                {refreshing ? 'Refreshing...' : 'Refresh'}
-              </button>
-
               {fleet.status === 'approved' && (
                 <Link
                   href="/fleet/vehicles/add"

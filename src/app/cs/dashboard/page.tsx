@@ -151,9 +151,6 @@ export default function CSDashboard() {
                 <option value="7">Last 7 days</option>
                 <option value="30">Last 30 days</option>
               </select>
-              <button onClick={() => fetchDashboardData(localStorage.getItem('cs_token') || '', true)} disabled={isRefreshing} style={{ padding: '0.75rem 1.5rem', fontSize: '1rem', fontWeight: '600', color: currentThemeStyles.textPrimary, backgroundColor: currentThemeStyles.cardBg, border: currentThemeStyles.cardBorder, borderRadius: '0.5rem', cursor: 'pointer', opacity: isRefreshing ? 0.5 : 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <ArrowPathIcon width={20} height={20} className={isRefreshing ? 'animate-spin' : ''}/> Refresh
-              </button>
               <button onClick={() => router.push('/cs/chat')} style={{ padding: '0.75rem 1.5rem', fontSize: '1rem', fontWeight: '600', color: 'white', backgroundColor: '#10b981', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <ChatBubbleLeftRightIcon width={20} height={20}/> Live Chat
               </button>

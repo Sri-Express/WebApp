@@ -197,7 +197,6 @@ export default function CSTickets() {
               <p style={{ color: currentThemeStyles.textSecondary, margin: '0.25rem 0 0 0', fontSize: '1rem' }}>Manage all customer support tickets and requests.</p>
             </div>
             <div style={{ display: 'flex', gap: '1rem' }}>
-              <button onClick={refreshTickets} disabled={isRefreshing} style={{ padding: '0.75rem 1.5rem', fontSize: '1rem', fontWeight: '600', color: currentThemeStyles.textPrimary, backgroundColor: currentThemeStyles.glassPanelBg, border: currentThemeStyles.glassPanelBorder, borderRadius: '0.5rem', cursor: 'pointer', opacity: isRefreshing ? 0.5 : 1, display: 'flex', alignItems: 'center', gap: '0.5rem', transition: 'all 0.2s' }}><ArrowPathIcon width={20} height={20} className={isRefreshing ? 'animate-spin' : ''}/> Refresh</button>
               <button onClick={() => router.push('/cs/tickets/create')} style={{ padding: '0.75rem 1.5rem', fontSize: '1rem', fontWeight: '600', color: 'white', backgroundColor: '#3b82f6', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', transition: 'all 0.2s' }}><PlusIcon width={20} height={20}/> Create Ticket</button>
             </div>
           </header>

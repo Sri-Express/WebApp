@@ -126,14 +126,7 @@ const WeatherPage: React.FC = () => {
     }
   }, [selectedLocation, loadWeatherData]);
 
-  // Auto-refresh weather data every 10 minutes
-  useEffect(() => {
-    const interval = setInterval(() => {
-      loadWeatherData();
-    }, 10 * 60 * 1000);
-
-    return () => clearInterval(interval);
-  }, [loadWeatherData]);
+  // Auto-refresh removed - weather data doesn't need constant updates
 
   const handleLocationChange = (newLocation: string) => {
     setSelectedLocation(newLocation);
@@ -216,7 +209,6 @@ const WeatherPage: React.FC = () => {
           <h2 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '0.5rem' }}>Weather Data Unavailable</h2>
           <p style={{ color: currentThemeStyles.textSecondary, marginBottom: '1.5rem' }}>{error}</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <button onClick={handleRefresh} style={{ backgroundColor: '#2563eb', color: 'white', padding: '0.75rem 1.5rem', borderRadius: '0.5rem', border: 'none', cursor: 'pointer' }}>Try Again</button>
             <Link href="/dashboard" style={{ backgroundColor: '#475569', color: 'white', padding: '0.75rem 1.5rem', borderRadius: '0.5rem', textDecoration: 'none' }}>Back to Dashboard</Link>
           </div>
         </div>
@@ -277,9 +269,6 @@ const WeatherPage: React.FC = () => {
               Last updated: {lastRefresh.toLocaleTimeString()}
             </span>
             <ThemeSwitcher />
-            <button onClick={handleRefresh} disabled={loading} style={{ padding: '0.5rem', color: currentThemeStyles.textSecondary, cursor: 'pointer', background: 'none', border: 'none', opacity: loading ? 0.5 : 1 }} title="Refresh weather data">
-              <ArrowPathIcon style={{ width: '20px', height: '20px', animation: loading ? 'spin 1s linear infinite' : 'none' }} />
-            </button>
           </div>
         </div>
       </nav>
@@ -327,7 +316,6 @@ const WeatherPage: React.FC = () => {
                   weatherData={weatherData}
                   currentLocation={selectedLocation}
                   loading={loading}
-                  onRefresh={handleRefresh}
                   onLocationChange={handleLocationChange}
                   availableLocations={availableLocations}
                 />
@@ -361,7 +349,7 @@ const WeatherPage: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                <WeatherAnalytics weatherData={weatherData} selectedLocation={selectedLocation} loading={loading} onRefresh={handleRefresh} multiLocationData={multiLocationData} />
+                <WeatherAnalytics weatherData={weatherData} selectedLocation={selectedLocation} loading={loading} multiLocationData={multiLocationData} />
               </div>
             )}
 

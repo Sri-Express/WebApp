@@ -117,14 +117,8 @@ export default function SystemAnalyticsPage() {
               <option value="30d">Last 30 Days</option>
               <option value="90d">Last 90 Days</option>
             </select>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#94a3b8', fontSize: '0.875rem', cursor: 'pointer' }}>
-              <input type="checkbox" checked={autoRefresh} onChange={(e) => setAutoRefresh(e.target.checked)} style={{ accentColor: '#3b82f6' }} /> Auto Refresh
-            </label>
             <button onClick={handleExportData} style={{ backgroundColor: '#374151', color: '#f9fafb', padding: '0.5rem 1rem', borderRadius: '0.5rem', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}>
               <DocumentArrowDownIcon width={16} height={16} /> Export
-            </button>
-            <button onClick={handleRefresh} disabled={loading} style={{ backgroundColor: '#3b82f6', color: 'white', padding: '0.5rem 1rem', borderRadius: '0.5rem', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', opacity: loading ? 0.7 : 1 }}>
-              <ArrowPathIcon width={16} height={16} /> Refresh
             </button>
           </div>
         </div>

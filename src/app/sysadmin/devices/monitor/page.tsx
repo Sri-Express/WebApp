@@ -98,7 +98,6 @@ export default function AdvancedDeviceMonitorPage() {
               ))}
             </div>
 
-            <button onClick={handleRefresh} disabled={loading} style={{ backgroundColor: '#374151', color: '#f9fafb', padding: '0.75rem 1rem', borderRadius: '0.5rem', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', opacity: loading ? 0.7 : 1 }}><ArrowPathIcon width={16} height={16} />Refresh</button>
           </div>
         </div>
       </nav>

@@ -221,10 +221,7 @@ function DashboardContent() {
     loadWeatherData(); // Load weather data on initial mount
   }, [loadDashboardData, loadWeatherData, router]);
 
-  useEffect(() => {
-    const interval = setInterval(() => loadDashboardData(true), 30000);
-    return () => clearInterval(interval);
-  }, [loadDashboardData]);
+  // Auto-refresh removed - dashboard data doesn't need constant updates
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -342,9 +339,6 @@ function DashboardContent() {
               >
                 {availableLocations.map(loc => <option key={loc} value={loc}>{loc}</option>)}
               </select>
-              <button onClick={handleRefresh} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem' }}>
-                <ArrowPathIcon width={20} height={20} color={currentThemeStyles.textSecondary} />
-              </button>
             </div>
           </>
         ) : (
@@ -438,9 +432,6 @@ function DashboardContent() {
       )}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', padding: '0 0.5rem' }}>
        <div style={{ fontSize: '0.9rem', color: currentThemeStyles.textPrimary, textShadow: theme === 'dark' ? '0 1px 3px rgba(0,0,0,0.5)' : '0 1px 3px rgba(255,255,255,0.5)' }}>Last updated: {formatDateTime(lastRefresh.toString())}</div>
-        <button onClick={() => loadDashboardData(true)} disabled={refreshing} style={{ backgroundColor: refreshing ? '#9CA3AF' : '#F59E0B', color: 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: '0.5rem', cursor: refreshing ? 'not-allowed' : 'pointer', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem', transition: 'background-color 0.3s' }}>
-          {refreshing ? 'Refreshing...' : 'Refresh'}
-        </button>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
         {[
