@@ -1,4 +1,4 @@
-// src/app/fleet/dashboard/page.tsx - Fleet Manager Dashboard with Theme Integration
+// src/app/fleet/dashboard/page.tsx - Fleet Manager Dashboard with Notifications Integration
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -13,8 +13,11 @@ import {
   ChartBarIcon,
   CogIcon,
   PlusIcon,
-  ArrowPathIcon
+  ArrowPathIcon,
+  BellIcon,
+  WifiIcon
 } from '@heroicons/react/24/outline';
+import RealTimeEmergencyClient, { useEmergencyAlerts, useEmergencyContext } from '@/app/components/RealTimeEmergencyClient';
 
 interface FleetStats {
   complianceScore: number;
@@ -43,13 +46,27 @@ interface DashboardData {
   alerts: any[];
 }
 
-export default function FleetDashboardPage() {
+function FleetDashboardContent() {
   const { theme } = useTheme();
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+
+  // Notification integration
+  const { alerts: realtimeAlerts, unreadCount, criticalCount } = useEmergencyAlerts();
+  const { connectionStatus } = useEmergencyContext();
+
+  // Filter alerts relevant to fleet managers
+  const fleetRelevantAlerts = realtimeAlerts.filter(alert => 
+    alert.recipients.includes('all') || 
+    alert.recipients.includes('fleet_managers') ||
+    alert.type === 'emergency_created' ||
+    (alert.emergency && alert.message.toLowerCase().includes('vehicle')) ||
+    (alert.emergency && alert.message.toLowerCase().includes('route')) ||
+    (alert.emergency && alert.message.toLowerCase().includes('fleet'))
+  ).slice(0, 5);
 
   // Theme and Style Definitions
   const lightTheme = { 
@@ -244,6 +261,16 @@ export default function FleetDashboardPage() {
     return '#ef4444';
   };
 
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'critical': return '#dc2626';
+      case 'high': return '#ea580c';
+      case 'medium': return '#f59e0b';
+      case 'low': return '#10b981';
+      default: return '#6b7280';
+    }
+  };
+
   if (loading) {
     return (
       <div style={{ 
@@ -375,6 +402,22 @@ export default function FleetDashboardPage() {
                 }}>
                   Fleet Status: {fleet.status}
                 </span>
+                {/* Connection Status */}
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '0.5rem', 
+                  marginLeft: '1rem',
+                  padding: '0.25rem 0.75rem', 
+                  borderRadius: '0.5rem', 
+                  backgroundColor: connectionStatus.connected ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)', 
+                  border: `1px solid ${connectionStatus.connected ? 'rgba(16, 185, 129, 0.5)' : 'rgba(239, 68, 68, 0.5)'}`, 
+                  fontSize: '0.75rem', 
+                  fontWeight: '600' 
+                }}>
+                  <WifiIcon width={14} height={14} />
+                  {connectionStatus.connected ? 'Live' : 'Offline'}
+                </div>
               </div>
               <div style={{
                 fontSize: '0.875rem',
@@ -386,6 +429,47 @@ export default function FleetDashboardPage() {
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              {/* Notifications Button */}
+              <Link
+                href="/fleet/notifications"
+                style={{
+                  backgroundColor: currentThemeStyles.quickActionBg,
+                  color: currentThemeStyles.textPrimary,
+                  padding: '0.75rem 1rem',
+                  borderRadius: '0.5rem',
+                  textDecoration: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  fontSize: '0.875rem',
+                  fontWeight: '600',
+                  border: currentThemeStyles.quickActionBorder,
+                  position: 'relative'
+                }}
+              >
+                <BellIcon width={20} height={20} />
+                Notifications
+                {unreadCount > 0 && (
+                  <span style={{
+                    position: 'absolute',
+                    top: '-8px',
+                    right: '-8px',
+                    backgroundColor: '#dc2626',
+                    color: 'white',
+                    borderRadius: '50%',
+                    width: '20px',
+                    height: '20px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '0.75rem',
+                    fontWeight: 'bold'
+                  }}>
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </Link>
+              
               {fleet.status === 'approved' && (
                 <Link
                   href="/fleet/vehicles/add"
@@ -795,24 +879,130 @@ export default function FleetDashboardPage() {
               border: currentThemeStyles.quickActionBorder,
               backdropFilter: 'blur(8px)'
             }}>
-              <h3 style={{ color: currentThemeStyles.textPrimary, marginBottom: '1rem', fontWeight: 'bold' }}>Alerts & Notifications</h3>
-              <div style={{ 
-                color: currentThemeStyles.textMuted, 
-                textAlign: 'center', 
-                padding: '2rem 0',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '0.5rem'
-              }}>
-                <CheckCircleIcon width={32} height={32} color="#10b981" />
-                <div>No active alerts</div>
-                <div style={{ fontSize: '0.75rem' }}>Your fleet is operating normally</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <h3 style={{ color: currentThemeStyles.textPrimary, fontWeight: 'bold', margin: 0 }}>Recent Notifications</h3>
+                <Link 
+                  href="/fleet/notifications"
+                  style={{ 
+                    color: '#3b82f6', 
+                    fontSize: '0.875rem', 
+                    textDecoration: 'none', 
+                    fontWeight: '600',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.25rem'
+                  }}
+                >
+                  View All
+                  {unreadCount > 0 && (
+                    <span style={{
+                      backgroundColor: '#dc2626',
+                      color: 'white',
+                      borderRadius: '50%',
+                      width: '18px',
+                      height: '18px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '0.75rem',
+                      fontWeight: 'bold'
+                    }}>
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </Link>
               </div>
+              
+              {fleetRelevantAlerts.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {fleetRelevantAlerts.map((alert, index) => (
+                    <div key={alert.id} style={{
+                      padding: '0.75rem',
+                      backgroundColor: currentThemeStyles.quickActionBg,
+                      borderRadius: '0.5rem',
+                      borderLeft: `3px solid ${getPriorityColor(alert.priority)}`,
+                      transition: 'all 0.2s ease'
+                    }}>
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'flex-start',
+                        gap: '0.5rem'
+                      }}>
+                        <div style={{ flex: 1 }}>
+                          <p style={{
+                            color: currentThemeStyles.textPrimary,
+                            fontWeight: '600',
+                            margin: '0 0 0.25rem 0',
+                            fontSize: '0.875rem',
+                            lineHeight: '1.4'
+                          }}>
+                            {alert.title}
+                          </p>
+                          <p style={{
+                            color: currentThemeStyles.textSecondary,
+                            margin: 0,
+                            fontSize: '0.75rem',
+                            lineHeight: '1.4'
+                          }}>
+                            {alert.message.length > 80 ? `${alert.message.substring(0, 80)}...` : alert.message}
+                          </p>
+                        </div>
+                        <div style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'flex-end',
+                          gap: '0.25rem'
+                        }}>
+                          <span style={{
+                            backgroundColor: getPriorityColor(alert.priority),
+                            color: 'white',
+                            padding: '0.125rem 0.5rem',
+                            borderRadius: '0.25rem',
+                            fontSize: '0.625rem',
+                            fontWeight: '600',
+                            textTransform: 'uppercase'
+                          }}>
+                            {alert.priority}
+                          </span>
+                          <span style={{
+                            color: currentThemeStyles.textMuted,
+                            fontSize: '0.625rem'
+                          }}>
+                            {new Date(alert.timestamp).toLocaleTimeString()}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ 
+                  color: currentThemeStyles.textMuted, 
+                  textAlign: 'center', 
+                  padding: '2rem 0',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}>
+                  <CheckCircleIcon width={32} height={32} color="#10b981" />
+                  <div>No recent notifications</div>
+                  <div style={{ fontSize: '0.75rem' }}>All systems operational</div>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function FleetDashboardPage() {
+  return (
+    <RealTimeEmergencyClient enableSound={true} enablePushNotifications={true}>
+      <FleetDashboardContent />
+    </RealTimeEmergencyClient>
   );
 }
