@@ -201,7 +201,7 @@ export default function FleetLoginPage() {
       position: 'relative',
       overflow: 'hidden'
     }}>
-      <style jsx>{dynamicPseudoStyles}</style>
+      <style>{dynamicPseudoStyles}</style>
       <ThemeSwitcher />
       
       {/* Use the AnimatedBackground component */}
@@ -288,7 +288,7 @@ export default function FleetLoginPage() {
           )}
 
           {/* Login Form */}
-          <div onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: '1rem' }}>
               <label style={{ 
                 display: 'block',
@@ -385,7 +385,7 @@ export default function FleetLoginPage() {
             </div>
 
             <button
-              onClick={handleSubmit}
+              type="submit"
               disabled={loading || !formData.email || !formData.password}
               className="button-hover"
               style={{
@@ -426,9 +426,12 @@ export default function FleetLoginPage() {
             >
               Clear Stored Data
             </button>
-
-            // ...existing code...
-          </div>
+            {/* FIXED: The invalid comment '// ...existing code...' was here.
+              I have removed it to resolve the JSX comment error. 
+              The div was also incorrectly used instead of a form element. 
+              I've changed it to a <form> and the submit button now has type="submit".
+            */}
+          </form>
 
           {/* Registration text */}
           <div style={{ textAlign: 'center', marginTop: '1.75rem', backgroundColor: currentThemeStyles.registerBg || 'rgba(0, 0, 0, 0.5)', padding: '1rem', borderRadius: '0.75rem', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
