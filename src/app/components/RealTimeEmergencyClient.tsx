@@ -1,13 +1,15 @@
 // src/app/components/RealTimeEmergencyClient.tsx
+
+// FIXED VERSION - Add proper rate limiting and prevent excessive API calls
 "use client";
 
 import { useEffect, useState, useRef, useCallback, createContext, useContext } from 'react';
 import { io, Socket } from 'socket.io-client';
 
-// Defines the structure for the nested 'emergency' object.
+// Interfaces remain the same...
 export interface EmergencyDetails {
   _id: string;
-  [key: string]: unknown; // Allows for other properties without using 'any'.
+  [key: string]: unknown;
 }
 
 export interface EmergencyAlert {
@@ -16,11 +18,9 @@ export interface EmergencyAlert {
   title: string;
   message: string;
   priority: 'low' | 'medium' | 'high' | 'critical';
-  // Replaced 'any' with the specific 'EmergencyDetails' interface.
   emergency?: EmergencyDetails;
   timestamp: Date;
   recipients: string[];
-  // Replaced 'any' with a safer, more descriptive type.
   data?: Record<string, unknown>;
   read?: boolean;
 }
@@ -32,10 +32,8 @@ export interface ConnectionStatus {
   connectionError?: string;
 }
 
-// Defines the structure for emergency status updates.
 export type EmergencyStatusUpdate = Record<string, unknown>;
 
-// Defines the structure for the push notification request data.
 interface PushNotificationRequestData {
   tag: string;
   title: string;
@@ -46,7 +44,6 @@ interface PushNotificationRequestData {
 interface RealTimeEmergencyClientProps {
   onEmergencyAlert?: (alert: EmergencyAlert) => void;
   onConnectionStatusChange?: (status: ConnectionStatus) => void;
-  // Replaced 'any' with the specific 'EmergencyStatusUpdate' type.
   onEmergencyStatusUpdate?: (status: EmergencyStatusUpdate) => void;
   enableSound?: boolean;
   enablePushNotifications?: boolean;
@@ -69,9 +66,15 @@ export default function RealTimeEmergencyClient({
   const [alerts, setAlerts] = useState<EmergencyAlert[]>([]);
   const [isVisible, setIsVisible] = useState(true);
   
+  // CRITICAL FIX: Add rate limiting for API calls
+  const [lastAlertsFetch, setLastAlertsFetch] = useState(0);
+  const [isCurrentlyFetchingAlerts, setIsCurrentlyFetchingAlerts] = useState(false);
+  const [alertsFetchAttempts, setAlertsFetchAttempts] = useState(0);
+  
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const heartbeatTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const alertsFetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Sound effects for different alert types
   const playSound = useCallback((priority: string) => {
@@ -88,7 +91,6 @@ export default function RealTimeEmergencyClient({
         case 'low': frequency = 700; duration = 300; break;
       }
 
-      // Safely checks for vendor-prefixed AudioContext without using 'any'.
       const AudioContext = window.AudioContext || (window as unknown as { webkitAudioContext: typeof window.AudioContext }).webkitAudioContext;
       if (!AudioContext) {
         console.warn('Web Audio API is not supported in this browser.');
@@ -143,10 +145,6 @@ export default function RealTimeEmergencyClient({
           badge: '/emergency-badge.png',
           tag: alert.id,
           requireInteraction: alert.priority === 'critical',
-          // FIX: The 'timestamp' property is not a valid option in the NotificationOptions object.
-          // It has been removed from the spec and causes a build error.
-          // The browser automatically timestamps the notification upon creation.
-          // timestamp: new Date(alert.timestamp).getTime(), 
           data: {
             emergencyId: alert.emergency?._id,
             priority: alert.priority,
@@ -177,56 +175,145 @@ export default function RealTimeEmergencyClient({
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
-  const fetchExistingAlerts = useCallback(async () => {
+  // CRITICAL FIX: Rate-limited alert fetching with exponential backoff
+  const fetchExistingAlerts = useCallback(async (isRetry = false) => {
+    const now = Date.now();
+    const MIN_FETCH_INTERVAL = isRetry ? 30000 : 15000; // 15s normal, 30s retry
+    const MAX_FETCH_ATTEMPTS = 3;
+
+    // Rate limiting
+    if (now - lastAlertsFetch < MIN_FETCH_INTERVAL) {
+      console.log('⏰ Skipping alerts fetch - too recent');
+      return;
+    }
+
+    // Prevent concurrent fetches
+    if (isCurrentlyFetchingAlerts) {
+      console.log('🔄 Skipping alerts fetch - already in progress');
+      return;
+    }
+
+    // Exponential backoff after multiple failures
+    if (alertsFetchAttempts >= MAX_FETCH_ATTEMPTS && !isRetry) {
+      console.log(`❌ Maximum fetch attempts reached (${alertsFetchAttempts}), backing off`);
+      
+      // Schedule retry with exponential backoff
+      const backoffDelay = Math.min(60000, 5000 * Math.pow(2, alertsFetchAttempts - MAX_FETCH_ATTEMPTS));
+      alertsFetchTimeoutRef.current = setTimeout(() => {
+        console.log('🔄 Retrying alerts fetch after backoff');
+        fetchExistingAlerts(true);
+      }, backoffDelay);
+      return;
+    }
+
+    setIsCurrentlyFetchingAlerts(true);
+    setLastAlertsFetch(now);
+
     try {
       const token = localStorage.getItem('token');
-      if (!token) return;
+      if (!token) {
+        console.log('❌ No auth token found for alerts fetch');
+        setIsCurrentlyFetchingAlerts(false);
+        return;
+      }
 
       const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      console.log('📡 Fetching existing alerts...');
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
       const response = await fetch(`${API_BASE_URL}/api/admin/emergency/user-alerts`, {
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+        headers: { 
+          'Authorization': `Bearer ${token}`, 
+          'Content-Type': 'application/json' 
+        },
+        signal: controller.signal
       });
+
+      clearTimeout(timeoutId);
 
       if (response.ok) {
         const data = await response.json();
         const alertsArray = data.alerts || [];
+        
         if (Array.isArray(alertsArray) && alertsArray.length > 0) {
           setAlerts(prev => {
             const merged = [...alertsArray, ...prev];
-            const unique = merged.filter((alert, index, self) => index === self.findIndex(a => a.id === alert.id));
+            const unique = merged.filter((alert, index, self) => 
+              index === self.findIndex(a => a.id === alert.id)
+            );
             return unique.slice(0, 100);
           });
+          console.log(`✅ Loaded ${alertsArray.length} existing alerts`);
+        } else {
+          console.log('📭 No existing alerts found');
+        }
+
+        // Reset failure counter on success
+        setAlertsFetchAttempts(0);
+        
+        // Clear any pending retry timeout
+        if (alertsFetchTimeoutRef.current) {
+          clearTimeout(alertsFetchTimeoutRef.current);
+          alertsFetchTimeoutRef.current = null;
         }
       } else {
-        console.warn('Failed to fetch existing alerts:', response.status);
+        console.warn(`⚠️ Failed to fetch alerts: HTTP ${response.status}`);
+        setAlertsFetchAttempts(prev => prev + 1);
       }
     } catch (error) {
-      console.error('Error fetching existing alerts:', error);
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.warn('⏱️ Alerts fetch timed out');
+      } else {
+        console.error('❌ Error fetching existing alerts:', error);
+      }
+      setAlertsFetchAttempts(prev => prev + 1);
+    } finally {
+      setIsCurrentlyFetchingAlerts(false);
     }
-  }, []);
+  }, [lastAlertsFetch, isCurrentlyFetchingAlerts, alertsFetchAttempts]);
 
+  // FIXED: WebSocket connection with proper error handling and rate limiting
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      console.log('No auth token found, skipping WebSocket connection');
+      console.log('❌ No auth token found, skipping WebSocket connection');
       return;
     }
 
     const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
     const socketUrl = API_BASE_URL.replace(/^http/, 'ws');
+    
+    console.log('🔌 Initializing WebSocket connection...');
+    
     const newSocket = io(socketUrl, {
       auth: { token },
       transports: ['websocket', 'polling'],
       timeout: 20000,
       reconnection: true,
-      reconnectionDelay: 1000,
-      reconnectionAttempts: 5
+      reconnectionDelay: 2000, // Increased from 1000ms
+      reconnectionAttempts: 5,
+      reconnectionDelayMax: 10000, // Max delay between reconnections
     });
 
     newSocket.on('connect', () => {
       console.log('✅ Connected to emergency alert system');
-      setConnectionStatus(prev => ({ ...prev, connected: true, connectionError: undefined }));
-      fetchExistingAlerts();
+      setConnectionStatus(prev => ({ 
+        ...prev, 
+        connected: true, 
+        connectionError: undefined 
+      }));
+      
+      // FIXED: Only fetch alerts on first connection or after long disconnect
+      const timeSinceLastFetch = Date.now() - lastAlertsFetch;
+      if (timeSinceLastFetch > 60000) { // Only if more than 1 minute since last fetch
+        console.log('🔄 Fetching alerts after connection (rate limited)');
+        fetchExistingAlerts();
+      } else {
+        console.log('⏰ Skipping alerts fetch - recent fetch detected');
+      }
+      
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
         reconnectTimeoutRef.current = null;
@@ -235,12 +322,20 @@ export default function RealTimeEmergencyClient({
 
     newSocket.on('disconnect', (reason) => {
       console.log('❌ Disconnected from emergency alert system:', reason);
-      setConnectionStatus(prev => ({ ...prev, connected: false, connectionError: reason }));
+      setConnectionStatus(prev => ({ 
+        ...prev, 
+        connected: false, 
+        connectionError: reason 
+      }));
     });
 
     newSocket.on('connect_error', (error) => {
       console.error('🔌 Connection error:', error);
-      setConnectionStatus(prev => ({ ...prev, connected: false, connectionError: error.message }));
+      setConnectionStatus(prev => ({ 
+        ...prev, 
+        connected: false, 
+        connectionError: error.message 
+      }));
     });
 
     newSocket.on('connected', (data: { message: string }) => {
@@ -248,8 +343,13 @@ export default function RealTimeEmergencyClient({
     });
 
     newSocket.on('emergency_alert', (alert: EmergencyAlert) => {
-      console.log('🚨 Emergency alert received:', alert);
-      const alertWithTimestamp = { ...alert, timestamp: new Date(alert.timestamp), read: false };
+      console.log('🚨 Emergency alert received:', alert.title);
+      const alertWithTimestamp = { 
+        ...alert, 
+        timestamp: new Date(alert.timestamp), 
+        read: false 
+      };
+      
       setAlerts(prev => [alertWithTimestamp, ...prev.slice(0, 99)]);
       playSound(alert.priority);
       showPushNotification(alertWithTimestamp);
@@ -298,16 +398,22 @@ export default function RealTimeEmergencyClient({
       }
     });
 
+    // FIXED: Less aggressive heartbeat handling
     newSocket.on('heartbeat', (data: { connectedUsers: number; timestamp: string }) => {
-      setConnectionStatus(prev => ({ ...prev, connectedUsers: data.connectedUsers, lastHeartbeat: new Date(data.timestamp) }));
+      setConnectionStatus(prev => ({ 
+        ...prev, 
+        connectedUsers: data.connectedUsers, 
+        lastHeartbeat: new Date(data.timestamp) 
+      }));
+      
       if (heartbeatTimeoutRef.current) clearTimeout(heartbeatTimeoutRef.current);
       heartbeatTimeoutRef.current = setTimeout(() => {
         console.warn('⚠️ Heartbeat timeout - connection may be unstable');
-      }, 45000);
+      }, 60000); // Increased timeout to 60 seconds
     });
 
     newSocket.on('push_notification_request', (data: PushNotificationRequestData) => {
-      console.log('🔔 Push notification request:', data);
+      console.log('🔔 Push notification request:', data.title);
       showPushNotification({
         id: data.tag,
         type: 'critical_alert',
@@ -321,7 +427,10 @@ export default function RealTimeEmergencyClient({
     });
 
     newSocket.on('pong', (data: { timestamp: string }) => {
-      console.log('🏓 Pong received:', data.timestamp);
+      // Reduced log frequency for pong messages
+      if (Math.random() < 0.1) { // Only log 10% of pong messages
+        console.log('🏓 Pong received:', data.timestamp);
+      }
     });
 
     newSocket.on('error', (error: Error) => {
@@ -330,26 +439,35 @@ export default function RealTimeEmergencyClient({
 
     setSocket(newSocket);
 
+    // FIXED: Less aggressive ping interval
     const pingInterval = setInterval(() => {
-      if (newSocket.connected) newSocket.emit('ping');
-    }, 30000);
+      if (newSocket.connected) {
+        newSocket.emit('ping');
+      }
+    }, 45000); // Increased from 30 seconds to 45 seconds
 
     return () => {
       console.log('🧹 Cleaning up WebSocket connection');
       clearInterval(pingInterval);
       if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
       if (heartbeatTimeoutRef.current) clearTimeout(heartbeatTimeoutRef.current);
+      if (alertsFetchTimeoutRef.current) clearTimeout(alertsFetchTimeoutRef.current);
       newSocket.disconnect();
     };
-  }, [fetchExistingAlerts, playSound, showPushNotification, isVisible, onEmergencyAlert, onEmergencyStatusUpdate]);
+  }, []); // FIXED: Empty dependency array to prevent recreation
 
   useEffect(() => {
     onConnectionStatusChange?.(connectionStatus);
   }, [connectionStatus, onConnectionStatusChange]);
 
   const markAlertAsRead = useCallback((alertId: string) => {
-    setAlerts(prev => prev.map(alert => alert.id === alertId ? { ...alert, read: true } : alert));
-    socket?.emit('emergency_action', { action: 'mark_notification_read', notificationId: alertId });
+    setAlerts(prev => prev.map(alert => 
+      alert.id === alertId ? { ...alert, read: true } : alert
+    ));
+    socket?.emit('emergency_action', { 
+      action: 'mark_notification_read', 
+      notificationId: alertId 
+    });
   }, [socket]);
 
   const subscribeToEmergency = useCallback((emergencyId: string) => {
@@ -377,8 +495,24 @@ export default function RealTimeEmergencyClient({
   return (
     <>
       <audio ref={audioRef} style={{ display: 'none' }} />
+      {isCurrentlyFetchingAlerts && (
+        <div style={{
+          position: 'fixed',
+          top: '60px',
+          right: '20px',
+          backgroundColor: 'rgba(59, 130, 246, 0.9)',
+          color: 'white',
+          padding: '0.5rem 1rem',
+          borderRadius: '0.5rem',
+          fontSize: '0.875rem',
+          fontWeight: '600',
+          zIndex: 9999,
+          backdropFilter: 'blur(8px)'
+        }}>
+          🔄 Loading alerts...
+        </div>
+      )}
       {children && (
-        // This closing tag has been corrected.
         <EmergencyContext.Provider value={contextValue}>
           {children}
         </EmergencyContext.Provider>
@@ -393,7 +527,7 @@ export default function RealTimeEmergencyClient({
   );
 }
 
-// --- React Context and Hooks ---
+// Context and hooks remain the same...
 interface EmergencyContextType {
   connectionStatus: ConnectionStatus;
   alerts: EmergencyAlert[];
