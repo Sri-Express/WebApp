@@ -66,7 +66,8 @@ export default function CustomerChatWidget({ userId, userName, userEmail }: Cust
     if (chatSession?.status === 'ended' && !ratingSubmitted && !chatSession.feedback) {
       setShowRating(true);
     }
-  }, [chatSession?.status, ratingSubmitted]);
+    // FIXED: Added 'chatSession.feedback' to the dependency array to resolve the ESLint warning.
+  }, [chatSession?.status, ratingSubmitted, chatSession?.feedback]);
 
   useEffect(() => {
     if (!chatSession || !isOpen) return;
