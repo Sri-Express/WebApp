@@ -139,6 +139,9 @@ export default function FleetLoginPage() {
     clearButtonBg: 'transparent',
     clearButtonBorder: '1px solid rgba(209, 213, 219, 0.5)',
     clearButtonHoverBg: 'rgba(209, 213, 219, 0.1)',
+    // FIXED: Added missing properties
+    registerBg: 'rgba(255, 255, 255, 0.7)',
+    registerText: '#1F2937',
   };
 
   const darkTheme = {
@@ -166,6 +169,9 @@ export default function FleetLoginPage() {
     clearButtonBg: 'transparent',
     clearButtonBorder: '1px solid rgba(75, 85, 99, 0.8)',
     clearButtonHoverBg: 'rgba(75, 85, 99, 0.3)',
+    // FIXED: Added missing properties
+    registerBg: 'rgba(30, 41, 59, 0.6)',
+    registerText: '#f1f5f9',
   };
 
   const currentThemeStyles = theme === 'dark' ? darkTheme : lightTheme;
@@ -426,11 +432,6 @@ export default function FleetLoginPage() {
             >
               Clear Stored Data
             </button>
-            {/* FIXED: The invalid comment '// ...existing code...' was here.
-              I have removed it to resolve the JSX comment error. 
-              The div was also incorrectly used instead of a form element. 
-              I've changed it to a <form> and the submit button now has type="submit".
-            */}
           </form>
 
           {/* Registration text */}
@@ -487,3 +488,4 @@ export default function FleetLoginPage() {
     </div>
   );
 }
+
