@@ -6,180 +6,828 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { GlobeAltIcon, DevicePhoneMobileIcon, MagnifyingGlassIcon, MapPinIcon, SignalIcon, BoltIcon, TruckIcon, CheckCircleIcon, XCircleIcon, ClockIcon, ExclamationTriangleIcon, ArrowPathIcon, ViewColumnsIcon, MapIcon, FunnelIcon, EyeIcon } from '@heroicons/react/24/outline';
+import { useTheme } from '@/app/context/ThemeContext';
+import ThemeSwitcher from '@/app/components/ThemeSwitcher';
 
 // Dynamic import for the map component (SSR safe)
-const AdvancedMap = dynamic(() => import('../../../components/AdvancedMap'), { ssr: false, loading: () => <div style={{ height: '100%', backgroundColor: '#334155', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '0.75rem' }}><div style={{ color: '#94a3b8' }}>Loading advanced GPS map...</div></div> });
+const AdvancedMap = dynamic(() => import('../../../components/AdvancedMap'), { 
+  ssr: false, 
+  loading: () => (
+    <div style={{ 
+      height: '100%', 
+      backgroundColor: 'rgba(51, 65, 85, 0.6)', 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'center', 
+      borderRadius: '0.75rem' 
+    }}>
+      <div style={{ color: '#94a3b8' }}>Loading advanced GPS map...</div>
+    </div>
+  ) 
+});
 
-interface Device { _id: string; deviceId: string; vehicleNumber: string; vehicleType: 'bus' | 'train'; status: 'online' | 'offline' | 'maintenance'; lastSeen: string; location: { latitude: number; longitude: number; address: string; lastUpdated: string; }; batteryLevel: number; signalStrength: number; assignedTo: { type: 'route_admin' | 'company_admin' | 'system'; name: string; id: string; }; route?: { id: string; name: string; }; alerts: { count: number; messages: string[]; }; }
-interface VehicleLocation { _id: string; deviceId: string; routeId: string; vehicleId: string; vehicleNumber: string; location: { latitude: number; longitude: number; accuracy: number; heading: number; speed: number; altitude: number; }; routeProgress: { currentWaypoint: number; distanceCovered: number; estimatedTimeToDestination: number; nextStopETA: string; progressPercentage: number; }; passengerLoad: { currentCapacity: number; maxCapacity: number; loadPercentage: number; }; operationalInfo: { driverInfo: { driverName: string; contactNumber: string; }; tripInfo: { tripId: string; departureTime: string; estimatedArrival: string; }; status: 'on_route' | 'at_stop' | 'delayed' | 'breakdown' | 'off_duty'; delays: { currentDelay: number; reason: string; }; }; environmentalData: { weather: string; temperature: number; trafficCondition: string; }; timestamp: string; }
-interface SimulationStatus { isRunning: boolean; vehicleCount: number; speedMultiplier: number; routes: number; lastUpdate: string; }
+interface Device { 
+  _id: string; 
+  deviceId: string; 
+  vehicleNumber: string; 
+  vehicleType: 'bus' | 'train'; 
+  status: 'online' | 'offline' | 'maintenance'; 
+  lastSeen: string; 
+  location: { 
+    latitude: number; 
+    longitude: number; 
+    address: string; 
+    lastUpdated: string; 
+  }; 
+  batteryLevel: number; 
+  signalStrength: number; 
+  assignedTo: { 
+    type: 'route_admin' | 'company_admin' | 'system'; 
+    name: string; 
+    id: string; 
+  }; 
+  route?: { id: string; name: string; }; 
+  alerts: { count: number; messages: string[]; }; 
+}
+
+interface VehicleLocation { 
+  _id: string; 
+  deviceId: string; 
+  routeId: string; 
+  vehicleId: string; 
+  vehicleNumber: string; 
+  location: { 
+    latitude: number; 
+    longitude: number; 
+    accuracy: number; 
+    heading: number; 
+    speed: number; 
+    altitude: number; 
+  }; 
+  routeProgress: { 
+    currentWaypoint: number; 
+    distanceCovered: number; 
+    estimatedTimeToDestination: number; 
+    nextStopETA: string; 
+    progressPercentage: number; 
+  }; 
+  passengerLoad: { 
+    currentCapacity: number; 
+    maxCapacity: number; 
+    loadPercentage: number; 
+  }; 
+  operationalInfo: { 
+    driverInfo: { driverName: string; contactNumber: string; }; 
+    tripInfo: { tripId: string; departureTime: string; estimatedArrival: string; }; 
+    status: 'on_route' | 'at_stop' | 'delayed' | 'breakdown' | 'off_duty'; 
+    delays: { currentDelay: number; reason: string; }; 
+  }; 
+  environmentalData: { weather: string; temperature: number; trafficCondition: string; }; 
+  timestamp: string; 
+}
+
+interface SimulationStatus { 
+  isRunning: boolean; 
+  vehicleCount: number; 
+  speedMultiplier: number; 
+  routes: number; 
+  lastUpdate: string; 
+}
 
 type ViewMode = 'map' | 'grid' | 'hybrid';
 
 export default function AdvancedDeviceMonitorPage() {
-  const router = useRouter(); const [devices, setDevices] = useState<Device[]>([]); const [vehicles, setVehicles] = useState<VehicleLocation[]>([]); const [filteredDevices, setFilteredDevices] = useState<Device[]>([]); const [loading, setLoading] = useState(true); const [viewMode, setViewMode] = useState<ViewMode>('hybrid'); const [searchTerm, setSearchTerm] = useState(''); const [statusFilter, setStatusFilter] = useState('all'); const [typeFilter, setTypeFilter] = useState('all'); const [autoRefresh, setAutoRefresh] = useState(true); const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null); const [simulationStatus, setSimulationStatus] = useState<SimulationStatus | null>(null); const [showSimulationData, setShowSimulationData] = useState(true);
+  const router = useRouter(); 
+  const { theme } = useTheme();
+  
+  const [devices, setDevices] = useState<Device[]>([]); 
+  const [vehicles, setVehicles] = useState<VehicleLocation[]>([]); 
+  const [filteredDevices, setFilteredDevices] = useState<Device[]>([]); 
+  const [loading, setLoading] = useState(true); 
+  const [viewMode, setViewMode] = useState<ViewMode>('hybrid'); 
+  const [searchTerm, setSearchTerm] = useState(''); 
+  const [statusFilter, setStatusFilter] = useState('all'); 
+  const [typeFilter, setTypeFilter] = useState('all'); 
+  const [autoRefresh, setAutoRefresh] = useState(true); 
+  const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null); 
+  const [simulationStatus, setSimulationStatus] = useState<SimulationStatus | null>(null); 
+  const [showSimulationData, setShowSimulationData] = useState(true);
+
+  // Theme styles - consistent with dashboard
+  const lightTheme = { 
+    mainBg: '#fffbeb', 
+    bgGradient: 'linear-gradient(to bottom right, #fffbeb, #fef3c7, #fde68a)',
+    glassPanelBg: 'rgba(255, 255, 255, 0.92)', 
+    glassPanelBorder: '1px solid rgba(251, 191, 36, 0.3)', 
+    glassPanelShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 10px 20px -5px rgba(0, 0, 0, 0.1)', 
+    textPrimary: '#1f2937', 
+    textSecondary: '#4B5563', 
+    textMuted: '#6B7280', 
+    navBg: 'rgba(30, 41, 59, 0.92)',
+    inputBg: 'rgba(249, 250, 251, 0.8)',
+    inputBorder: '1px solid rgba(209, 213, 219, 0.5)'
+  };
+  
+  const darkTheme = { 
+    mainBg: '#0f172a', 
+    bgGradient: 'linear-gradient(to bottom right, #0f172a, #1e293b, #334155)', 
+    glassPanelBg: 'rgba(30, 41, 59, 0.8)', 
+    glassPanelBorder: '1px solid rgba(251, 191, 36, 0.3)', 
+    glassPanelShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35), 0 10px 20px -5px rgba(0, 0, 0, 0.2)', 
+    textPrimary: '#f9fafb', 
+    textSecondary: '#9ca3af', 
+    textMuted: '#9ca3af',
+    navBg: 'rgba(30, 41, 59, 0.92)',
+    inputBg: 'rgba(51, 65, 85, 0.8)',
+    inputBorder: '1px solid rgba(75, 85, 99, 0.5)'
+  };
+  
+  const currentThemeStyles = theme === 'dark' ? darkTheme : lightTheme;
+
+  // Animation styles
+  const animationStyles = `
+    @keyframes fade-in-down { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } } 
+    .animate-fade-in-down { animation: fade-in-down 0.8s ease-out forwards; }
+    @keyframes fade-in-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } } 
+    .animate-fade-in-up { animation: fade-in-up 0.8s ease-out forwards; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    @keyframes road-marking { 0% { transform: translateX(-200%); } 100% { transform: translateX(500%); } }
+    .animate-road-marking { animation: road-marking 10s linear infinite; }
+    @keyframes car-right { 0% { transform: translateX(-100%); } 100% { transform: translateX(100vw); } }
+    .animate-car-right { animation: car-right 15s linear infinite; }
+    @keyframes car-left { 0% { transform: translateX(100vw) scaleX(-1); } 100% { transform: translateX(-200px) scaleX(-1); } }
+    .animate-car-left { animation: car-left 16s linear infinite; }
+    @keyframes light-blink { 0%, 100% { opacity: 1; box-shadow: 0 0 15px #fcd34d; } 50% { opacity: 0.6; box-shadow: 0 0 5px #fcd34d; } }
+    .animate-light-blink { animation: light-blink 2s infinite; }
+  `;
 
   // Get auth token
   const getToken = () => localStorage.getItem('token');
 
   // API call helper
-  const apiCall = useCallback(async (endpoint: string, options: RequestInit = {}) => { const token = getToken(); if (!token) { router.push('/sysadmin/login'); return null; } try { const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api${endpoint}`, { ...options, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, ...options.headers, }, }); if (!response.ok) { if (response.status === 401) { localStorage.removeItem('token'); router.push('/sysadmin/login'); return null; } throw new Error(`API Error: ${response.status}`); } return await response.json(); } catch (error) { console.error('API call error:', error); return null; } }, [router]);
+  const apiCall = useCallback(async (endpoint: string, options: RequestInit = {}) => { 
+    const token = getToken(); 
+    if (!token) { 
+      router.push('/sysadmin/login'); 
+      return null; 
+    } 
+    try { 
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api${endpoint}`, { 
+        ...options, 
+        headers: { 
+          'Content-Type': 'application/json', 
+          'Authorization': `Bearer ${token}`, 
+          ...options.headers, 
+        }, 
+      }); 
+      if (!response.ok) { 
+        if (response.status === 401) { 
+          localStorage.removeItem('token'); 
+          router.push('/sysadmin/login'); 
+          return null; 
+        } 
+        throw new Error(`API Error: ${response.status}`); 
+      } 
+      return await response.json(); 
+    } catch (error) { 
+      console.error('API call error:', error); 
+      return null; 
+    } 
+  }, [router]);
 
   // Load devices data
-  const loadDevices = useCallback(async () => { try { const response = await apiCall('/admin/devices?limit=1000'); if (response?.devices) { setDevices(response.devices); } } catch (error) { console.error('Error loading devices:', error); } }, [apiCall]);
+  const loadDevices = useCallback(async () => { 
+    try { 
+      const response = await apiCall('/admin/devices?limit=1000'); 
+      if (response?.devices && Array.isArray(response.devices)) { 
+        setDevices(response.devices); 
+      } else {
+        setDevices([]);
+      }
+    } catch (error) { 
+      console.error('Error loading devices:', error);
+      setDevices([]);
+    } 
+  }, [apiCall]);
 
   // Load real-time vehicle locations (GPS simulation data)
-  const loadVehicleLocations = useCallback(async () => { try { const response = await apiCall('/tracking/live'); if (response?.vehicles) { setVehicles(response.vehicles); } } catch (error) { console.error('Error loading vehicle locations:', error); } }, [apiCall]);
+  const loadVehicleLocations = useCallback(async () => { 
+    try { 
+      const response = await apiCall('/tracking/live'); 
+      if (response?.vehicles && Array.isArray(response.vehicles)) { 
+        setVehicles(response.vehicles); 
+      } else {
+        setVehicles([]);
+      }
+    } catch (error) { 
+      console.error('Error loading vehicle locations:', error);
+      setVehicles([]);
+    } 
+  }, [apiCall]);
 
   // Load simulation status
-  const loadSimulationStatus = useCallback(async () => { try { const response = await apiCall('/admin/simulation/status'); if (response?.simulation) { setSimulationStatus(response.simulation); } } catch (error) { console.error('Error loading simulation status:', error); } }, [apiCall]);
+  const loadSimulationStatus = useCallback(async () => { 
+    try { 
+      const response = await apiCall('/admin/simulation/status'); 
+      if (response?.simulation) { 
+        setSimulationStatus(response.simulation); 
+      } 
+    } catch (error) { 
+      console.error('Error loading simulation status:', error); 
+    } 
+  }, [apiCall]);
 
   // Control simulation
-  const controlSimulation = useCallback(async (action: 'start' | 'stop' | 'speed', value?: number) => { try { const endpoint = action === 'speed' ? `/admin/simulation/speed` : `/admin/simulation/${action}`; const options = action === 'speed' ? { method: 'POST', body: JSON.stringify({ speed: value }) } : { method: 'POST' }; const response = await apiCall(endpoint, options); if (response) { setSimulationStatus(response.simulation); if (action === 'start') setAutoRefresh(true); } } catch (error) { console.error('Error controlling simulation:', error); } }, [apiCall]);
+  const controlSimulation = useCallback(async (action: 'start' | 'stop' | 'speed', value?: number) => { 
+    try { 
+      const endpoint = action === 'speed' ? `/admin/simulation/speed` : `/admin/simulation/${action}`; 
+      const options = action === 'speed' ? { method: 'POST', body: JSON.stringify({ speed: value }) } : { method: 'POST' }; 
+      const response = await apiCall(endpoint, options); 
+      if (response) { 
+        setSimulationStatus(response.simulation); 
+        if (action === 'start') setAutoRefresh(true); 
+      } 
+    } catch (error) { 
+      console.error('Error controlling simulation:', error); 
+    } 
+  }, [apiCall]);
 
   // Initial load
-  useEffect(() => { const initialLoad = async () => { setLoading(true); await Promise.all([loadDevices(), loadVehicleLocations(), loadSimulationStatus()]); setLoading(false); }; initialLoad(); }, [loadDevices, loadVehicleLocations, loadSimulationStatus]);
+  useEffect(() => { 
+    const initialLoad = async () => { 
+      setLoading(true); 
+      try {
+        await Promise.all([loadDevices(), loadVehicleLocations(), loadSimulationStatus()]);
+      } catch (error) {
+        console.error('Error during initial load:', error);
+        setDevices([]);
+        setVehicles([]);
+        setSimulationStatus(null);
+      } finally {
+        setLoading(false); 
+      }
+    }; 
+    initialLoad(); 
+  }, [loadDevices, loadVehicleLocations, loadSimulationStatus]);
 
   // Auto refresh
-  useEffect(() => { if (!autoRefresh) return; const interval = setInterval(() => { loadDevices(); loadVehicleLocations(); loadSimulationStatus(); }, 5000); return () => clearInterval(interval); }, [autoRefresh, loadDevices, loadVehicleLocations, loadSimulationStatus]);
+  useEffect(() => { 
+    if (!autoRefresh) return; 
+    const interval = setInterval(() => { 
+      loadDevices(); 
+      loadVehicleLocations(); 
+      loadSimulationStatus(); 
+    }, 5000); 
+    return () => clearInterval(interval); 
+  }, [autoRefresh, loadDevices, loadVehicleLocations, loadSimulationStatus]);
 
   // Filter devices
-  useEffect(() => { let filtered = devices; if (searchTerm) { filtered = filtered.filter(device => device.deviceId.toLowerCase().includes(searchTerm.toLowerCase()) || device.vehicleNumber.toLowerCase().includes(searchTerm.toLowerCase()) || device.location.address.toLowerCase().includes(searchTerm.toLowerCase()) || device.assignedTo.name.toLowerCase().includes(searchTerm.toLowerCase())); } if (statusFilter !== 'all') { filtered = filtered.filter(device => device.status === statusFilter); } if (typeFilter !== 'all') { filtered = filtered.filter(device => device.vehicleType === typeFilter); } setFilteredDevices(filtered); }, [devices, searchTerm, statusFilter, typeFilter]);
+  useEffect(() => { 
+    let filtered = devices; 
+    if (searchTerm && searchTerm.trim()) { 
+      filtered = filtered.filter(device => {
+        const deviceId = device?.deviceId?.toLowerCase() || '';
+        const vehicleNumber = device?.vehicleNumber?.toLowerCase() || '';
+        const address = device?.location?.address?.toLowerCase() || '';
+        const assignedName = device?.assignedTo?.name?.toLowerCase() || '';
+        const searchLower = searchTerm.toLowerCase();
+        
+        return deviceId.includes(searchLower) || 
+               vehicleNumber.includes(searchLower) || 
+               address.includes(searchLower) || 
+               assignedName.includes(searchLower);
+      }); 
+    } 
+    if (statusFilter !== 'all') { 
+      filtered = filtered.filter(device => device?.status === statusFilter); 
+    } 
+    if (typeFilter !== 'all') { 
+      filtered = filtered.filter(device => device?.vehicleType === typeFilter); 
+    } 
+    setFilteredDevices(filtered); 
+  }, [devices, searchTerm, statusFilter, typeFilter]);
 
-  const getStatusColor = (status: string) => { switch (status) { case 'online': return '#10b981'; case 'offline': return '#ef4444'; case 'maintenance': return '#f59e0b'; default: return '#6b7280'; } }; const getStatusIcon = (status: string) => { switch (status) { case 'online': return <CheckCircleIcon width={16} height={16} />; case 'offline': return <XCircleIcon width={16} height={16} />; case 'maintenance': return <ClockIcon width={16} height={16} />; default: return <ExclamationTriangleIcon width={16} height={16} />; } }; const getBatteryColor = (level: number) => { if (level > 50) return '#10b981'; if (level > 20) return '#f59e0b'; return '#ef4444'; }; const getTimeSince = (dateString: string) => { const now = new Date(); const past = new Date(dateString); const diffInMinutes = Math.floor((now.getTime() - past.getTime()) / (1000 * 60)); if (diffInMinutes < 1) return 'Just now'; if (diffInMinutes < 60) return `${diffInMinutes}m ago`; if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`; return `${Math.floor(diffInMinutes / 1440)}d ago`; };
+  const getStatusColor = (status: string) => { 
+    switch (status) { 
+      case 'online': return '#10b981'; 
+      case 'offline': return '#ef4444'; 
+      case 'maintenance': return '#f59e0b'; 
+      default: return '#6b7280'; 
+    } 
+  }; 
 
-  const handleRefresh = async () => { setLoading(true); await Promise.all([loadDevices(), loadVehicleLocations(), loadSimulationStatus()]); setLoading(false); };
+  const getStatusIcon = (status: string) => { 
+    switch (status) { 
+      case 'online': return <CheckCircleIcon width={16} height={16} />; 
+      case 'offline': return <XCircleIcon width={16} height={16} />; 
+      case 'maintenance': return <ClockIcon width={16} height={16} />; 
+      default: return <ExclamationTriangleIcon width={16} height={16} />; 
+    } 
+  }; 
+
+  const getBatteryColor = (level: number) => { 
+    if (level > 50) return '#10b981'; 
+    if (level > 20) return '#f59e0b'; 
+    return '#ef4444'; 
+  }; 
+
+  const getTimeSince = (dateString: string) => { 
+    const now = new Date(); 
+    const past = new Date(dateString); 
+    const diffInMinutes = Math.floor((now.getTime() - past.getTime()) / (1000 * 60)); 
+    if (diffInMinutes < 1) return 'Just now'; 
+    if (diffInMinutes < 60) return `${diffInMinutes}m ago`; 
+    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`; 
+    return `${Math.floor(diffInMinutes / 1440)}d ago`; 
+  };
+
+  const handleRefresh = async () => { 
+    setLoading(true); 
+    await Promise.all([loadDevices(), loadVehicleLocations(), loadSimulationStatus()]); 
+    setLoading(false); 
+  };
 
   // Combine device and vehicle data for display
-  const displayData = showSimulationData ? vehicles : filteredDevices; const deviceCounts = { total: devices.length, online: devices.filter(d => d.status === 'online').length, offline: devices.filter(d => d.status === 'offline').length, maintenance: devices.filter(d => d.status === 'maintenance').length, alerts: devices.reduce((sum, d) => sum + d.alerts.count, 0), simulationVehicles: vehicles.length };
-
-  const animationStyles = ` @keyframes road-marking { 0% { transform: translateX(-200%); } 100% { transform: translateX(500%); } } .animate-road-marking { animation: road-marking 10s linear infinite; } @keyframes car-right { 0% { transform: translateX(-100%); } 100% { transform: translateX(100vw); } } .animate-car-right { animation: car-right 15s linear infinite; } @keyframes car-left { 0% { transform: translateX(100vw) scaleX(-1); } 100% { transform: translateX(-200px) scaleX(-1); } } .animate-car-left { animation: car-left 16s linear infinite; } @keyframes light-blink { 0%, 100% { opacity: 1; box-shadow: 0 0 15px #fcd34d; } 50% { opacity: 0.6; box-shadow: 0 0 5px #fcd34d; } } .animate-light-blink { animation: light-blink 1s infinite; } @keyframes fade-in-down { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } } .animate-fade-in-down { animation: fade-in-down 0.8s ease-out forwards; } @keyframes fade-in-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } } .animate-fade-in-up { animation: fade-in-up 0.8s ease-out forwards; } @keyframes trainMove { from { left: 100%; } to { left: -300px; } } @keyframes slight-bounce { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-1px); } } .animate-slight-bounce { animation: slight-bounce 2s ease-in-out infinite; } @keyframes steam { 0% { opacity: 0.8; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-20px) scale(2.5); } } .animate-steam { animation: steam 2s ease-out infinite; } @keyframes wheels { 0% { transform: rotate(0deg); } 100% { transform: rotate(-360deg); } } .animate-wheels { animation: wheels 2s linear infinite; } @keyframes connecting-rod { 0% { transform: translateX(-1px) rotate(0deg); } 50% { transform: translateX(1px) rotate(180deg); } 100% { transform: translateX(-1px) rotate(360deg); } } .animate-connecting-rod { animation: connecting-rod 2s linear infinite; } @keyframes piston-move { 0% { transform: translateX(-2px); } 50% { transform: translateX(2px); } 100% { transform: translateX(-2px); } } .animate-piston { animation: piston-move 2s linear infinite; } .animation-delay-100 { animation-delay: 0.1s; } .animation-delay-200 { animation-delay: 0.2s; } .animation-delay-300 { animation-delay: 0.3s; } .animation-delay-400 { animation-delay: 0.4s; } .animation-delay-500 { animation-delay: 0.5s; } .animation-delay-600 { animation-delay: 0.6s; } .animation-delay-700 { animation-delay: 0.7s; } .animation-delay-800 { animation-delay: 0.8s; } .animation-delay-1000 { animation-delay: 1s; } .animation-delay-1200 { animation-delay: 1.2s; } .animation-delay-1500 { animation-delay: 1.5s; } .animation-delay-2000 { animation-delay: 2s; } .animation-delay-2500 { animation-delay: 2.5s; } .animation-delay-3000 { animation-delay: 3s; } `;
+  const displayData = showSimulationData ? vehicles : filteredDevices; 
+  const deviceCounts = { 
+    total: devices?.length || 0, 
+    online: devices?.filter(d => d?.status === 'online')?.length || 0, 
+    offline: devices?.filter(d => d?.status === 'offline')?.length || 0, 
+    maintenance: devices?.filter(d => d?.status === 'maintenance')?.length || 0, 
+    alerts: devices?.reduce((sum, d) => sum + (d?.alerts?.count || 0), 0) || 0, 
+    simulationVehicles: vehicles?.length || 0 
+  };
 
   if (loading && devices.length === 0) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', backgroundColor: '#0f172a', color: '#f1f5f9' }}>
-        <div style={{ textAlign: 'center' }}><div style={{ width: '48px', height: '48px', border: '4px solid #1e293b', borderTop: '4px solid #3B82F6', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }}></div><div style={{ color: '#94a3b8', fontSize: '18px', fontWeight: '500' }}>Loading Advanced Device Monitor...</div><div style={{ color: '#64748b', fontSize: '14px', marginTop: '8px' }}>Initializing GPS tracking system</div></div>
+      <div style={{ backgroundColor: currentThemeStyles.mainBg, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center', color: currentThemeStyles.textPrimary }}>
+          <div style={{ 
+            width: '40px', 
+            height: '40px', 
+            border: `4px solid ${theme === 'dark' ? '#1e293b' : '#f3f4f6'}`, 
+            borderTop: '4px solid #3b82f6', 
+            borderRadius: '50%', 
+            animation: 'spin 1s linear infinite', 
+            margin: '0 auto 1rem' 
+          }}></div>
+          <p style={{ fontSize: '1.125rem', fontWeight: '500' }}>Loading Advanced Device Monitor...</p>
+          <p style={{ color: currentThemeStyles.textSecondary, fontSize: '0.875rem', marginTop: '0.5rem' }}>Initializing GPS tracking system</p>
+        </div>
         <style jsx>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#0f172a', position: 'relative', overflow: 'hidden' }}>
+    <div style={{ backgroundColor: currentThemeStyles.mainBg, background: currentThemeStyles.bgGradient, minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
       <style jsx>{animationStyles}</style>
-      
-      {/* START: Animated Background */}
-      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom right, #0f172a, #1e293b, #334155)' }}>
-        <div style={{ position: 'absolute', top: '15%', left: 0, right: 0, height: '100px', backgroundColor: '#1f2937', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)', zIndex: 2 }}></div><div style={{ position: 'absolute', top: '15%', left: 0, right: 0, height: '100px', zIndex: 3, display: 'flex', justifyContent: 'center', alignItems: 'center' }}><div style={{ width: '100%', height: '5px', background: 'repeating-linear-gradient(to right, #fcd34d, #fcd34d 30px, transparent 30px, transparent 60px)', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2)' }}></div></div><div style={{ position: 'absolute', top: '15%', left: 0, right: 0, height: '100px', overflow: 'hidden', zIndex: 3 }}><div style={{ position: 'absolute', top: '25%', left: 0, right: 0, height: '8px', display: 'flex', transform: 'translateY(-50%)' }}><div className="animate-road-marking" style={{ position: 'absolute', width: '80px', backgroundColor: '#fbbf24', left: '10%' }}></div><div className="animate-road-marking animation-delay-200" style={{ position: 'absolute', width: '80px', backgroundColor: '#fbbf24', left: '30%' }}></div><div className="animate-road-marking animation-delay-500" style={{ position: 'absolute', width: '80px', backgroundColor: '#fbbf24', left: '50%' }}></div><div className="animate-road-marking animation-delay-700" style={{ position: 'absolute', width: '80px', backgroundColor: '#fbbf24', left: '70%' }}></div></div><div style={{ position: 'absolute', top: '75%', left: 0, right: 0, height: '8px', display: 'flex', transform: 'translateY(-50%)' }}><div className="animate-road-marking animation-delay-300" style={{ position: 'absolute', width: '80px', backgroundColor: '#fbbf24', left: '20%' }}></div><div className="animate-road-marking animation-delay-400" style={{ position: 'absolute', width: '80px', backgroundColor: '#fbbf24', left: '40%' }}></div><div className="animate-road-marking animation-delay-600" style={{ position: 'absolute', width: '80px', backgroundColor: '#fbbf24', left: '60%' }}></div><div className="animate-road-marking animation-delay-800" style={{ position: 'absolute', width: '80px', backgroundColor: '#fbbf24', left: '80%' }}></div></div></div>
-        <div style={{ position: 'absolute', top: '60%', left: 0, right: 0, height: '80px', backgroundColor: '#1f2937', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.2)', zIndex: 2 }}></div><div style={{ position: 'absolute', top: '60%', left: 0, right: 0, height: '80px', zIndex: 3, display: 'flex', justifyContent: 'center', alignItems: 'center' }}><div style={{ width: '100%', height: '4px', background: 'repeating-linear-gradient(to right, #fcd34d, #fcd34d 20px, transparent 20px, transparent 40px)', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2)' }}></div></div>
-        <div style={{ position: 'absolute', top: '85%', left: 0, right: 0, height: '50px', background: 'linear-gradient(to bottom, #4b5563 0%, #374151 100%)', boxShadow: '0 5px 10px -3px rgba(0, 0, 0, 0.3)', zIndex: 2 }}></div><div style={{ position: 'absolute', top: '85%', left: 0, right: 0, height: '50px', overflow: 'visible', zIndex: 3 }}><div style={{ position: 'absolute', top: '35%', left: 0, right: 0, height: '6px', background: 'linear-gradient(to bottom, #94a3b8 0%, #64748b 100%)', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3)', zIndex: 4 }}></div><div style={{ position: 'absolute', top: '65%', left: 0, right: 0, height: '6px', background: 'linear-gradient(to bottom, #94a3b8 0%, #64748b 100%)', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3)', zIndex: 4 }}></div><div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '100%', display: 'flex', gap: '15px', zIndex: 3 }}>{Array(30).fill(0).map((_, i) => (<div key={i} style={{ width: '20px', height: '100%', background: 'linear-gradient(to bottom, #92400e 0%, #7c2d12 70%, #713f12 100%)', marginLeft: `${i * 30}px`, boxShadow: 'inset 0 0 2px rgba(0, 0, 0, 0.5)', border: '1px solid #78350f' }}></div>))}</div></div>
-        <div className="animate-slight-bounce" style={{ position: 'absolute', top: '85%', marginTop: '-15px', left: '100%', height: '70px', width: '300px', zIndex: 6, pointerEvents: 'none', display: 'flex', animation: 'trainMove 15s linear infinite', filter: 'drop-shadow(0 4px 3px rgba(0, 0, 0, 0.2))' }}><div style={{ display: 'flex', width: '100%', height: '100%' }}><div style={{ position: 'relative', width: '110px', height: '60px', marginRight: '5px' }}><div style={{ position: 'absolute', bottom: '12px', left: '8px', width: '85%', height: '30px', background: 'linear-gradient(to bottom, #b91c1c 0%, #9f1239 60%, #7f1d1d 100%)', borderRadius: '8px 5px 5px 5px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)', border: '1px solid #7f1d1d' }}></div><div style={{ position: 'absolute', bottom: '42px', right: '10px', width: '60px', height: '30px', background: 'linear-gradient(to bottom, #7f1d1d 0%, #681e1e 100%)', borderRadius: '6px 6px 0 0', border: '1px solid #601414', boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.1)' }}></div><div style={{ position: 'absolute', bottom: '72px', right: '8px', width: '65px', height: '5px', background: '#4c1d95', borderRadius: '2px', boxShadow: '0 -1px 2px rgba(0, 0, 0, 0.3)' }}></div><div style={{ position: 'absolute', bottom: '5px', left: '0', width: '15px', height: '18px', background: 'linear-gradient(135deg, #9f1239 0%, #7f1d1d 100%)', clipPath: 'polygon(0 0, 100% 0, 100% 35%, 50% 100%, 0 35%)', borderRadius: '2px' }}></div><div style={{ position: 'absolute', bottom: '15px', left: '3px', width: '10px', height: '4px', backgroundColor: '#64748b', borderRadius: '1px', border: '1px solid #475569' }}></div><div style={{ position: 'absolute', top: '3px', left: '40px', padding: '3px 5px', backgroundColor: '#fef3c7', borderRadius: '3px', border: '1px solid #7f1d1d', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)', fontSize: '9px', fontWeight: 'bold', color: '#7f1d1d', whiteSpace: 'nowrap', fontFamily: "'Noto Sans Sinhala', 'Iskoola Pota', sans-serif", zIndex: 10, transform: 'rotate(-2deg)' }}>දුම්රිය සේවය</div><div style={{ position: 'absolute', bottom: '42px', left: '22px', width: '14px', height: '18px', background: 'linear-gradient(to bottom, #27272a 0%, #18181b 100%)', borderRadius: '4px 4px 0 0', border: '1px solid #111', boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.1)' }}><div style={{ position: 'absolute', top: '-2px', left: '-2px', width: '16px', height: '4px', background: 'linear-gradient(to bottom, #cbd5e1 0%, #94a3b8 100%)', borderRadius: '4px 4px 0 0', border: '1px solid #64748b' }}></div><div className="animate-steam" style={{ position: 'absolute', top: '-15px', left: '-2px', width: '18px', height: '15px', background: 'radial-gradient(circle, rgba(255, 255, 255, 0.95) 30%, rgba(255, 255, 255, 0.6) 80%)', borderRadius: '50%', opacity: 0.9 }}></div><div className="animate-steam animation-delay-200" style={{ position: 'absolute', top: '-12px', left: '4px', width: '16px', height: '14px', background: 'radial-gradient(circle, rgba(255, 255, 255, 0.95) 30%, rgba(255, 255, 255, 0.6) 80%)', borderRadius: '50%', opacity: 0.85 }}></div><div className="animate-steam animation-delay-400" style={{ position: 'absolute', top: '-18px', left: '2px', width: '20px', height: '18px', background: 'radial-gradient(circle, rgba(255, 255, 255, 0.95) 30%, rgba(255, 255, 255, 0.6) 80%)', borderRadius: '50%', opacity: 0.9 }}></div><div className="animate-steam animation-delay-600" style={{ position: 'absolute', top: '-14px', left: '-4px', width: '17px', height: '15px', background: 'radial-gradient(circle, rgba(255, 255, 255, 0.95) 30%, rgba(255, 255, 255, 0.6) 80%)', borderRadius: '50%', opacity: 0.8 }}></div><div className="animate-steam animation-delay-800" style={{ position: 'absolute', top: '-22px', left: '1px', width: '22px', height: '20px', background: 'radial-gradient(circle, rgba(255, 255, 255, 0.95) 30%, rgba(255, 255, 255, 0.6) 80%)', borderRadius: '50%', opacity: 0.7 }}></div></div><div style={{ position: 'absolute', bottom: '42px', left: '45px', width: '8px', height: '10px', background: 'linear-gradient(to bottom, #fbbf24 0%, #d97706 100%)', borderRadius: '4px 4px 8px 8px', border: '1px solid #b45309' }}></div><div style={{ position: 'absolute', bottom: '42px', left: '60px', width: '6px', height: '8px', background: 'linear-gradient(to bottom, #94a3b8 0%, #64748b 100%)', borderRadius: '3px 3px 0 0', border: '1px solid #475569' }}></div><div className="animate-wheels" style={{ position: 'absolute', bottom: '0', left: '15px', width: '24px', height: '24px', background: 'linear-gradient(135deg, #64748b 0%, #334155 100%)', borderRadius: '50%', border: '3px solid #cbd5e1', boxSizing: 'border-box', boxShadow: '0 3px 6px rgba(0, 0, 0, 0.4)' }}><div style={{ position: 'absolute', top: '1px', left: '1px', right: '1px', bottom: '1px', borderRadius: '50%', border: '2px solid #94a3b8' }}></div><div style={{ position: 'absolute', top: 'calc(50% - 1px)', left: '0', width: '100%', height: '2px', backgroundColor: '#cbd5e1' }}></div><div style={{ position: 'absolute', top: '0', left: 'calc(50% - 1px)', width: '2px', height: '100%', backgroundColor: '#cbd5e1' }}></div><div style={{ position: 'absolute', top: '0', left: '0', width: '100%', height: '100%', background: 'conic-gradient(from 0deg, transparent 0deg, transparent 10deg, #cbd5e1 10deg, #cbd5e1 15deg, transparent 15deg, transparent 55deg, #cbd5e1 55deg, #cbd5e1 60deg, transparent 60deg, transparent 100deg, #cbd5e1 100deg, #cbd5e1 105deg, transparent 105deg, transparent 145deg, #cbd5e1 145deg, #cbd5e1 150deg, transparent 150deg, transparent 190deg, #cbd5e1 190deg, #cbd5e1 195deg, transparent 195deg, transparent 235deg, #cbd5e1 235deg, #cbd5e1 240deg, transparent 240deg, transparent 280deg, #cbd5e1 280deg, #cbd5e1 285deg, transparent 285deg, transparent 325deg, #cbd5e1 325deg, #cbd5e1 330deg, transparent 330deg)', borderRadius: '50%' }}></div><div style={{ position: 'absolute', top: 'calc(50% - 4px)', left: 'calc(50% - 4px)', width: '8px', height: '8px', background: 'radial-gradient(circle, #f8fafc 0%, #cbd5e1 100%)', borderRadius: '50%', border: '1px solid #64748b', boxShadow: 'inset 0 0 2px rgba(0, 0, 0, 0.2)' }}></div></div><div className="animate-wheels" style={{ position: 'absolute', bottom: '0', right: '25px', width: '24px', height: '24px', background: 'linear-gradient(135deg, #64748b 0%, #334155 100%)', borderRadius: '50%', border: '3px solid #cbd5e1', boxSizing: 'border-box', boxShadow: '0 3px 6px rgba(0, 0, 0, 0.4)' }}><div style={{ position: 'absolute', top: '1px', left: '1px', right: '1px', bottom: '1px', borderRadius: '50%', border: '2px solid #94a3b8' }}></div><div style={{ position: 'absolute', top: 'calc(50% - 1px)', left: '0', width: '100%', height: '2px', backgroundColor: '#cbd5e1' }}></div><div style={{ position: 'absolute', top: '0', left: 'calc(50% - 1px)', width: '2px', height: '100%', backgroundColor: '#cbd5e1' }}></div><div style={{ position: 'absolute', top: '0', left: '0', width: '100%', height: '100%', background: 'conic-gradient(from 0deg, transparent 0deg, transparent 10deg, #cbd5e1 10deg, #cbd5e1 15deg, transparent 15deg, transparent 55deg, #cbd5e1 55deg, #cbd5e1 60deg, transparent 60deg, transparent 100deg, #cbd5e1 100deg, #cbd5e1 105deg, transparent 105deg, transparent 145deg, #cbd5e1 145deg, #cbd5e1 150deg, transparent 150deg, transparent 190deg, #cbd5e1 190deg, #cbd5e1 195deg, transparent 195deg, transparent 235deg, #cbd5e1 235deg, #cbd5e1 240deg, transparent 240deg, transparent 280deg, #cbd5e1 280deg, #cbd5e1 285deg, transparent 285deg, transparent 325deg, #cbd5e1 325deg, #cbd5e1 330deg, transparent 330deg)', borderRadius: '50%' }}></div><div style={{ position: 'absolute', top: 'calc(50% - 4px)', left: 'calc(50% - 4px)', width: '8px', height: '8px', background: 'radial-gradient(circle, #f8fafc 0%, #cbd5e1 100%)', borderRadius: '50%', border: '1px solid #64748b', boxShadow: 'inset 0 0 2px rgba(0, 0, 0, 0.2)' }}></div></div><div className="animate-wheels" style={{ position: 'absolute', bottom: '0', right: '60px', width: '24px', height: '24px', background: 'linear-gradient(135deg, #64748b 0%, #334155 100%)', borderRadius: '50%', border: '3px solid #cbd5e1', boxSizing: 'border-box', boxShadow: '0 3px 6px rgba(0, 0, 0, 0.4)' }}><div style={{ position: 'absolute', top: '1px', left: '1px', right: '1px', bottom: '1px', borderRadius: '50%', border: '2px solid #94a3b8' }}></div><div style={{ position: 'absolute', top: 'calc(50% - 1px)', left: '0', width: '100%', height: '2px', backgroundColor: '#cbd5e1' }}></div><div style={{ position: 'absolute', top: '0', left: 'calc(50% - 1px)', width: '2px', height: '100%', backgroundColor: '#cbd5e1' }}></div><div style={{ position: 'absolute', top: '0', left: '0', width: '100%', height: '100%', background: 'conic-gradient(from 0deg, transparent 0deg, transparent 10deg, #cbd5e1 10deg, #cbd5e1 15deg, transparent 15deg, transparent 55deg, #cbd5e1 55deg, #cbd5e1 60deg, transparent 60deg, transparent 100deg, #cbd5e1 100deg, #cbd5e1 105deg, transparent 105deg, transparent 145deg, #cbd5e1 145deg, #cbd5e1 150deg, transparent 150deg, transparent 190deg, #cbd5e1 190deg, #cbd5e1 195deg, transparent 195deg, transparent 235deg, #cbd5e1 235deg, #cbd5e1 240deg, transparent 240deg, transparent 280deg, #cbd5e1 280deg, #cbd5e1 285deg, transparent 285deg, transparent 325deg, #cbd5e1 325deg, #cbd5e1 330deg, transparent 330deg)', borderRadius: '50%' }}></div><div style={{ position: 'absolute', top: 'calc(50% - 4px)', left: 'calc(50% - 4px)', width: '8px', height: '8px', background: 'radial-gradient(circle, #f8fafc 0%, #cbd5e1 100%)', borderRadius: '50%', border: '1px solid #64748b', boxShadow: 'inset 0 0 2px rgba(0, 0, 0, 0.2)' }}></div></div><div style={{ position: 'absolute', bottom: '24px', left: '22px', width: '30px', height: '8px', backgroundColor: '#64748b', borderRadius: '4px', border: '1px solid #475569', zIndex: 3 }}><div className="animate-piston" style={{ position: 'absolute', top: '2px', left: '3px', width: '22px', height: '2px', backgroundColor: '#94a3b8', borderRadius: '1px' }}></div></div><div style={{ position: 'absolute', bottom: '47px', right: '15px', width: '15px', height: '12px', background: 'linear-gradient(135deg, #93c5fd 0%, #bfdbfe 50%, #93c5fd 100%)', borderRadius: '2px', border: '2px solid #7f1d1d', boxShadow: 'inset 0 0 4px rgba(255, 255, 255, 0.5)' }}></div><div style={{ position: 'absolute', bottom: '47px', right: '40px', width: '15px', height: '12px', background: 'linear-gradient(135deg, #93c5fd 0%, #bfdbfe 50%, #93c5fd 100%)', borderRadius: '2px', border: '2px solid #7f1d1d', boxShadow: 'inset 0 0 4px rgba(255, 255, 255, 0.5)' }}></div><div className="animate-light-blink" style={{ position: 'absolute', bottom: '22px', left: '3px', width: '10px', height: '10px', background: 'radial-gradient(circle, #fef3c7 0%, #fcd34d 100%)', borderRadius: '50%', boxShadow: '0 0 15px #fcd34d, 0 0 5px #fef3c7', border: '1px solid #b45309' }}></div></div><div style={{ position: 'relative', width: '90px', height: '40px', marginTop: '15px', marginRight: '5px' }}><div style={{ position: 'absolute', bottom: '5px', width: '100%', height: '28px', background: 'linear-gradient(to bottom, #dc2626 0%, #be123c 60%, #9f1239 100%)', borderRadius: '4px', boxSizing: 'border-box', border: '1px solid #881337', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)' }}><div style={{ position: 'absolute', top: '18px', left: '0', width: '100%', height: '3px', backgroundColor: '#fbbf24', opacity: 0.8 }}></div></div><div style={{ position: 'absolute', bottom: '33px', left: '2px', width: '96%', height: '4px', background: 'linear-gradient(to bottom, #7f1d1d 0%, #881337 100%)', borderRadius: '40% 40% 0 0 / 100% 100% 0 0', boxShadow: '0 -1px 2px rgba(0, 0, 0, 0.3)' }}></div><div style={{ position: 'absolute', top: '5px', left: '10px', width: '15px', height: '10px', background: 'linear-gradient(135deg, #93c5fd 0%, #bfdbfe 50%, #93c5fd 100%)', borderRadius: '2px', border: '1px solid #881337', boxShadow: 'inset 0 0 3px rgba(255, 255, 255, 0.5)' }}></div><div style={{ position: 'absolute', top: '5px', left: '35px', width: '15px', height: '10px', background: 'linear-gradient(135deg, #93c5fd 0%, #bfdbfe 50%, #93c5fd 100%)', borderRadius: '2px', border: '1px solid #881337', boxShadow: 'inset 0 0 3px rgba(255, 255, 255, 0.5)' }}></div><div style={{ position: 'absolute', top: '5px', left: '60px', width: '15px', height: '10px', background: 'linear-gradient(135deg, #93c5fd 0%, #bfdbfe 50%, #93c5fd 100%)', borderRadius: '2px', border: '1px solid #881337', boxShadow: 'inset 0 0 3px rgba(255, 255, 255, 0.5)' }}></div><div className="animate-wheels" style={{ position: 'absolute', bottom: '0', left: '20px', width: '20px', height: '20px', background: 'linear-gradient(135deg, #64748b 0%, #334155 100%)', borderRadius: '50%', border: '3px solid #cbd5e1', boxSizing: 'border-box', boxShadow: '0 3px 6px rgba(0, 0, 0, 0.4)' }}><div style={{ position: 'absolute', top: '1px', left: '1px', right: '1px', bottom: '1px', borderRadius: '50%', border: '2px solid #94a3b8' }}></div><div style={{ position: 'absolute', top: 'calc(50% - 1px)', left: '0', width: '100%', height: '2px', backgroundColor: '#cbd5e1' }}></div><div style={{ position: 'absolute', top: '0', left: 'calc(50% - 1px)', width: '2px', height: '100%', backgroundColor: '#cbd5e1' }}></div><div style={{ position: 'absolute', top: 'calc(50% - 3px)', left: 'calc(50% - 3px)', width: '6px', height: '6px', background: 'radial-gradient(circle, #f8fafc 0%, #cbd5e1 100%)', borderRadius: '50%', border: '1px solid #64748b', boxShadow: 'inset 0 0 2px rgba(0, 0, 0, 0.2)' }}></div></div><div className="animate-wheels" style={{ position: 'absolute', bottom: '0', right: '20px', width: '20px', height: '20px', background: 'linear-gradient(135deg, #64748b 0%, #334155 100%)', borderRadius: '50%', border: '3px solid #cbd5e1', boxSizing: 'border-box', boxShadow: '0 3px 6px rgba(0, 0, 0, 0.4)' }}><div style={{ position: 'absolute', top: '1px', left: '1px', right: '1px', bottom: '1px', borderRadius: '50%', border: '2px solid #94a3b8' }}></div><div style={{ position: 'absolute', top: 'calc(50% - 1px)', left: '0', width: '100%', height: '2px', backgroundColor: '#cbd5e1' }}></div><div style={{ position: 'absolute', top: '0', left: 'calc(50% - 1px)', width: '2px', height: '100%', backgroundColor: '#cbd5e1' }}></div><div style={{ position: 'absolute', top: 'calc(50% - 3px)', left: 'calc(50% - 3px)', width: '6px', height: '6px', background: 'radial-gradient(circle, #f8fafc 0%, #cbd5e1 100%)', borderRadius: '50%', border: '1px solid #64748b', boxShadow: 'inset 0 0 2px rgba(0, 0, 0, 0.2)' }}></div></div></div><div style={{ position: 'relative', width: '90px', height: '40px', marginTop: '15px' }}><div style={{ position: 'absolute', bottom: '5px', width: '100%', height: '28px', background: 'linear-gradient(to bottom, #c026d3 0%, #a21caf 60%, #86198f 100%)', borderRadius: '4px', boxSizing: 'border-box', border: '1px solid #701a75', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)' }}><div style={{ position: 'absolute', top: '18px', left: '0', width: '100%', height: '3px', backgroundColor: '#fbbf24', opacity: 0.8 }}></div></div><div style={{ position: 'absolute', bottom: '33px', left: '2px', width: '96%', height: '4px', background: 'linear-gradient(to bottom, #701a75 0%, #86198f 100%)', borderRadius: '40% 40% 0 0 / 100% 100% 0 0', boxShadow: '0 -1px 2px rgba(0, 0, 0, 0.3)' }}></div><div style={{ position: 'absolute', top: '5px', left: '10px', width: '15px', height: '10px', background: 'linear-gradient(135deg, #93c5fd 0%, #bfdbfe 50%, #93c5fd 100%)', borderRadius: '2px', border: '1px solid #701a75', boxShadow: 'inset 0 0 3px rgba(255, 255, 255, 0.5)' }}></div><div style={{ position: 'absolute', top: '5px', left: '35px', width: '15px', height: '10px', background: 'linear-gradient(135deg, #93c5fd 0%, #bfdbfe 50%, #93c5fd 100%)', borderRadius: '2px', border: '1px solid #701a75', boxShadow: 'inset 0 0 3px rgba(255, 255, 255, 0.5)' }}></div><div style={{ position: 'absolute', top: '5px', left: '60px', width: '15px', height: '10px', background: 'linear-gradient(135deg, #93c5fd 0%, #bfdbfe 50%, #93c5fd 100%)', borderRadius: '2px', border: '1px solid #701a75', boxShadow: 'inset 0 0 3px rgba(255, 255, 255, 0.5)' }}></div><div className="animate-light-blink animation-delay-500" style={{ position: 'absolute', bottom: '15px', right: '3px', width: '6px', height: '6px', background: 'radial-gradient(circle, #fef3c7 0%, #f87171 100%)', borderRadius: '50%', boxShadow: '0 0 8px #f87171', border: '1px solid #7f1d1d' }}></div><div className="animate-wheels" style={{ position: 'absolute', bottom: '0', left: '20px', width: '20px', height: '20px', background: 'linear-gradient(135deg, #64748b 0%, #334155 100%)', borderRadius: '50%', border: '3px solid #cbd5e1', boxSizing: 'border-box', boxShadow: '0 3px 6px rgba(0, 0, 0, 0.4)' }}><div style={{ position: 'absolute', top: '1px', left: '1px', right: '1px', bottom: '1px', borderRadius: '50%', border: '2px solid #94a3b8' }}></div><div style={{ position: 'absolute', top: 'calc(50% - 1px)', left: '0', width: '100%', height: '2px', backgroundColor: '#cbd5e1' }}></div><div style={{ position: 'absolute', top: '0', left: 'calc(50% - 1px)', width: '2px', height: '100%', backgroundColor: '#cbd5e1' }}></div><div style={{ position: 'absolute', top: 'calc(50% - 3px)', left: 'calc(50% - 3px)', width: '6px', height: '6px', background: 'radial-gradient(circle, #f8fafc 0%, #cbd5e1 100%)', borderRadius: '50%', border: '1px solid #64748b', boxShadow: 'inset 0 0 2px rgba(0, 0, 0, 0.2)' }}></div></div><div className="animate-wheels" style={{ position: 'absolute', bottom: '0', right: '20px', width: '20px', height: '20px', background: 'linear-gradient(135deg, #64748b 0%, #334155 100%)', borderRadius: '50%', border: '3px solid #cbd5e1', boxSizing: 'border-box', boxShadow: '0 3px 6px rgba(0, 0, 0, 0.4)' }}><div style={{ position: 'absolute', top: '1px', left: '1px', right: '1px', bottom: '1px', borderRadius: '50%', border: '2px solid #94a3b8' }}></div><div style={{ position: 'absolute', top: 'calc(50% - 1px)', left: '0', width: '100%', height: '2px', backgroundColor: '#cbd5e1' }}></div><div style={{ position: 'absolute', top: '0', left: 'calc(50% - 1px)', width: '2px', height: '100%', backgroundColor: '#cbd5e1' }}></div><div style={{ position: 'absolute', top: 'calc(50% - 3px)', left: 'calc(50% - 3px)', width: '6px', height: '6px', background: 'radial-gradient(circle, #f8fafc 0%, #cbd5e1 100%)', borderRadius: '50%', border: '1px solid #64748b', boxShadow: 'inset 0 0 2px rgba(0, 0, 0, 0.2)' }}></div></div><div style={{ position: 'absolute', bottom: '15px', left: '-8px', width: '10px', height: '4px', backgroundColor: '#64748b', borderRadius: '1px', zIndex: 1 }}></div></div></div></div>
-        <div className="animate-car-left animation-delay-1000" style={{ position: 'absolute', top: '15%', marginTop: '10px', right: '-150px', width: '150px', height: '70px', zIndex: 5, filter: 'drop-shadow(0 4px 3px rgba(0, 0, 0, 0.3))' }}><div style={{ position: 'relative', width: '100%', height: '100%' }}><div style={{ position: 'absolute', bottom: 0, right: 0, width: '50px', height: '45px', background: 'linear-gradient(to bottom, #059669 0%, #047857 70%, #065f46 100%)', borderRadius: '3px 8px 3px 3px', border: '1px solid #064e3b', boxShadow: 'inset 0 -3px 8px rgba(0, 0, 0, 0.2), inset -2px 0 6px rgba(255, 255, 255, 0.3)' }}></div><div style={{ position: 'absolute', bottom: 0, left: 0, width: '100px', height: '40px', background: 'linear-gradient(to bottom, #f3f4f6 0%, #e5e7eb 70%, #d1d5db 100%)', borderRadius: '3px', border: '1px solid #9ca3af', boxShadow: 'inset 0 -3px 8px rgba(0, 0, 0, 0.1)' }}></div><div style={{ position: 'absolute', top: '8px', right: '5px', width: '35px', height: '20px', background: 'linear-gradient(to bottom right, rgba(219, 234, 254, 0.8) 0%, rgba(147, 197, 253, 0.8) 100%)', borderRadius: '3px', border: '2px solid #047857', boxShadow: 'inset 0 0 8px rgba(255, 255, 255, 0.6)' }}><div style={{ position: 'absolute', top: '3px', left: '5px', width: '20px', height: '2px', background: 'linear-gradient(to bottom, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.2) 100%)', borderRadius: '50%' }}></div></div><div style={{ position: 'absolute', top: '15px', right: '8px', width: '15px', height: '15px', background: 'linear-gradient(to bottom, rgba(219, 234, 254, 0.7) 0%, rgba(147, 197, 253, 0.7) 100%)', borderRadius: '2px', border: '2px solid #047857' }}><div style={{ position: 'absolute', bottom: '3px', left: '50%', transform: 'translateX(-50%)', width: '6px', height: '8px', backgroundColor: 'rgba(0,0,0,0.8)', borderRadius: '3px 3px 0 0' }}></div></div><div style={{ position: 'absolute', top: '10px', left: '40px', width: '30px', height: '15px', backgroundColor: 'rgba(255, 255, 255, 0.9)', border: '1px solid #047857', borderRadius: '3px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)' }}><div style={{ fontSize: '6px', fontWeight: 'bold', color: '#047857', fontFamily: "'Noto Sans Sinhala', 'Iskoola Pota', sans-serif" }}>බෙදාහැරීම්</div></div><div style={{ position: 'absolute', bottom: '8px', right: '3px', width: '8px', height: '6px', background: 'linear-gradient(to left, #fef3c7 0%, #fcd34d 100%)', borderRadius: '30%', border: '1px solid #064e3b', boxShadow: '0 0 8px rgba(252, 211, 77, 0.7)' }}><div style={{ position: 'absolute', top: '1px', right: '1px', width: '3px', height: '3px', background: 'radial-gradient(circle, #fef9c3 0%, #fef3c7 100%)', borderRadius: '50%' }}></div></div><div style={{ position: 'absolute', bottom: '15px', right: '3px', width: '8px', height: '12px', background: 'linear-gradient(to bottom, #374151 0%, #1f2937 100%)', borderRadius: '2px' }}><div style={{ position: 'absolute', top: '2px', left: '1px', right: '1px', height: '1px', backgroundColor: '#6b7280' }}></div><div style={{ position: 'absolute', top: '5px', left: '1px', right: '1px', height: '1px', backgroundColor: '#6b7280' }}></div><div style={{ position: 'absolute', top: '8px', left: '1px', right: '1px', height: '1px', backgroundColor: '#6b7280' }}></div></div><div className="animate-light-blink animation-delay-300" style={{ position: 'absolute', bottom: '20px', right: '5px', width: '5px', height: '5px', background: 'radial-gradient(circle, #fef3c7 0%, #fcd34d 100%)', borderRadius: '50%', border: '1px solid #064e3b', boxShadow: '0 0 6px rgba(252, 211, 77, 0.6)' }}></div><div className="animate-light-blink animation-delay-700" style={{ position: 'absolute', bottom: '18px', left: '5px', width: '10px', height: '6px', background: 'radial-gradient(circle, #f87171 50%, #ef4444 100%)', borderRadius: '2px', border: '1px solid #064e3b', boxShadow: '0 0 8px rgba(239, 68, 68, 0.6)' }}></div><div style={{ position: 'absolute', bottom: '-8px', right: '15px', width: '20px', height: '20px', backgroundColor: '#0f172a', borderRadius: '50%', border: '3px solid #94a3b8', boxSizing: 'border-box', boxShadow: '0 3px 5px rgba(0, 0, 0, 0.5)', overflow: 'hidden' }}><div className="animate-wheels" style={{ position: 'absolute', inset: '1px', borderRadius: '50%', border: '2px solid #64748b', background: 'radial-gradient(circle at center, #e2e8f0 15%, transparent 15%), conic-gradient(#cbd5e1 0deg, #cbd5e1 30deg, transparent 30deg, transparent 60deg, #cbd5e1 60deg, #cbd5e1 90deg, transparent 90deg, transparent 120deg, #cbd5e1 120deg, #cbd5e1 150deg, transparent 150deg, transparent 180deg, #cbd5e1 180deg, #cbd5e1 210deg, transparent 210deg, transparent 240deg, #cbd5e1 240deg, #cbd5e1 270deg, transparent 270deg, transparent 300deg, #cbd5e1 300deg, #cbd5e1 330deg, transparent 330deg, transparent 360deg)' }}></div></div><div style={{ position: 'absolute', bottom: '-8px', left: '15px', width: '20px', height: '20px', backgroundColor: '#0f172a', borderRadius: '50%', border: '3px solid #94a3b8', boxSizing: 'border-box', boxShadow: '0 3px 5px rgba(0, 0, 0, 0.5)', overflow: 'hidden' }}><div className="animate-wheels" style={{ position: 'absolute', inset: '1px', borderRadius: '50%', border: '2px solid #64748b', background: 'radial-gradient(circle at center, #e2e8f0 15%, transparent 15%), conic-gradient(#cbd5e1 0deg, #cbd5e1 30deg, transparent 30deg, transparent 60deg, #cbd5e1 60deg, #cbd5e1 90deg, transparent 90deg, transparent 120deg, #cbd5e1 120deg, #cbd5e1 150deg, transparent 150deg, transparent 180deg, #cbd5e1 180deg, #cbd5e1 210deg, transparent 210deg, transparent 240deg, #cbd5e1 240deg, #cbd5e1 270deg, transparent 270deg, transparent 300deg, #cbd5e1 300deg, #cbd5e1 330deg, transparent 330deg, transparent 360deg)' }}></div></div><div style={{ position: 'absolute', bottom: '3px', left: '50%', transform: 'translateX(-50%)', width: '25px', height: '8px', backgroundColor: 'white', borderRadius: '2px', border: '1px solid #047857', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)' }}><div style={{ fontSize: '4px', fontWeight: 'bold', color: '#1f2937' }}>DL-9876</div></div><div style={{ position: 'absolute', bottom: '5px', left: '5px', width: '6px', height: '3px', background: 'linear-gradient(to bottom, #9ca3af 0%, #6b7280 100%)', borderRadius: '2px 0 0 2px', boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.4)' }}></div><div style={{ position: 'absolute', bottom: '5px', left: '-8px', width: '8px', height: '8px', background: 'radial-gradient(circle, rgba(209, 213, 219, 0.8) 0%, rgba(209, 213, 219, 0) 70%)', borderRadius: '50%', opacity: 0.6, animation: 'steam 1.2s ease-out infinite' }}></div></div></div>
-        <div className="animate-car-right animation-delay-2500" style={{ position: 'absolute', top: '15%', marginTop: '15px', left: '-140px', width: '140px', height: '65px', zIndex: 5, filter: 'drop-shadow(0 4px 3px rgba(0, 0, 0, 0.3))' }}><div style={{ position: 'relative', width: '100%', height: '100%' }}><div style={{ position: 'absolute', bottom: 0, width: '100%', height: '40px', background: 'linear-gradient(to bottom, #f97316 0%, #ea580c 70%, #c2410c 100%)', borderRadius: '10px 12px 6px 6px', border: '1px solid #9a3412', boxShadow: 'inset 0 -3px 8px rgba(0, 0, 0, 0.2), inset 2px 0 6px rgba(255, 255, 255, 0.3)' }}></div><div style={{ position: 'absolute', bottom: '5px', left: '0', width: '35px', height: '35px', background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)', borderRadius: '10px 4px 0 6px', boxShadow: 'inset 1px 1px 5px rgba(255, 255, 255, 0.4)' }}></div><div style={{ position: 'absolute', top: '8px', left: '40px', right: '8px', height: '25px', background: 'linear-gradient(to bottom, rgba(219, 234, 254, 0.7) 0%, rgba(147, 197, 253, 0.7) 100%)', borderRadius: '4px', border: '2px solid #c2410c', boxShadow: 'inset 0 0 8px rgba(255, 255, 255, 0.6)', overflow: 'hidden' }}><div style={{ display: 'flex', height: '100%', width: '100%' }}>{[...Array(4)].map((_, i) => (<div key={i} style={{ flex: '1', height: '100%', borderRight: i < 3 ? '2px solid #c2410c' : 'none', position: 'relative' }}>{i % 2 === 1 && (<div style={{ position: 'absolute', bottom: '4px', left: '50%', transform: 'translateX(-50%)', width: '6px', height: '8px', backgroundColor: 'rgba(0,0,0,0.7)', borderRadius: '3px 3px 0 0' }}></div>)}</div>))}</div></div><div style={{ position: 'absolute', top: '8px', left: '8px', width: '25px', height: '25px', background: 'linear-gradient(to bottom right, rgba(219, 234, 254, 0.8) 0%, rgba(147, 197, 253, 0.8) 100%)', borderRadius: '4px', border: '2px solid #c2410c', boxShadow: 'inset 0 0 6px rgba(255, 255, 255, 0.6)' }}><div style={{ position: 'absolute', top: '3px', left: '3px', width: '15px', height: '2px', background: 'linear-gradient(to bottom, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.2) 100%)', borderRadius: '50%' }}></div></div><div style={{ position: 'absolute', top: '35px', left: '50%', transform: 'translateX(-50%)', width: '40px', height: '8px', backgroundColor: 'rgba(255, 255, 255, 0.9)', border: '1px solid #c2410c', borderRadius: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)' }}><div style={{ fontSize: '4px', fontWeight: 'bold', color: '#c2410c' }}>SCHOOL BUS</div></div><div style={{ position: 'absolute', bottom: '25px', left: '18px', width: '8px', height: '10px', backgroundColor: 'rgba(0,0,0,0.8)', borderRadius: '4px 4px 0 0' }}><div style={{ position: 'absolute', top: '2px', left: '1px', width: '2px', height: '1px', backgroundColor: '#f8fafc', borderRadius: '50%' }}></div><div style={{ position: 'absolute', top: '2px', right: '1px', width: '2px', height: '1px', backgroundColor: '#f8fafc', borderRadius: '50%' }}></div></div><div style={{ position: 'absolute', bottom: '8px', left: '3px', width: '8px', height: '6px', background: 'linear-gradient(to right, #fef3c7 0%, #fcd34d 100%)', borderRadius: '40%', border: '1px solid #9a3412', boxShadow: '0 0 8px rgba(252, 211, 77, 0.7)' }}><div style={{ position: 'absolute', top: '1px', left: '1px', width: '3px', height: '3px', background: 'radial-gradient(circle, #fef9c3 0%, #fef3c7 100%)', borderRadius: '50%' }}></div></div><div style={{ position: 'absolute', bottom: '20px', left: '40px', width: '15px', height: '8px', background: 'linear-gradient(to bottom, #dc2626 0%, #b91c1c 100%)', borderRadius: '2px', border: '1px solid #7f1d1d' }}><div style={{ position: 'absolute', top: '1px', left: '2px', fontSize: '3px', fontWeight: 'bold', color: 'white' }}>STOP</div></div><div style={{ position: 'absolute', bottom: '-7px', left: '18px', width: '18px', height: '18px', backgroundColor: '#0f172a', borderRadius: '50%', border: '3px solid #94a3b8', boxSizing: 'border-box', boxShadow: '0 3px 5px rgba(0, 0, 0, 0.5)', overflow: 'hidden' }}><div className="animate-wheels" style={{ position: 'absolute', inset: '1px', borderRadius: '50%', border: '2px solid #64748b', background: 'radial-gradient(circle at center, #e2e8f0 15%, transparent 15%), conic-gradient(#cbd5e1 0deg, #cbd5e1 30deg, transparent 30deg, transparent 60deg, #cbd5e1 60deg, #cbd5e1 90deg, transparent 90deg, transparent 120deg, #cbd5e1 120deg, #cbd5e1 150deg, transparent 150deg, transparent 180deg, #cbd5e1 180deg, #cbd5e1 210deg, transparent 210deg, transparent 240deg, #cbd5e1 240deg, #cbd5e1 270deg, transparent 270deg, transparent 300deg, #cbd5e1 300deg, #cbd5e1 330deg, transparent 330deg, transparent 360deg)' }}></div></div><div style={{ position: 'absolute', bottom: '-7px', right: '18px', width: '18px', height: '18px', backgroundColor: '#0f172a', borderRadius: '50%', border: '3px solid #94a3b8', boxSizing: 'border-box', boxShadow: '0 3px 5px rgba(0, 0, 0, 0.5)', overflow: 'hidden' }}><div className="animate-wheels" style={{ position: 'absolute', inset: '1px', borderRadius: '50%', border: '2px solid #64748b', background: 'radial-gradient(circle at center, #e2e8f0 15%, transparent 15%), conic-gradient(#cbd5e1 0deg, #cbd5e1 30deg, transparent 30deg, transparent 60deg, #cbd5e1 60deg, #cbd5e1 90deg, transparent 90deg, transparent 120deg, #cbd5e1 120deg, #cbd5e1 150deg, transparent 150deg, transparent 180deg, #cbd5e1 180deg, #cbd5e1 210deg, transparent 210deg, transparent 240deg, #cbd5e1 240deg, #cbd5e1 270deg, transparent 270deg, transparent 300deg, #cbd5e1 300deg, #cbd5e1 330deg, transparent 330deg, transparent 360deg)' }}></div></div><div style={{ position: 'absolute', bottom: '2px', left: '50%', transform: 'translateX(-50%)', width: '22px', height: '6px', backgroundColor: 'white', borderRadius: '2px', border: '1px solid #c2410c', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2)' }}><div style={{ fontSize: '3px', fontWeight: 'bold', color: '#1f2937' }}>SCH-321</div></div><div style={{ position: 'absolute', bottom: '4px', right: '8px', width: '5px', height: '3px', background: 'linear-gradient(to bottom, #9ca3af 0%, #6b7280 100%)', borderRadius: '0 2px 2px 0', boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.4)' }}></div><div className="animate-light-blink animation-delay-100" style={{ position: 'absolute', top: '3px', left: '5px', width: '6px', height: '6px', background: 'radial-gradient(circle, #fbbf24 0%, #f59e0b 100%)', borderRadius: '50%', border: '1px solid #9a3412', boxShadow: '0 0 8px rgba(251, 191, 36, 0.6)' }}></div><div className="animate-light-blink animation-delay-600" style={{ position: 'absolute', top: '3px', right: '5px', width: '6px', height: '6px', background: 'radial-gradient(circle, #fbbf24 0%, #f59e0b 100%)', borderRadius: '50%', border: '1px solid #9a3412', boxShadow: '0 0 8px rgba(251, 191, 36, 0.6)' }}></div></div></div>
-      </div>
-      {/* END: Animated Background */}
 
-      {/* Enhanced Navigation */}
-      <nav style={{ backgroundColor: 'rgba(30, 41, 59, 0.8)', backdropFilter: 'blur(8px)', borderBottom: '1px solid #334155', padding: '1rem 0', position: 'relative', zIndex: 10 }}>
-        <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+      {/* Animated Background with Vehicles */}
+      <div style={{ position: 'absolute', inset: 0, zIndex: 1 }}>
+        {/* Road */}
+        <div style={{ 
+          position: 'absolute', 
+          top: '15%', 
+          left: 0, 
+          right: 0, 
+          height: '100px', 
+          backgroundColor: '#1f2937', 
+          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)' 
+        }}></div>
+        
+        {/* Road Markings */}
+        <div style={{ position: 'absolute', top: '15%', left: 0, right: 0, height: '100px', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '4px', background: 'repeating-linear-gradient(to right, #fcd34d, #fcd34d 40px, transparent 40px, transparent 80px)', transform: 'translateY(-50%)' }}></div>
+          <div className="animate-road-marking" style={{ position: 'absolute', top: '30%', width: '60px', height: '8px', backgroundColor: '#fbbf24', left: '10%', transform: 'translateY(-50%)' }}></div>
+          <div className="animate-road-marking" style={{ position: 'absolute', top: '70%', width: '60px', height: '8px', backgroundColor: '#fbbf24', left: '30%', transform: 'translateY(-50%)', animationDelay: '0.3s' }}></div>
+        </div>
+        
+        {/* Animated Vehicles */}
+        <div style={{ position: 'absolute', top: '15%', left: 0, right: 0, height: '100px', overflow: 'hidden' }}>
+          {/* Bus moving right */}
+          <div className="animate-car-right" style={{ 
+            position: 'absolute', 
+            top: '20%', 
+            width: '60px', 
+            height: '30px', 
+            backgroundColor: '#3b82f6', 
+            borderRadius: '4px', 
+            animationDelay: '2s',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'white',
+            fontSize: '20px'
+          }}>🚌</div>
+          
+          {/* Train moving left */}
+          <div className="animate-car-left" style={{ 
+            position: 'absolute', 
+            top: '60%', 
+            width: '80px', 
+            height: '25px', 
+            backgroundColor: '#10b981', 
+            borderRadius: '4px',
+            animationDelay: '5s',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'white',
+            fontSize: '18px'
+          }}>🚊</div>
+          
+          {/* Another bus */}
+          <div className="animate-car-right" style={{ 
+            position: 'absolute', 
+            top: '35%', 
+            width: '55px', 
+            height: '28px', 
+            backgroundColor: '#f59e0b', 
+            borderRadius: '4px',
+            animationDelay: '8s',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'white',
+            fontSize: '18px'
+          }}>🚐</div>
+        </div>
+        
+        {/* Traffic Lights */}
+        <div style={{ position: 'absolute', top: '10%', right: '10%', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <div className="animate-light-blink" style={{ width: '8px', height: '8px', backgroundColor: '#10b981', borderRadius: '50%' }}></div>
+          <div style={{ width: '8px', height: '8px', backgroundColor: '#374151', borderRadius: '50%' }}></div>
+          <div style={{ width: '8px', height: '8px', backgroundColor: '#374151', borderRadius: '50%' }}></div>
+        </div>
+      </div>
+
+      {/* Navigation */}
+      <nav style={{ 
+        backgroundColor: currentThemeStyles.navBg, 
+        backdropFilter: 'blur(12px)', 
+        borderBottom: currentThemeStyles.glassPanelBorder, 
+        padding: '1rem 0', 
+        position: 'relative', 
+        zIndex: 10 
+      }}>
+        <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
             <Link href="/sysadmin/devices" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: '0.875rem' }}>← Back to Devices</Link>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><GlobeAltIcon width={24} height={24} color="#06b6d4" /><h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#f1f5f9', margin: 0 }}>Advanced GPS Monitor</h1>{simulationStatus && <span style={{ fontSize: '0.875rem', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', backgroundColor: simulationStatus.isRunning ? '#10B981' : '#6B7280', color: 'white' }}>{simulationStatus.isRunning ? '🟢 Simulation Active' : '⭕ Simulation Stopped'}</span>}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <GlobeAltIcon width={24} height={24} color="#06b6d4" />
+              <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#f1f5f9', margin: 0 }}>Advanced GPS Monitor</h1>
+              {simulationStatus && (
+                <span style={{ 
+                  fontSize: '0.875rem', 
+                  padding: '0.25rem 0.5rem', 
+                  borderRadius: '0.25rem', 
+                  color: 'white',
+                  backgroundColor: simulationStatus.isRunning ? '#10B981' : '#6B7280'
+                }}>
+                  {simulationStatus.isRunning ? '🟢 Simulation Active' : '⭕ Simulation Stopped'}
+                </span>
+              )}
+            </div>
           </div>
           
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#94a3b8', fontSize: '0.875rem', cursor: 'pointer' }}><input type="checkbox" checked={autoRefresh} onChange={(e) => setAutoRefresh(e.target.checked)} style={{ accentColor: '#3b82f6' }} />Auto Refresh (5s)</label>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#94a3b8', fontSize: '0.875rem', cursor: 'pointer' }}><input type="checkbox" checked={showSimulationData} onChange={(e) => setShowSimulationData(e.target.checked)} style={{ accentColor: '#10B981' }} />Show Simulation Data</label>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <ThemeSwitcher />
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#94a3b8', fontSize: '0.875rem', cursor: 'pointer' }}>
+              <input 
+                type="checkbox" 
+                checked={autoRefresh} 
+                onChange={(e) => setAutoRefresh(e.target.checked)} 
+                style={{ accentColor: '#3b82f6' }}
+              />
+              Auto Refresh (5s)
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#94a3b8', fontSize: '0.875rem', cursor: 'pointer' }}>
+              <input 
+                type="checkbox" 
+                checked={showSimulationData} 
+                onChange={(e) => setShowSimulationData(e.target.checked)} 
+                style={{ accentColor: '#10B981' }}
+              />
+              Show Simulation Data
+            </label>
 
-            {/* View Mode Toggle */}
-            <div style={{ display: 'flex', backgroundColor: '#334155', borderRadius: '0.5rem', padding: '0.25rem' }}>
+            <div style={{ display: 'flex', backgroundColor: 'rgba(51, 65, 85, 0.8)', borderRadius: '0.5rem', padding: '0.25rem' }}>
               {(['grid', 'map', 'hybrid'] as ViewMode[]).map((mode) => (
-                <button key={mode} onClick={() => setViewMode(mode)} style={{ backgroundColor: viewMode === mode ? '#3b82f6' : 'transparent', color: viewMode === mode ? 'white' : '#94a3b8', padding: '0.5rem 1rem', border: 'none', borderRadius: '0.25rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', textTransform: 'capitalize' }}>{mode === 'grid' ? <ViewColumnsIcon width={16} height={16} /> : mode === 'map' ? <MapIcon width={16} height={16} /> : <GlobeAltIcon width={16} height={16} />}{mode}</button>
+                <button 
+                  key={mode} 
+                  onClick={() => setViewMode(mode)} 
+                  style={{
+                    backgroundColor: viewMode === mode ? '#3b82f6' : 'transparent',
+                    color: viewMode === mode ? 'white' : '#94a3b8',
+                    padding: '0.5rem 1rem',
+                    border: 'none',
+                    borderRadius: '0.25rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    fontSize: '0.875rem',
+                    textTransform: 'capitalize',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  {mode === 'grid' ? <ViewColumnsIcon width={16} height={16} /> : 
+                   mode === 'map' ? <MapIcon width={16} height={16} /> : 
+                   <GlobeAltIcon width={16} height={16} />}
+                  {mode}
+                </button>
               ))}
             </div>
-
           </div>
         </div>
       </nav>
 
       <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '2rem 1.5rem', position: 'relative', zIndex: 10 }}>
-        {/* Enhanced Stats Overview */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-          <div style={{ backgroundColor: 'rgba(30, 41, 59, 0.8)', backdropFilter: 'blur(8px)', padding: '1.5rem', borderRadius: '0.75rem', border: '1px solid #334155' }}><div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}><DevicePhoneMobileIcon width={32} height={32} color="#3b82f6" /><div><h3 style={{ color: '#3b82f6', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>{deviceCounts.total}</h3><p style={{ color: '#94a3b8', margin: '0.5rem 0 0 0' }}>Total Devices</p></div></div></div>
-          <div style={{ backgroundColor: 'rgba(30, 41, 59, 0.8)', backdropFilter: 'blur(8px)', padding: '1.5rem', borderRadius: '0.75rem', border: '1px solid #334155' }}><div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}><CheckCircleIcon width={32} height={32} color="#10b981" /><div><h3 style={{ color: '#10b981', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>{showSimulationData ? deviceCounts.simulationVehicles : deviceCounts.online}</h3><p style={{ color: '#94a3b8', margin: '0.5rem 0 0 0' }}>{showSimulationData ? 'GPS Vehicles' : 'Online'}</p></div></div></div>
-          <div style={{ backgroundColor: 'rgba(30, 41, 59, 0.8)', backdropFilter: 'blur(8px)', padding: '1.5rem', borderRadius: '0.75rem', border: '1px solid #334155' }}><div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}><XCircleIcon width={32} height={32} color="#ef4444" /><div><h3 style={{ color: '#ef4444', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>{deviceCounts.offline}</h3><p style={{ color: '#94a3b8', margin: '0.5rem 0 0 0' }}>Offline</p></div></div></div>
-          <div style={{ backgroundColor: 'rgba(30, 41, 59, 0.8)', backdropFilter: 'blur(8px)', padding: '1.5rem', borderRadius: '0.75rem', border: '1px solid #334155' }}><div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}><ExclamationTriangleIcon width={32} height={32} color="#f59e0b" /><div><h3 style={{ color: '#f59e0b', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>{deviceCounts.alerts}</h3><p style={{ color: '#94a3b8', margin: '0.5rem 0 0 0' }}>Active Alerts</p></div></div></div>
-          {simulationStatus && (
-            <div style={{ backgroundColor: 'rgba(30, 41, 59, 0.8)', backdropFilter: 'blur(8px)', padding: '1.5rem', borderRadius: '0.75rem', border: '1px solid #334155' }}><div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}><GlobeAltIcon width={32} height={32} color="#8B5CF6" /><div><h3 style={{ color: '#8B5CF6', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>{simulationStatus.speedMultiplier}x</h3><p style={{ color: '#94a3b8', margin: '0.5rem 0 0 0' }}>Sim Speed</p></div></div></div>
-          )}
+        {/* Stats Overview */}
+        <div className="animate-fade-in-up" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+          {[ 
+            { label: 'Total Devices', value: deviceCounts.total, icon: DevicePhoneMobileIcon, color: '#3b82f6' },
+            { label: showSimulationData ? 'GPS Vehicles' : 'Online', value: showSimulationData ? deviceCounts.simulationVehicles : deviceCounts.online, icon: CheckCircleIcon, color: '#10b981' },
+            { label: 'Offline', value: deviceCounts.offline, icon: XCircleIcon, color: '#ef4444' },
+            { label: 'Active Alerts', value: deviceCounts.alerts, icon: ExclamationTriangleIcon, color: '#f59e0b' },
+            ...(simulationStatus ? [{ label: 'Sim Speed', value: `${simulationStatus.speedMultiplier}x`, icon: GlobeAltIcon, color: '#8B5CF6' }] : [])
+          ].map((metric, index) => (
+            <div key={metric.label} style={{ 
+              backgroundColor: currentThemeStyles.glassPanelBg, 
+              padding: '1.5rem', 
+              borderRadius: '0.75rem', 
+              boxShadow: currentThemeStyles.glassPanelShadow, 
+              backdropFilter: 'blur(12px)', 
+              border: currentThemeStyles.glassPanelBorder,
+              animation: `fade-in-up 0.6s ease-out ${index * 0.1}s both`
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <metric.icon width={32} height={32} color={metric.color} />
+                <div>
+                  <h3 style={{ color: metric.color, fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>{metric.value}</h3>
+                  <p style={{ color: currentThemeStyles.textSecondary, margin: '0.5rem 0 0 0' }}>{metric.label}</p>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* Simulation Controls */}
         {simulationStatus && (
-          <div style={{ backgroundColor: 'rgba(30, 41, 59, 0.8)', backdropFilter: 'blur(8px)', padding: '1.5rem', borderRadius: '0.75rem', border: '1px solid #334155', marginBottom: '2rem' }}>
+          <div className="animate-fade-in-up" style={{ 
+            backgroundColor: currentThemeStyles.glassPanelBg, 
+            backdropFilter: 'blur(12px)', 
+            padding: '1.5rem', 
+            borderRadius: '0.75rem', 
+            border: currentThemeStyles.glassPanelBorder, 
+            marginBottom: '2rem',
+            animationDelay: '0.2s'
+          }}>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><span style={{ color: '#e2e8f0', fontWeight: '600' }}>GPS Simulation Control:</span></div>
-              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                <button onClick={() => controlSimulation(simulationStatus.isRunning ? 'stop' : 'start')} style={{ backgroundColor: simulationStatus.isRunning ? '#EF4444' : '#10B981', color: 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: '0.375rem', cursor: 'pointer', fontSize: '0.875rem', fontWeight: '500' }}>{simulationStatus.isRunning ? '⏹️ Stop Simulation' : '▶️ Start Simulation'}</button>
-                <select onChange={(e) => controlSimulation('speed', parseFloat(e.target.value))} value={simulationStatus.speedMultiplier} style={{ padding: '0.5rem', border: '1px solid #475569', borderRadius: '0.375rem', backgroundColor: '#334155', color: '#f1f5f9', fontSize: '0.875rem' }}><option value="0.5">0.5x Speed</option><option value="1">1x Normal</option><option value="2">2x Fast</option><option value="5">5x Very Fast</option></select>
-                <span style={{ color: '#94a3b8', fontSize: '0.875rem' }}>{simulationStatus.vehicleCount} vehicles • {simulationStatus.routes} routes</span>
+              <div>
+                <span style={{ color: currentThemeStyles.textPrimary, fontWeight: '600', fontSize: '1.1rem' }}>GPS Simulation Control:</span>
+              </div>
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                <button 
+                  onClick={() => controlSimulation(simulationStatus.isRunning ? 'stop' : 'start')} 
+                  style={{
+                    backgroundColor: simulationStatus.isRunning ? '#ef4444' : '#10b981',
+                    color: 'white',
+                    padding: '0.5rem 1rem',
+                    border: 'none',
+                    borderRadius: '0.375rem',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem',
+                    fontWeight: '500'
+                  }}
+                >
+                  {simulationStatus.isRunning ? '⏹️ Stop Simulation' : '▶️ Start Simulation'}
+                </button>
+                <select 
+                  onChange={(e) => controlSimulation('speed', parseFloat(e.target.value))} 
+                  value={simulationStatus.speedMultiplier} 
+                  style={{
+                    padding: '0.5rem',
+                    border: currentThemeStyles.inputBorder,
+                    borderRadius: '0.375rem',
+                    backgroundColor: currentThemeStyles.inputBg,
+                    color: currentThemeStyles.textPrimary,
+                    fontSize: '0.875rem'
+                  }}
+                >
+                  <option value="0.5">0.5x Speed</option>
+                  <option value="1">1x Normal</option>
+                  <option value="2">2x Fast</option>
+                  <option value="5">5x Very Fast</option>
+                </select>
+                <span style={{ color: currentThemeStyles.textSecondary, fontSize: '0.875rem' }}>
+                  {simulationStatus.vehicleCount} vehicles • {simulationStatus.routes} routes
+                </span>
               </div>
             </div>
           </div>
         )}
 
         {/* Filters */}
-        <div style={{ backgroundColor: 'rgba(30, 41, 59, 0.8)', backdropFilter: 'blur(8px)', padding: '1.5rem', borderRadius: '0.75rem', border: '1px solid #334155', marginBottom: '2rem' }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><FunnelIcon width={20} height={20} color="#94a3b8" /><span style={{ color: '#e2e8f0', fontWeight: '600' }}>Filters:</span></div>
-            <div style={{ position: 'relative', flex: '1 1 300px' }}><MagnifyingGlassIcon width={20} height={20} color="#94a3b8" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} /><input type="text" placeholder="Search devices..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: '100%', padding: '0.75rem 1rem 0.75rem 3rem', borderRadius: '0.5rem', border: '1px solid #475569', backgroundColor: '#334155', color: '#f1f5f9', fontSize: '1rem', boxSizing: 'border-box', outline: 'none' }} /></div>
-            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} style={{ padding: '0.75rem 1rem', borderRadius: '0.5rem', border: '1px solid #475569', backgroundColor: '#334155', color: '#f1f5f9', fontSize: '1rem', outline: 'none' }}><option value="all">All Status</option><option value="online">Online</option><option value="offline">Offline</option><option value="maintenance">Maintenance</option></select>
-            <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} style={{ padding: '0.75rem 1rem', borderRadius: '0.5rem', border: '1px solid #475569', backgroundColor: '#334155', color: '#f1f5f9', fontSize: '1rem', outline: 'none' }}><option value="all">All Types</option><option value="bus">Bus</option><option value="train">Train</option></select>
+        <div className="animate-fade-in-up" style={{ 
+          backgroundColor: currentThemeStyles.glassPanelBg, 
+          backdropFilter: 'blur(12px)', 
+          padding: '1.5rem', 
+          borderRadius: '0.75rem', 
+          border: currentThemeStyles.glassPanelBorder, 
+          marginBottom: '2rem',
+          animationDelay: '0.3s'
+        }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center', marginBottom: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <FunnelIcon width={20} height={20} color={currentThemeStyles.textSecondary} />
+              <span style={{ color: currentThemeStyles.textPrimary, fontWeight: '600' }}>Filters:</span>
+            </div>
+            <div style={{ position: 'relative', flex: '1 1 300px' }}>
+              <MagnifyingGlassIcon width={20} height={20} color={currentThemeStyles.textMuted} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
+              <input 
+                type="text" 
+                placeholder="Search devices..." 
+                value={searchTerm} 
+                onChange={(e) => setSearchTerm(e.target.value)} 
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 1rem 0.75rem 3rem',
+                  borderRadius: '0.5rem',
+                  border: currentThemeStyles.inputBorder,
+                  backgroundColor: currentThemeStyles.inputBg,
+                  color: currentThemeStyles.textPrimary,
+                  fontSize: '1rem',
+                  boxSizing: 'border-box'
+                }}
+              />
+            </div>
+            <select 
+              value={statusFilter} 
+              onChange={(e) => setStatusFilter(e.target.value)} 
+              style={{
+                padding: '0.75rem 1rem',
+                borderRadius: '0.5rem',
+                border: currentThemeStyles.inputBorder,
+                backgroundColor: currentThemeStyles.inputBg,
+                color: currentThemeStyles.textPrimary,
+                fontSize: '1rem'
+              }}
+            >
+              <option value="all">All Status</option>
+              <option value="online">Online</option>
+              <option value="offline">Offline</option>
+              <option value="maintenance">Maintenance</option>
+            </select>
+            <select 
+              value={typeFilter} 
+              onChange={(e) => setTypeFilter(e.target.value)} 
+              style={{
+                padding: '0.75rem 1rem',
+                borderRadius: '0.5rem',
+                border: currentThemeStyles.inputBorder,
+                backgroundColor: currentThemeStyles.inputBg,
+                color: currentThemeStyles.textPrimary,
+                fontSize: '1rem'
+              }}
+            >
+              <option value="all">All Types</option>
+              <option value="bus">Bus</option>
+              <option value="train">Train</option>
+            </select>
           </div>
-          <div style={{ marginTop: '1rem', color: '#94a3b8', fontSize: '0.875rem' }}>Showing {showSimulationData ? vehicles.length : filteredDevices.length} {showSimulationData ? 'simulation vehicles' : 'devices'} • Updated {new Date().toLocaleTimeString()}</div>
+          <div style={{ color: currentThemeStyles.textSecondary, fontSize: '0.875rem' }}>
+            Showing {displayData.length} {showSimulationData ? 'simulation vehicles' : 'devices'} • Updated {new Date().toLocaleTimeString()}
+          </div>
         </div>
 
         {/* Content Area */}
         {viewMode === 'map' ? (
           /* Map View Only */
-          <div style={{ backgroundColor: 'rgba(30, 41, 59, 0.8)', backdropFilter: 'blur(8px)', borderRadius: '0.75rem', border: '1px solid #334155', overflow: 'hidden', height: '70vh' }}>
-            <AdvancedMap vehicles={vehicles} selectedVehicle={selectedVehicle} onVehicleSelect={setSelectedVehicle} height="70vh" showControls={true} />
+          <div className="animate-fade-in-up" style={{ 
+            backgroundColor: currentThemeStyles.glassPanelBg, 
+            backdropFilter: 'blur(12px)', 
+            borderRadius: '0.75rem', 
+            border: currentThemeStyles.glassPanelBorder, 
+            overflow: 'hidden',
+            height: '70vh',
+            animationDelay: '0.4s'
+          }}>
+            <AdvancedMap 
+              vehicles={vehicles} 
+              selectedVehicle={selectedVehicle} 
+              onVehicleSelect={setSelectedVehicle} 
+              height="70vh" 
+              showControls={true} 
+            />
           </div>
         ) : viewMode === 'hybrid' ? (
           /* Hybrid View - Map + Grid */
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem', height: '70vh' }}>
-            <div style={{ backgroundColor: 'rgba(30, 41, 59, 0.8)', backdropFilter: 'blur(8px)', borderRadius: '0.75rem', border: '1px solid #334155', overflow: 'hidden' }}>
-              <AdvancedMap vehicles={vehicles} selectedVehicle={selectedVehicle} onVehicleSelect={setSelectedVehicle} height="70vh" showControls={true} />
+          <div className="animate-fade-in-up" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem', height: '70vh', animationDelay: '0.4s' }}>
+            <div style={{ 
+              backgroundColor: currentThemeStyles.glassPanelBg, 
+              backdropFilter: 'blur(12px)', 
+              borderRadius: '0.75rem', 
+              border: currentThemeStyles.glassPanelBorder, 
+              overflow: 'hidden'
+            }}>
+              <AdvancedMap 
+                vehicles={vehicles} 
+                selectedVehicle={selectedVehicle} 
+                onVehicleSelect={setSelectedVehicle} 
+                height="70vh" 
+                showControls={true} 
+              />
             </div>
             <div style={{ maxHeight: '70vh', overflowY: 'auto' }}>
-              {/* Grid View - Compact for hybrid */}
               {displayData.length > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {(showSimulationData ? vehicles : filteredDevices).slice(0, 10).map((item) => {
-                    const isVehicle = 'operationalInfo' in item; const device = item as Device; const vehicle = item as VehicleLocation;
+                  {(showSimulationData ? vehicles : filteredDevices).slice(0, 10).map((item, index) => {
+                    if (!item) return null;
+                    const isVehicle = 'operationalInfo' in item; 
+                    const device = item as Device; 
+                    const vehicle = item as VehicleLocation;
                     return (
-                      <div key={item._id} onClick={() => isVehicle && setSelectedVehicle(selectedVehicle === vehicle.vehicleId ? null : vehicle.vehicleId)} style={{ backgroundColor: isVehicle && selectedVehicle === vehicle.vehicleId ? 'rgba(55, 65, 81, 0.8)' : 'rgba(30, 41, 59, 0.8)', backdropFilter: 'blur(8px)', padding: '1rem', borderRadius: '0.5rem', border: `1px solid ${isVehicle && selectedVehicle === vehicle.vehicleId ? '#3B82F6' : '#334155'}`, cursor: isVehicle ? 'pointer' : 'default', transition: 'all 0.2s' }}>
+                      <div 
+                        key={item._id || Math.random()} 
+                        onClick={() => isVehicle && setSelectedVehicle(selectedVehicle === vehicle.vehicleId ? null : vehicle.vehicleId)} 
+                        style={{
+                          backgroundColor: currentThemeStyles.glassPanelBg,
+                          backdropFilter: 'blur(12px)',
+                          padding: '1rem',
+                          borderRadius: '0.5rem',
+                          border: isVehicle && selectedVehicle === vehicle.vehicleId ? '2px solid #3B82F6' : currentThemeStyles.glassPanelBorder,
+                          cursor: isVehicle ? 'pointer' : 'default',
+                          transition: 'all 0.2s',
+                          animation: `fade-in-up 0.5s ease-out ${index * 0.1}s both`
+                        }}
+                      >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                           <div>
-                            <h4 style={{ color: '#f1f5f9', fontSize: '1rem', fontWeight: 'bold', margin: '0 0 0.25rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>{isVehicle ? (vehicle.vehicleId.includes('TRAIN') ? '🚊' : '🚌') : <TruckIcon width={16} height={16} />}{isVehicle ? vehicle.vehicleNumber : device.vehicleNumber}{isVehicle && selectedVehicle === vehicle.vehicleId && <span style={{ fontSize: '0.75rem', color: '#3B82F6' }}>📍</span>}</h4>
-                            <p style={{ color: '#94a3b8', fontSize: '0.875rem', margin: 0 }}>{isVehicle ? `${vehicle.operationalInfo.driverInfo.driverName} • Speed: ${vehicle.location.speed.toFixed(1)} km/h` : `${device.assignedTo.name} • ${device.vehicleType}`}</p>
+                            <h4 style={{ 
+                              color: currentThemeStyles.textPrimary, 
+                              fontSize: '1rem', 
+                              fontWeight: 'bold', 
+                              margin: '0 0 0.25rem 0',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.5rem'
+                            }}>
+                              {isVehicle ? (vehicle.vehicleId?.includes('TRAIN') ? '🚊' : '🚌') : <TruckIcon width={16} height={16} />}
+                              {isVehicle ? (vehicle.vehicleNumber || 'Unknown') : (device.vehicleNumber || 'Unknown')}
+                              {isVehicle && selectedVehicle === vehicle.vehicleId && <span style={{ fontSize: '0.875rem', color: '#3B82F6' }}>📍</span>}
+                            </h4>
+                            <p style={{ 
+                              color: currentThemeStyles.textSecondary, 
+                              fontSize: '0.875rem', 
+                              margin: 0,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.5rem'
+                            }}>
+                              {isVehicle ? 
+                                `${vehicle.operationalInfo?.driverInfo?.driverName || 'Unknown'} • Speed: ${vehicle.location?.speed?.toFixed(1) || '0'} km/h` : 
+                                `${device.assignedTo?.name || 'Unassigned'} • ${device.vehicleType || 'Unknown'}`
+                              }
+                            </p>
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                             {isVehicle ? (
-                              <span style={{ color: vehicle.operationalInfo.status === 'on_route' ? '#10B981' : vehicle.operationalInfo.status === 'delayed' ? '#F59E0B' : '#6B7280', fontSize: '0.75rem', fontWeight: '500', textTransform: 'capitalize' }}>{vehicle.operationalInfo.status.replace('_', ' ')}</span>
+                              <span style={{ 
+                                fontSize: '0.875rem', 
+                                fontWeight: '500', 
+                                textTransform: 'capitalize',
+                                color: vehicle.operationalInfo?.status === 'on_route' ? '#10B981' : 
+                                       vehicle.operationalInfo?.status === 'delayed' ? '#F59E0B' : '#6B7280'
+                              }}>
+                                {vehicle.operationalInfo?.status?.replace('_', ' ') || 'Unknown'}
+                              </span>
                             ) : (
                               <>
-                                <span style={{ color: getStatusColor(device.status) }}>{getStatusIcon(device.status)}</span>
-                                <span style={{ color: getStatusColor(device.status), fontSize: '0.75rem', textTransform: 'capitalize' }}>{device.status}</span>
+                                <span style={{ color: getStatusColor(device.status || 'offline') }}>{getStatusIcon(device.status || 'offline')}</span>
+                                <span style={{ 
+                                  color: getStatusColor(device.status || 'offline'), 
+                                  fontSize: '0.75rem', 
+                                  textTransform: 'capitalize' 
+                                }}>{device.status || 'offline'}</span>
                               </>
                             )}
                           </div>
                         </div>
                         {isVehicle && (
-                          <div style={{ marginTop: '0.5rem', display: 'flex', gap: '1rem', fontSize: '0.75rem', color: '#94a3b8' }}>
-                            <span>Load: {vehicle.passengerLoad.loadPercentage.toFixed(0)}%</span>
-                            <span>Progress: {vehicle.routeProgress.progressPercentage.toFixed(0)}%</span>
-                            {vehicle.operationalInfo.delays.currentDelay > 0 && <span style={{ color: '#F59E0B' }}>+{vehicle.operationalInfo.delays.currentDelay}min</span>}
+                          <div style={{ 
+                            marginTop: '0.5rem', 
+                            display: 'flex', 
+                            gap: '1rem', 
+                            fontSize: '0.75rem', 
+                            color: currentThemeStyles.textSecondary 
+                          }}>
+                            <span>Load: {vehicle.passengerLoad?.loadPercentage?.toFixed(0) || '0'}%</span>
+                            <span>Progress: {vehicle.routeProgress?.progressPercentage?.toFixed(0) || '0'}%</span>
+                            {(vehicle.operationalInfo?.delays?.currentDelay || 0) > 0 && 
+                              <span style={{ color: '#F59E0B' }}>+{vehicle.operationalInfo.delays.currentDelay}min</span>
+                            }
                           </div>
                         )}
                       </div>
@@ -187,34 +835,112 @@ export default function AdvancedDeviceMonitorPage() {
                   })}
                 </div>
               ) : (
-                <div style={{ backgroundColor: 'rgba(30, 41, 59, 0.8)', backdropFilter: 'blur(8px)', padding: '2rem', borderRadius: '0.75rem', border: '1px solid #334155', textAlign: 'center' }}>
-                  <DevicePhoneMobileIcon width={48} height={48} color="#94a3b8" style={{ margin: '0 auto 1rem' }} />
-                  <h3 style={{ color: '#f1f5f9', fontSize: '1.25rem', fontWeight: 'bold', margin: '0 0 0.5rem 0' }}>No data found</h3>
-                  <p style={{ color: '#94a3b8', margin: 0 }}>Try adjusting your filters or starting the simulation</p>
+                <div style={{ 
+                  backgroundColor: currentThemeStyles.glassPanelBg, 
+                  backdropFilter: 'blur(12px)', 
+                  padding: '3rem', 
+                  borderRadius: '0.75rem', 
+                  border: currentThemeStyles.glassPanelBorder, 
+                  textAlign: 'center' 
+                }}>
+                  <DevicePhoneMobileIcon width={48} height={48} color={currentThemeStyles.textMuted} style={{ margin: '0 auto 1rem' }} />
+                  <h3 style={{ color: currentThemeStyles.textPrimary, fontSize: '1.25rem', fontWeight: 'bold', margin: '0 0 0.5rem 0' }}>No data found</h3>
+                  <p style={{ color: currentThemeStyles.textSecondary, margin: 0 }}>Try adjusting your filters or starting the simulation</p>
                 </div>
               )}
             </div>
           </div>
         ) : (
           /* Grid View Only */
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1.5rem' }}>
-            {(showSimulationData ? vehicles : filteredDevices).map((item) => {
-              const isVehicle = 'operationalInfo' in item; const device = item as Device; const vehicle = item as VehicleLocation;
+          <div className="animate-fade-in-up" style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', 
+            gap: '1.5rem',
+            animationDelay: '0.4s'
+          }}>
+            {(showSimulationData ? vehicles : filteredDevices).map((item, index) => {
+              if (!item) return null;
+              const isVehicle = 'operationalInfo' in item; 
+              const device = item as Device; 
+              const vehicle = item as VehicleLocation;
               return (
-                <div key={item._id} onClick={() => isVehicle && setSelectedVehicle(selectedVehicle === vehicle.vehicleId ? null : vehicle.vehicleId)} style={{ backgroundColor: isVehicle && selectedVehicle === vehicle.vehicleId ? 'rgba(55, 65, 81, 0.8)' : 'rgba(30, 41, 59, 0.8)', backdropFilter: 'blur(8px)', padding: '1.5rem', borderRadius: '0.75rem', border: `1px solid ${isVehicle && selectedVehicle === vehicle.vehicleId ? '#3B82F6' : '#334155'}`, transition: 'all 0.2s', cursor: isVehicle ? 'pointer' : 'default' }} onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.transform = 'translateY(-2px)'; }} onMouseLeave={(e) => { e.currentTarget.style.borderColor = isVehicle && selectedVehicle === vehicle.vehicleId ? '#3B82F6' : '#334155'; e.currentTarget.style.transform = 'translateY(0)'; }}>
+                <div 
+                  key={item._id || Math.random()} 
+                  onClick={() => isVehicle && setSelectedVehicle(selectedVehicle === vehicle.vehicleId ? null : vehicle.vehicleId)} 
+                  style={{
+                    backgroundColor: currentThemeStyles.glassPanelBg,
+                    backdropFilter: 'blur(12px)',
+                    padding: '1.5rem',
+                    borderRadius: '0.75rem',
+                    border: isVehicle && selectedVehicle === vehicle.vehicleId ? '2px solid #3B82F6' : currentThemeStyles.glassPanelBorder,
+                    boxShadow: currentThemeStyles.glassPanelShadow,
+                    cursor: isVehicle ? 'pointer' : 'default',
+                    transition: 'all 0.2s',
+                    animation: `fade-in-up 0.6s ease-out ${index * 0.05}s both`
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isVehicle) {
+                      e.currentTarget.style.borderColor = '#3b82f6';
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isVehicle) {
+                      e.currentTarget.style.borderColor = currentThemeStyles.glassPanelBorder.includes('#') ? currentThemeStyles.glassPanelBorder.split(' ')[3] : 'rgba(251, 191, 36, 0.3)';
+                      e.currentTarget.style.transform = 'translateY(0)';
+                    }
+                  }}
+                >
                   {/* Device/Vehicle Header */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
                     <div>
-                      <h3 style={{ color: '#f1f5f9', fontSize: '1.1rem', fontWeight: 'bold', margin: '0 0 0.25rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>{isVehicle ? (vehicle.vehicleId.includes('TRAIN') ? '🚊' : '🚌') : device.deviceId}{isVehicle ? vehicle.vehicleNumber : device.vehicleNumber}{isVehicle && selectedVehicle === vehicle.vehicleId && <span style={{ fontSize: '0.875rem', color: '#3B82F6' }}>📍 Selected</span>}</h3>
-                      <p style={{ color: '#94a3b8', fontSize: '0.875rem', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}><TruckIcon width={14} height={14} />{isVehicle ? `${vehicle.operationalInfo.driverInfo.driverName} • Speed: ${vehicle.location.speed.toFixed(1)} km/h` : `${device.vehicleNumber} • ${device.vehicleType}`}</p>
+                      <h3 style={{ 
+                        color: currentThemeStyles.textPrimary, 
+                        fontSize: '1.1rem', 
+                        fontWeight: 'bold', 
+                        margin: '0 0 0.25rem 0',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
+                      }}>
+                        {isVehicle ? (vehicle.vehicleId?.includes('TRAIN') ? '🚊' : '🚌') : (device.deviceId || 'Unknown')}
+                        {isVehicle ? (vehicle.vehicleNumber || 'Unknown') : (device.vehicleNumber || 'Unknown')}
+                        {isVehicle && selectedVehicle === vehicle.vehicleId && <span style={{ fontSize: '0.875rem', color: '#3B82F6' }}>📍 Selected</span>}
+                      </h3>
+                      <p style={{ 
+                        color: currentThemeStyles.textSecondary, 
+                        fontSize: '0.875rem', 
+                        margin: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
+                      }}>
+                        <TruckIcon width={14} height={14} />
+                        {isVehicle ? 
+                          `${vehicle.operationalInfo?.driverInfo?.driverName || 'Unknown'} • Speed: ${vehicle.location?.speed?.toFixed(1) || '0'} km/h` : 
+                          `${device.vehicleNumber || 'Unknown'} • ${device.vehicleType || 'Unknown'}`
+                        }
+                      </p>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       {isVehicle ? (
-                        <span style={{ color: vehicle.operationalInfo.status === 'on_route' ? '#10B981' : vehicle.operationalInfo.status === 'delayed' ? '#F59E0B' : '#6B7280', fontSize: '0.875rem', fontWeight: '500', textTransform: 'capitalize' }}>{vehicle.operationalInfo.status.replace('_', ' ')}</span>
+                        <span style={{ 
+                          fontSize: '0.875rem',
+                          fontWeight: '500', 
+                          textTransform: 'capitalize',
+                          color: vehicle.operationalInfo?.status === 'on_route' ? '#10B981' : 
+                                 vehicle.operationalInfo?.status === 'delayed' ? '#F59E0B' : '#6B7280'
+                        }}>
+                          {vehicle.operationalInfo?.status?.replace('_', ' ') || 'Unknown'}
+                        </span>
                       ) : (
                         <>
-                          <span style={{ color: getStatusColor(device.status) }}>{getStatusIcon(device.status)}</span>
-                          <span style={{ color: getStatusColor(device.status), fontSize: '0.875rem', fontWeight: '500', textTransform: 'capitalize' }}>{device.status}</span>
+                          <span style={{ color: getStatusColor(device.status || 'offline') }}>{getStatusIcon(device.status || 'offline')}</span>
+                          <span style={{ 
+                            color: getStatusColor(device.status || 'offline'), 
+                            fontSize: '0.75rem', 
+                            textTransform: 'capitalize' 
+                          }}>{device.status || 'offline'}</span>
                         </>
                       )}
                     </div>
@@ -223,29 +949,114 @@ export default function AdvancedDeviceMonitorPage() {
                   {/* Stats Grid */}
                   {isVehicle ? (
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                      <div style={{ textAlign: 'center' }}><div style={{ color: '#3B82F6', fontSize: '0.875rem', fontWeight: '600' }}>{vehicle.location.speed.toFixed(1)}</div><div style={{ color: '#94a3b8', fontSize: '0.75rem' }}>km/h</div></div>
-                      <div style={{ textAlign: 'center' }}><div style={{ color: vehicle.passengerLoad.loadPercentage > 80 ? '#EF4444' : '#10B981', fontSize: '0.875rem', fontWeight: '600' }}>{vehicle.passengerLoad.loadPercentage.toFixed(0)}%</div><div style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Load</div></div>
-                      <div style={{ textAlign: 'center' }}><div style={{ color: '#8B5CF6', fontSize: '0.875rem', fontWeight: '600' }}>{vehicle.routeProgress.progressPercentage.toFixed(0)}%</div><div style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Progress</div></div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ color: '#3B82F6', fontSize: '0.875rem', fontWeight: '600' }}>{vehicle.location?.speed?.toFixed(1) || '0'}</div>
+                        <div style={{ color: currentThemeStyles.textMuted, fontSize: '0.75rem' }}>km/h</div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ 
+                          color: (vehicle.passengerLoad?.loadPercentage || 0) > 80 ? '#EF4444' : '#10B981', 
+                          fontSize: '0.875rem', 
+                          fontWeight: '600' 
+                        }}>
+                          {vehicle.passengerLoad?.loadPercentage?.toFixed(0) || '0'}%
+                        </div>
+                        <div style={{ color: currentThemeStyles.textMuted, fontSize: '0.75rem' }}>Load</div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ color: '#8B5CF6', fontSize: '0.875rem', fontWeight: '600' }}>{vehicle.routeProgress?.progressPercentage?.toFixed(0) || '0'}%</div>
+                        <div style={{ color: currentThemeStyles.textMuted, fontSize: '0.75rem' }}>Progress</div>
+                      </div>
                     </div>
                   ) : (
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                      <div style={{ textAlign: 'center' }}><BoltIcon width={20} height={20} color={getBatteryColor(device.batteryLevel)} style={{ margin: '0 auto 0.25rem' }} /><div style={{ color: getBatteryColor(device.batteryLevel), fontSize: '0.875rem', fontWeight: '600' }}>{device.batteryLevel}%</div></div>
-                      <div style={{ textAlign: 'center' }}><SignalIcon width={20} height={20} color="#10b981" style={{ margin: '0 auto 0.25rem' }} /><div style={{ color: '#f1f5f9', fontSize: '0.875rem', fontWeight: '600' }}>{device.signalStrength}/5</div></div>
-                      <div style={{ textAlign: 'center' }}><ExclamationTriangleIcon width={20} height={20} color={device.alerts.count > 0 ? '#f59e0b' : '#6b7280'} style={{ margin: '0 auto 0.25rem' }} /><div style={{ color: device.alerts.count > 0 ? '#f59e0b' : '#6b7280', fontSize: '0.875rem', fontWeight: '600' }}>{device.alerts.count}</div></div>
+                      <div style={{ textAlign: 'center' }}>
+                        <BoltIcon width={20} height={20} color={getBatteryColor(device.batteryLevel || 0)} style={{ margin: '0 auto 0.25rem' }} />
+                        <div style={{ color: getBatteryColor(device.batteryLevel || 0), fontSize: '0.875rem', fontWeight: '600' }}>{device.batteryLevel || 0}%</div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <SignalIcon width={20} height={20} color="#10b981" style={{ margin: '0 auto 0.25rem' }} />
+                        <div style={{ color: currentThemeStyles.textPrimary, fontSize: '0.875rem', fontWeight: '600' }}>{device.signalStrength || 0}/5</div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <ExclamationTriangleIcon width={20} height={20} color={(device.alerts?.count || 0) > 0 ? '#f59e0b' : '#6b7280'} style={{ margin: '0 auto 0.25rem' }} />
+                        <div style={{ 
+                          color: (device.alerts?.count || 0) > 0 ? '#f59e0b' : '#6b7280', 
+                          fontSize: '0.875rem', 
+                          fontWeight: '600' 
+                        }}>{device.alerts?.count || 0}</div>
+                      </div>
                     </div>
                   )}
 
                   {/* Location Info */}
-                  <div style={{ backgroundColor: '#334155', padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}><MapPinIcon width={14} height={14} color="#94a3b8" /><span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Location</span></div>
-                    <p style={{ color: '#f1f5f9', fontSize: '0.875rem', margin: 0, lineHeight: '1.4' }}>{isVehicle ? `${vehicle.location.latitude.toFixed(4)}, ${vehicle.location.longitude.toFixed(4)}` : device.location.address}</p>
-                    <p style={{ color: '#94a3b8', fontSize: '0.75rem', margin: '0.25rem 0 0 0' }}>Updated {isVehicle ? getTimeSince(vehicle.timestamp) : getTimeSince(device.location.lastUpdated)}</p>
+                  <div style={{ 
+                    backgroundColor: theme === 'dark' ? 'rgba(51, 65, 85, 0.6)' : 'rgba(249, 250, 251, 0.8)', 
+                    padding: '0.75rem', 
+                    borderRadius: '0.5rem', 
+                    marginBottom: '1rem' 
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                      <MapPinIcon width={14} height={14} color={currentThemeStyles.textMuted} />
+                      <span style={{ color: currentThemeStyles.textMuted, fontSize: '0.75rem' }}>Location</span>
+                    </div>
+                    <p style={{ 
+                      color: currentThemeStyles.textPrimary, 
+                      fontSize: '0.875rem', 
+                      margin: 0, 
+                      lineHeight: '1.4' 
+                    }}>
+                      {isVehicle ? 
+                        `${vehicle.location?.latitude?.toFixed(4) || '0'}, ${vehicle.location?.longitude?.toFixed(4) || '0'}` : 
+                        (device.location?.address || 'Unknown location')
+                      }
+                    </p>
+                    <p style={{ 
+                      color: currentThemeStyles.textMuted, 
+                      fontSize: '0.75rem', 
+                      margin: '0.25rem 0 0 0' 
+                    }}>
+                      Updated {isVehicle ? getTimeSince(vehicle.timestamp || new Date().toISOString()) : getTimeSince(device.location?.lastUpdated || new Date().toISOString())}
+                    </p>
                   </div>
 
                   {/* Actions */}
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <Link href={`/sysadmin/devices/${item._id}`} style={{ flex: 1, backgroundColor: '#3b82f6', color: 'white', padding: '0.5rem', borderRadius: '0.5rem', textDecoration: 'none', textAlign: 'center', fontSize: '0.875rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}><EyeIcon width={14} height={14} />View Details</Link>
-                    <button onClick={() => window.open(`https://maps.google.com/?q=${isVehicle ? vehicle.location.latitude : device.location.latitude},${isVehicle ? vehicle.location.longitude : device.location.longitude}`, '_blank')} style={{ backgroundColor: '#374151', color: '#f9fafb', padding: '0.5rem', borderRadius: '0.5rem', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><MapPinIcon width={14} height={14} /></button>
+                    <Link 
+                      href={`/sysadmin/devices/${item._id}`} 
+                      style={{
+                        flex: 1,
+                        backgroundColor: '#3b82f6',
+                        color: 'white',
+                        padding: '0.5rem',
+                        borderRadius: '0.5rem',
+                        textDecoration: 'none',
+                        textAlign: 'center',
+                        fontSize: '0.875rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.5rem'
+                      }}
+                    >
+                      <EyeIcon width={14} height={14} />View Details
+                    </Link>
+                    <button 
+                      onClick={() => window.open(`https://maps.google.com/?q=${isVehicle ? (vehicle.location?.latitude || 0) : (device.location?.latitude || 0)},${isVehicle ? (vehicle.location?.longitude || 0) : (device.location?.longitude || 0)}`, '_blank')} 
+                      style={{
+                        backgroundColor: '#374151',
+                        color: '#f9fafb',
+                        padding: '0.5rem',
+                        borderRadius: '0.5rem',
+                        border: 'none',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
+                      }}
+                    >
+                      <MapPinIcon width={14} height={14} />
+                    </button>
                   </div>
                 </div>
               );
@@ -255,10 +1066,22 @@ export default function AdvancedDeviceMonitorPage() {
 
         {/* No Results */}
         {displayData.length === 0 && !loading && (
-          <div style={{ backgroundColor: 'rgba(30, 41, 59, 0.8)', backdropFilter: 'blur(8px)', padding: '3rem', borderRadius: '0.75rem', border: '1px solid #334155', textAlign: 'center' }}>
-            <DevicePhoneMobileIcon width={48} height={48} color="#94a3b8" style={{ margin: '0 auto 1rem' }} />
-            <h3 style={{ color: '#f1f5f9', fontSize: '1.25rem', fontWeight: 'bold', margin: '0 0 0.5rem 0' }}>No {showSimulationData ? 'simulation vehicles' : 'devices'} found</h3>
-            <p style={{ color: '#94a3b8', margin: 0 }}>{showSimulationData ? 'Start the GPS simulation to see vehicles' : 'Try adjusting your search criteria or filters'}</p>
+          <div className="animate-fade-in-up" style={{ 
+            backgroundColor: currentThemeStyles.glassPanelBg, 
+            backdropFilter: 'blur(12px)', 
+            padding: '3rem', 
+            borderRadius: '0.75rem', 
+            border: currentThemeStyles.glassPanelBorder, 
+            textAlign: 'center',
+            animationDelay: '0.4s'
+          }}>
+            <DevicePhoneMobileIcon width={48} height={48} color={currentThemeStyles.textMuted} style={{ margin: '0 auto 1rem' }} />
+            <h3 style={{ color: currentThemeStyles.textPrimary, fontSize: '1.25rem', fontWeight: 'bold', margin: '0 0 0.5rem 0' }}>
+              No {showSimulationData ? 'simulation vehicles' : 'devices'} found
+            </h3>
+            <p style={{ color: currentThemeStyles.textSecondary, margin: 0 }}>
+              {showSimulationData ? 'Start the GPS simulation to see vehicles' : 'Try adjusting your search criteria or filters'}
+            </p>
           </div>
         )}
       </div>
