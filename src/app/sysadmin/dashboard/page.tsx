@@ -4,7 +4,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { UsersIcon, DevicePhoneMobileIcon, TruckIcon, CpuChipIcon, ChartBarIcon, ExclamationTriangleIcon, ShieldCheckIcon, GlobeAltIcon, ServerIcon, CheckCircleIcon, BellIcon } from '@heroicons/react/24/outline';
+import { UsersIcon, DevicePhoneMobileIcon, TruckIcon, CpuChipIcon, ChartBarIcon, ExclamationTriangleIcon, ShieldCheckIcon, GlobeAltIcon, ServerIcon, CheckCircleIcon, BellIcon, MapIcon } from '@heroicons/react/24/outline';
 import { useTheme } from '@/app/context/ThemeContext';
 import ThemeSwitcher from '@/app/components/ThemeSwitcher';
 import AnimatedBackground from '@/app/sysadmin/components/AnimatedBackground'; // IMPORT THE NEW COMPONENT
@@ -99,7 +99,16 @@ export default function SriExpressAdminDashboard() {
     return () => clearInterval(interval);
   }, [autoRefresh, fetchDashboardData]);
 
-  const quickActions = stats && fleetStats ? [ { name: 'User Management', href: '/sysadmin/users', icon: UsersIcon, count: stats.totalUsers, desc: 'Manage system users' }, { name: 'Vehicle Management', href: '/sysadmin/vehicles', icon: TruckIcon, count: stats.totalDevices, desc: 'Manage fleet vehicles' }, { name: 'Fleet Control', href: '/sysadmin/fleet', icon: TruckIcon, count: fleetStats.pending, desc: 'Fleet approvals', urgent: fleetStats.pending > 0 }, { name: 'Live Tracking', href: '/sysadmin/devices/monitor', icon: GlobeAltIcon, count: stats.activeDevices, desc: 'Vehicle monitoring' }, { name: 'AI Systems', href: '/sysadmin/ai', icon: CpuChipIcon, desc: 'Neural networks' }, { name: 'Analytics', href: '/sysadmin/analytics', icon: ChartBarIcon, desc: 'Data insights' }, { name: 'Emergency', href: '/sysadmin/emergency', icon: ExclamationTriangleIcon, count: alerts.length, desc: 'Crisis response' } ] : [];
+  const quickActions = stats && fleetStats ? [ 
+    { name: 'User Management', href: '/sysadmin/users', icon: UsersIcon, count: stats.totalUsers, desc: 'Manage system users' }, 
+    { name: 'Vehicle Management', href: '/sysadmin/vehicles', icon: TruckIcon, count: stats.totalDevices, desc: 'Manage fleet vehicles' }, 
+    { name: 'Fleet Control', href: '/sysadmin/fleet', icon: TruckIcon, count: fleetStats.pending, desc: 'Fleet approvals', urgent: fleetStats.pending > 0 }, 
+    { name: 'Route Management', href: '/sysadmin/routes', icon: MapIcon, count: stats.todayTrips, desc: 'Route planning & tracking' },
+    { name: 'Live Tracking', href: '/sysadmin/devices/monitor', icon: GlobeAltIcon, count: stats.activeDevices, desc: 'Vehicle monitoring' }, 
+    { name: 'AI Systems', href: '/sysadmin/ai', icon: CpuChipIcon, desc: 'Neural networks' }, 
+    { name: 'Analytics', href: '/sysadmin/analytics', icon: ChartBarIcon, desc: 'Data insights' }, 
+    { name: 'Emergency', href: '/sysadmin/emergency', icon: ExclamationTriangleIcon, count: alerts.length, desc: 'Crisis response' } 
+  ] : [];
 
   const handleLogout = () => {
     localStorage.removeItem('token');
