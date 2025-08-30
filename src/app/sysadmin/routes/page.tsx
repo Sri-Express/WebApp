@@ -412,7 +412,7 @@ export default function AdminRoutesPage() {
             ...route, 
             routeAdminId: undefined,
             routeAdminAssignment: {
-              ...route.routeAdminAssignment,
+              ...route.routeAdminAssignment!,
               status: 'unassigned'
             }
           };
