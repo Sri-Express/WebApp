@@ -1,4 +1,4 @@
-// src/app/fleet/routes/page.tsx - Fleet Route Assignment Management (UPDATED WITH ANIMATED BACKGROUND)
+// src/app/fleet/routes/page.tsx - Fleet Route Assignment Management (UPDATED FOR ROUTE ADMIN SUPPORT)
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -13,7 +13,9 @@ import {
   InformationCircleIcon,
   ClockIcon,
   CurrencyDollarIcon,
-  BuildingOfficeIcon
+  BuildingOfficeIcon,
+  UserIcon,
+  EyeIcon
 } from '@heroicons/react/24/outline';
 import AnimatedBackground from '@/app/fleet/components/AnimatedBackground';
 
@@ -49,7 +51,12 @@ interface Vehicle {
   vehicleType: string;
   status: 'online' | 'offline' | 'maintenance';
   approvalStatus: 'pending' | 'approved' | 'rejected';
-  assignedRoutes?: string[]; // Route IDs this vehicle is assigned to
+  fleetId: {
+    _id: string;
+    companyName: string;
+    contactNumber: string;
+  };
+  assignedRoutes?: string[];
 }
 
 interface RouteAssignment {
@@ -67,14 +74,28 @@ interface RouteAssignment {
     vehicleType: string;
     status: string;
   };
+  fleetId: {
+    _id: string;
+    companyName: string;
+    contactNumber: string;
+  };
   assignedAt: string;
   status: 'active' | 'inactive';
+}
+
+// NEW: User role type
+interface User {
+  _id: string;
+  name: string;
+  email: string;
+  role: 'client' | 'customer_service' | 'route_admin' | 'company_admin' | 'system_admin';
 }
 
 export default function FleetRoutesPage() {
   const [routes, setRoutes] = useState<Route[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [assignments, setAssignments] = useState<RouteAssignment[]>([]);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState('');
@@ -97,7 +118,33 @@ export default function FleetRoutesPage() {
     alertBg: 'rgba(51, 65, 85, 0.6)'
   };
 
+  // Get current user info
   useEffect(() => {
+    const getCurrentUser = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/profile`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const userData = await response.json();
+          setUser(userData.user);
+        }
+      } catch (error) {
+        console.error('Error getting user info:', error);
+      }
+    };
+
+    getCurrentUser();
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
+
     const loadData = async () => {
       setLoading(true);
       try {
@@ -107,39 +154,14 @@ export default function FleetRoutesPage() {
           'Content-Type': 'application/json'
         };
 
-        // Load available routes (admin-created, approved routes)
-        const routesResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/fleet/routes/available`, {
-          headers
-        });
-        
-        if (!routesResponse.ok) {
-          throw new Error('Failed to load available routes');
+        // NEW: Different API endpoints based on user role
+        if (user.role === 'route_admin') {
+          // Route admins use the route admin API
+          await loadRouteAdminData(headers);
+        } else {
+          // Fleet managers use the fleet API
+          await loadFleetData(headers);
         }
-        const routesData = await routesResponse.json();
-
-        // Load approved vehicles for assignment
-        const vehiclesResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/fleet/vehicles`, {
-          headers
-        });
-        
-        if (!vehiclesResponse.ok) {
-          throw new Error('Failed to load vehicles');
-        }
-        const vehiclesData = await vehiclesResponse.json();
-
-        // Load current route assignments
-        const assignmentsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/fleet/route-assignments`, {
-          headers
-        });
-        
-        if (!assignmentsResponse.ok) {
-          throw new Error('Failed to load assignments');
-        }
-        const assignmentsData = await assignmentsResponse.json();
-
-        setRoutes(routesData.routes || []);
-        setVehicles(vehiclesData.vehicles?.filter((v: Vehicle) => v.approvalStatus === 'approved') || []);
-        setAssignments(assignmentsData.assignments || []);
       } catch (error) {
         console.error('Load data error:', error);
         setError(error instanceof Error ? error.message : 'Failed to load data');
@@ -149,7 +171,92 @@ export default function FleetRoutesPage() {
     };
 
     loadData();
-  }, []);
+  }, [user]);
+
+  // NEW: Load data for route admin
+  const loadRouteAdminData = async (headers: any) => {
+    // Get route admin dashboard
+    const dashboardResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/route-admin/dashboard`, {
+      headers
+    });
+    
+    if (!dashboardResponse.ok) {
+      throw new Error('Failed to load route admin dashboard');
+    }
+    const dashboardData = await dashboardResponse.json();
+
+    if (!dashboardData.hasAssignedRoute) {
+      setError('No route has been assigned to you. Please contact system administrator.');
+      return;
+    }
+
+    // Set route admin's assigned route
+    setRoutes([dashboardData.assignedRoute]);
+
+    // Get available vehicles from all fleets
+    const vehiclesResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/route-admin/available-vehicles`, {
+      headers
+    });
+    
+    if (vehiclesResponse.ok) {
+      const vehiclesData = await vehiclesResponse.json();
+      // Flatten vehicles from all fleets
+      const allVehicles = vehiclesData.availableFleets?.reduce((acc: Vehicle[], fleetData: any) => {
+        return acc.concat(fleetData.vehicles.map((vehicle: any) => ({
+          ...vehicle,
+          fleetId: fleetData.fleet
+        })));
+      }, []) || [];
+      setVehicles(allVehicles);
+    }
+
+    // Get current route assignments
+    const assignmentsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/route-admin/assignments`, {
+      headers
+    });
+    
+    if (assignmentsResponse.ok) {
+      const assignmentsData = await assignmentsResponse.json();
+      setAssignments(assignmentsData.assignments || []);
+    }
+  };
+
+  // Original: Load data for fleet manager
+  const loadFleetData = async (headers: any) => {
+    // Load available routes (admin-created, approved routes)
+    const routesResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/fleet/routes/available`, {
+      headers
+    });
+    
+    if (!routesResponse.ok) {
+      throw new Error('Failed to load available routes');
+    }
+    const routesData = await routesResponse.json();
+
+    // Load approved vehicles for assignment
+    const vehiclesResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/fleet/vehicles`, {
+      headers
+    });
+    
+    if (!vehiclesResponse.ok) {
+      throw new Error('Failed to load vehicles');
+    }
+    const vehiclesData = await vehiclesResponse.json();
+
+    // Load current route assignments
+    const assignmentsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/fleet/route-assignments`, {
+      headers
+    });
+    
+    if (!assignmentsResponse.ok) {
+      throw new Error('Failed to load assignments');
+    }
+    const assignmentsData = await assignmentsResponse.json();
+
+    setRoutes(routesData.routes || []);
+    setVehicles(vehiclesData.vehicles?.filter((v: Vehicle) => v.approvalStatus === 'approved') || []);
+    setAssignments(assignmentsData.assignments || []);
+  };
 
   const getRouteAssignments = (routeId: string) => {
     return assignments.filter(a => a.routeId._id === routeId && a.status === 'active');
@@ -168,7 +275,13 @@ export default function FleetRoutesPage() {
     
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/fleet/route-assignments`, {
+      
+      // NEW: Different endpoints based on user role
+      const endpoint = user?.role === 'route_admin' 
+        ? '/api/route-admin/assign-vehicles'
+        : '/api/fleet/route-assignments';
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${endpoint}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -198,12 +311,21 @@ export default function FleetRoutesPage() {
     }
   };
 
-  const handleUnassignVehicle = async (routeId: string, vehicleId: string) => {
+  const handleUnassignVehicle = async (routeId: string, vehicleId: string, assignmentId?: string) => {
     setActionLoading(`unassign-${vehicleId}`);
     
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/fleet/route-assignments/${routeId}/${vehicleId}`, {
+      
+      // NEW: Different endpoints based on user role
+      let endpoint;
+      if (user?.role === 'route_admin') {
+        endpoint = `/api/route-admin/assignments/${assignmentId || 'unknown'}`;
+      } else {
+        endpoint = `/api/fleet/route-assignments/${routeId}/${vehicleId}`;
+      }
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${endpoint}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -231,6 +353,27 @@ export default function FleetRoutesPage() {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+  };
+
+  const getPageTitle = () => {
+    if (user?.role === 'route_admin') {
+      return 'Route Management';
+    }
+    return 'Route Assignments';
+  };
+
+  const getPageDescription = () => {
+    if (user?.role === 'route_admin') {
+      return 'Manage your assigned route and assign vehicles from multiple fleets';
+    }
+    return 'Assign your approved vehicles to available routes';
+  };
+
+  const getVehicleCountDescription = () => {
+    if (user?.role === 'route_admin') {
+      return 'Available Vehicles (All Fleets)';
+    }
+    return 'Approved Vehicles';
   };
 
   if (loading) {
@@ -292,24 +435,36 @@ export default function FleetRoutesPage() {
           border: currentThemeStyles.glassPanelBorder
         }}>
           <div>
-            <h1 style={{
-              fontSize: '2rem',
-              fontWeight: 'bold',
-              color: currentThemeStyles.textPrimary,
-              margin: '0 0 0.5rem 0',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.75rem'
-            }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
               <MapIcon width={32} height={32} color="#10b981" />
-              Route Assignments
-            </h1>
+              <h1 style={{
+                fontSize: '2rem',
+                fontWeight: 'bold',
+                color: currentThemeStyles.textPrimary,
+                margin: 0
+              }}>
+                {getPageTitle()}
+              </h1>
+              {/* NEW: Role indicator */}
+              <div style={{
+                backgroundColor: user?.role === 'route_admin' ? '#8b5cf6' : '#10b981',
+                color: 'white',
+                padding: '0.25rem 0.75rem',
+                borderRadius: '0.25rem',
+                fontSize: '0.75rem',
+                fontWeight: '600',
+                textTransform: 'uppercase',
+                marginLeft: '0.5rem'
+              }}>
+                {user?.role === 'route_admin' ? 'Route Admin' : 'Fleet Manager'}
+              </div>
+            </div>
             <p style={{
               color: currentThemeStyles.textSecondary,
               margin: 0,
               fontSize: '1rem'
             }}>
-              Assign your approved vehicles to available routes
+              {getPageDescription()}
             </p>
           </div>
 
@@ -318,20 +473,22 @@ export default function FleetRoutesPage() {
             gap: '1rem',
             alignItems: 'center'
           }}>
-            <Link href="/fleet/vehicles" style={{
-              backgroundColor: '#374151',
-              color: '#f9fafb',
-              padding: '0.75rem 1.5rem',
-              borderRadius: '0.5rem',
-              textDecoration: 'none',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              fontSize: '0.875rem'
-            }}>
-              <TruckIcon width={20} height={20} />
-              Manage Vehicles
-            </Link>
+            {user?.role !== 'route_admin' && (
+              <Link href="/fleet/vehicles" style={{
+                backgroundColor: '#374151',
+                color: '#f9fafb',
+                padding: '0.75rem 1.5rem',
+                borderRadius: '0.5rem',
+                textDecoration: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                fontSize: '0.875rem'
+              }}>
+                <TruckIcon width={20} height={20} />
+                Manage Vehicles
+              </Link>
+            )}
           </div>
         </div>
 
@@ -374,7 +531,9 @@ export default function FleetRoutesPage() {
                 <h3 style={{ color: '#3b82f6', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>
                   {routes.length}
                 </h3>
-                <p style={{ color: currentThemeStyles.textSecondary, margin: '0.5rem 0 0 0' }}>Available Routes</p>
+                <p style={{ color: currentThemeStyles.textSecondary, margin: '0.5rem 0 0 0' }}>
+                  {user?.role === 'route_admin' ? 'Assigned Route' : 'Available Routes'}
+                </p>
               </div>
             </div>
           </div>
@@ -393,7 +552,9 @@ export default function FleetRoutesPage() {
                 <h3 style={{ color: '#10b981', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>
                   {approvedVehicles.length}
                 </h3>
-                <p style={{ color: currentThemeStyles.textSecondary, margin: '0.5rem 0 0 0' }}>Approved Vehicles</p>
+                <p style={{ color: currentThemeStyles.textSecondary, margin: '0.5rem 0 0 0' }}>
+                  {getVehicleCountDescription()}
+                </p>
               </div>
             </div>
           </div>
@@ -437,8 +598,41 @@ export default function FleetRoutesPage() {
           </div>
         </div>
 
-        {/* Information Box */}
-        {approvedVehicles.length === 0 && (
+        {/* Information Box for Route Admin */}
+        {user?.role === 'route_admin' && approvedVehicles.length === 0 && (
+          <div style={{
+            backgroundColor: currentThemeStyles.glassPanelBg,
+            border: currentThemeStyles.glassPanelBorder,
+            borderRadius: '0.75rem',
+            padding: '1.5rem',
+            marginBottom: '2rem',
+            boxShadow: currentThemeStyles.glassPanelShadow,
+            backdropFilter: 'blur(12px)'
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '1rem',
+              marginBottom: '1rem'
+            }}>
+              <UserIcon width={24} height={24} color="#8b5cf6" />
+              <h3 style={{ color: '#8b5cf6', fontSize: '1rem', fontWeight: '600', margin: 0 }}>
+                No Vehicles Available for Assignment
+              </h3>
+            </div>
+            <p style={{ color: currentThemeStyles.textSecondary, margin: '0 0 1rem 0' }}>
+              As a Route Admin, you can assign vehicles from ANY approved fleet to your route. Currently, there are no available vehicles that match your route's requirements.
+            </p>
+            <ul style={{ color: currentThemeStyles.textSecondary, margin: 0, paddingLeft: '1.5rem' }}>
+              <li>All compatible vehicles may already be assigned to other routes</li>
+              <li>Fleet operators need to add more vehicles of type: {routes[0]?.vehicleInfo?.type}</li>
+              <li>Vehicles need admin approval before they can be assigned</li>
+            </ul>
+          </div>
+        )}
+
+        {/* Information Box for Fleet Manager */}
+        {user?.role !== 'route_admin' && approvedVehicles.length === 0 && (
           <div style={{
             backgroundColor: currentThemeStyles.glassPanelBg,
             border: currentThemeStyles.glassPanelBorder,
@@ -505,7 +699,7 @@ export default function FleetRoutesPage() {
             gap: '0.5rem'
           }}>
             <MapIcon width={20} height={20} />
-            Available Routes ({routes.length})
+            {user?.role === 'route_admin' ? `Your Assigned Route (${routes.length})` : `Available Routes (${routes.length})`}
           </h2>
 
           <div style={{
@@ -564,6 +758,25 @@ export default function FleetRoutesPage() {
                       {route.vehicleInfo.type}
                     </div>
                   </div>
+
+                  {/* NEW: Route admin indicator */}
+                  {user?.role === 'route_admin' && (
+                    <div style={{
+                      backgroundColor: '#8b5cf6',
+                      color: 'white',
+                      padding: '0.75rem',
+                      borderRadius: '0.5rem',
+                      marginBottom: '1rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}>
+                      <UserIcon width={16} height={16} />
+                      <span style={{ fontSize: '0.875rem', fontWeight: '500' }}>
+                        You are the Route Administrator for this route
+                      </span>
+                    </div>
+                  )}
 
                   {/* Route Details */}
                   <div style={{
@@ -660,52 +873,63 @@ export default function FleetRoutesPage() {
                     
                     {assignedVehicles.length > 0 ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                        {assignedVehicles.map((vehicle) => (
-                          <div key={vehicle._id} style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            backgroundColor: 'rgba(51, 65, 85, 0.8)',
-                            padding: '0.75rem',
-                            borderRadius: '0.5rem',
-                            backdropFilter: 'blur(8px)'
-                          }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                              <div style={{
-                                width: '8px',
-                                height: '8px',
-                                borderRadius: '50%',
-                                backgroundColor: vehicle.status === 'online' ? '#10b981' : '#6b7280'
-                              }} />
-                              <span style={{ color: currentThemeStyles.textPrimary, fontSize: '0.875rem', fontWeight: '500' }}>
-                                {vehicle.vehicleNumber}
-                              </span>
-                              <span style={{ color: currentThemeStyles.textSecondary, fontSize: '0.75rem' }}>
-                                ({vehicle.status})
-                              </span>
+                        {assignedVehicles.map((vehicle) => {
+                          const assignment = routeAssignments.find(a => a.vehicleId._id === vehicle._id);
+                          return (
+                            <div key={vehicle._id} style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              backgroundColor: 'rgba(51, 65, 85, 0.8)',
+                              padding: '0.75rem',
+                              borderRadius: '0.5rem',
+                              backdropFilter: 'blur(8px)'
+                            }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                <div style={{
+                                  width: '8px',
+                                  height: '8px',
+                                  borderRadius: '50%',
+                                  backgroundColor: vehicle.status === 'online' ? '#10b981' : '#6b7280'
+                                }} />
+                                <div>
+                                  <div style={{ color: currentThemeStyles.textPrimary, fontSize: '0.875rem', fontWeight: '500' }}>
+                                    {vehicle.vehicleNumber}
+                                  </div>
+                                  {/* NEW: Show fleet info for route admin */}
+                                  {user?.role === 'route_admin' && assignment?.fleetId && (
+                                    <div style={{ color: currentThemeStyles.textSecondary, fontSize: '0.75rem' }}>
+                                      Fleet: {assignment.fleetId.companyName}
+                                    </div>
+                                  )}
+                                  <div style={{ color: currentThemeStyles.textSecondary, fontSize: '0.75rem' }}>
+                                    ({vehicle.status})
+                                  </div>
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => handleUnassignVehicle(route._id, vehicle._id, assignment?._id)}
+                                disabled={actionLoading === `unassign-${vehicle._id}`}
+                                style={{
+                                  backgroundColor: '#ef4444',
+                                  color: 'white',
+                                  padding: '0.25rem 0.5rem',
+                                  border: 'none',
+                                  borderRadius: '0.25rem',
+                                  fontSize: '0.75rem',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '0.25rem',
+                                  opacity: actionLoading === `unassign-${vehicle._id}` ? 0.7 : 1
+                                }}
+                              >
+                                <MinusIcon width={12} height={12} />
+                                {actionLoading === `unassign-${vehicle._id}` ? 'Removing...' : 'Remove'}
+                              </button>
                             </div>
-                            <button
-                              onClick={() => handleUnassignVehicle(route._id, vehicle._id)}
-                              disabled={actionLoading === `unassign-${vehicle._id}`}
-                              style={{
-                                backgroundColor: '#ef4444',
-                                color: 'white',
-                                padding: '0.25rem 0.5rem',
-                                border: 'none',
-                                borderRadius: '0.25rem',
-                                fontSize: '0.75rem',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.25rem',
-                                opacity: actionLoading === `unassign-${vehicle._id}` ? 0.7 : 1
-                              }}
-                            >
-                              <MinusIcon width={12} height={12} />
-                              {actionLoading === `unassign-${vehicle._id}` ? 'Removing...' : 'Remove'}
-                            </button>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     ) : (
                       <p style={{ color: '#6b7280', fontSize: '0.875rem', margin: 0, textAlign: 'center' }}>
@@ -810,11 +1034,23 @@ export default function FleetRoutesPage() {
               color: currentThemeStyles.textSecondary
             }}>
               <MapIcon width={48} height={48} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
-              <h3 style={{ color: currentThemeStyles.textPrimary, marginBottom: '0.5rem' }}>No Routes Available</h3>
-              <p>No approved routes are available for vehicle assignment at this time.</p>
-              <p style={{ fontSize: '0.875rem', marginTop: '1rem' }}>
-                Routes are created by system administrators. Please contact admin if you need new routes.
-              </p>
+              {user?.role === 'route_admin' ? (
+                <>
+                  <h3 style={{ color: currentThemeStyles.textPrimary, marginBottom: '0.5rem' }}>No Route Assigned</h3>
+                  <p>You have not been assigned to manage any route yet.</p>
+                  <p style={{ fontSize: '0.875rem', marginTop: '1rem' }}>
+                    Please contact the system administrator to have a route assigned to you.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <h3 style={{ color: currentThemeStyles.textPrimary, marginBottom: '0.5rem' }}>No Routes Available</h3>
+                  <p>No approved routes are available for vehicle assignment at this time.</p>
+                  <p style={{ fontSize: '0.875rem', marginTop: '1rem' }}>
+                    Routes are created by system administrators. Please contact admin if you need new routes.
+                  </p>
+                </>
+              )}
             </div>
           )}
         </div>
@@ -962,6 +1198,21 @@ export default function FleetRoutesPage() {
               Assign Vehicles to {showAssignModal.name}
             </h3>
             
+            {/* NEW: Different messaging for route admin */}
+            {user?.role === 'route_admin' && (
+              <div style={{
+                backgroundColor: 'rgba(139, 92, 246, 0.2)',
+                border: '1px solid #8b5cf6',
+                borderRadius: '0.5rem',
+                padding: '0.75rem',
+                marginBottom: '1rem'
+              }}>
+                <p style={{ color: '#c4b5fd', fontSize: '0.875rem', margin: 0 }}>
+                  As Route Admin, you can assign vehicles from any approved fleet to your route.
+                </p>
+              </div>
+            )}
+            
             <div style={{
               maxHeight: '300px',
               overflowY: 'auto',
@@ -999,6 +1250,10 @@ export default function FleetRoutesPage() {
                     </div>
                     <div style={{ color: currentThemeStyles.textSecondary, fontSize: '0.875rem' }}>
                       {vehicle.vehicleType} • {vehicle.status}
+                      {/* NEW: Show fleet info for route admin */}
+                      {user?.role === 'route_admin' && vehicle.fleetId && (
+                        <span> • Fleet: {vehicle.fleetId.companyName}</span>
+                      )}
                     </div>
                   </div>
                   <div style={{
