@@ -51,9 +51,36 @@ export default function SystemAdminDevicesPage() {
   const darkTheme = { mainBg: '#0f172a', bgGradient: 'linear-gradient(to bottom right, #0f172a, #1e293b, #334155)', glassPanelBg: 'rgba(30, 41, 59, 0.8)', glassPanelBorder: '1px solid rgba(251, 191, 36, 0.3)', glassPanelShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35), 0 10px 20px -5px rgba(0, 0, 0, 0.2)', textPrimary: '#f9fafb', textSecondary: '#9ca3af', textMuted: '#9ca3af', inputBg: '#334155', inputBorder: '#475569', tableHeaderBg: 'rgba(51, 65, 85, 0.9)', tableRowBg: 'transparent', tableRowBgHover: 'rgba(59, 130, 246, 0.2)' };
   const currentThemeStyles = theme === 'dark' ? darkTheme : lightTheme;
 
-  const animationStyles = ` @keyframes road-marking { 0% { transform: translateX(-200%); } 100% { transform: translateX(500%); } } .animate-road-marking { animation: road-marking 10s linear infinite; } @keyframes car-right { 0% { transform: translateX(-100%); } 100% { transform: translateX(100vw); } } .animate-car-right { animation: car-right 15s linear infinite; } @keyframes car-left { 0% { transform: translateX(100vw) scaleX(-1); } 100% { transform: translateX(-200px) scaleX(-1); } } .animate-car-left { animation: car-left 16s linear infinite; } @keyframes light-blink { 0%, 100% { opacity: 1; box-shadow: 0 0 15px #fcd34d; } 50% { opacity: 0.6; box-shadow: 0 0 5px #fcd34d; } } .animate-light-blink { animation: light-blink 1s infinite; } @keyframes fade-in-down { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } } .animate-fade-in-down { animation: fade-in-down 0.8s ease-out forwards; } @keyframes fade-in-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } } .animate-fade-in-up { animation: fade-in-up 0.8s ease-out forwards; } @keyframes trainMove { from { left: 100%; } to { left: -300px; } } @keyframes slight-bounce { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-1px); } } .animate-slight-bounce { animation: slight-bounce 2s ease-in-out infinite; } @keyframes steam { 0% { opacity: 0.8; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-20px) scale(2.5); } } .animate-steam { animation: steam 2s ease-out infinite; } @keyframes wheels { 0% { transform: rotate(0deg); } 100% { transform: rotate(-360deg); } } .animate-wheels { animation: wheels 2s linear infinite; } @keyframes connecting-rod { 0% { transform: translateX(-1px) rotate(0deg); } 50% { transform: translateX(1px) rotate(180deg); } 100% { transform: translateX(-1px) rotate(360deg); } } .animate-connecting-rod { animation: connecting-rod 2s linear infinite; } @keyframes piston-move { 0% { transform: translateX(-2px); } 50% { transform: translateX(2px); } 100% { transform: translateX(-2px); } } .animate-piston { animation: piston-move 2s linear infinite; } .animation-delay-100 { animation-delay: 0.1s; } .animation-delay-200 { animation-delay: 0.2s; } .animation-delay-300 { animation-delay: 0.3s; } .animation-delay-400 { animation-delay: 0.4s; } .animation-delay-500 { animation-delay: 0.5s; } .animation-delay-600 { animation-delay: 0.6s; } .animation-delay-700 { animation-delay: 0.7s; } .animation-delay-800 { animation-delay: 0.8s; } .animation-delay-1000 { animation-delay: 1s; } .animation-delay-1200 { animation-delay: 1.2s; } .animation-delay-1500 { animation-delay: 1.5s; } .animation-delay-2000 { animation-delay: 2s; } .animation-delay-2500 { animation-delay: 2.5s; } .animation-delay-3000 { animation-delay: 3s; } `;
+  const animationStyles = ` @keyframes road-marking { 0% { transform: translateX(-200%); } 100% { transform: translateX(500%); } } .animate-road-marking { animation: road-marking 10s linear infinite; } @keyframes car-right { 0% { transform: translateX(-100%); } 100% { transform: translateX(100vw); } } .animate-car-right { animation: car-right 15s linear infinite; } @keyframes car-left { 0% { transform: translateX(100vw) scaleX(-1); } 100% { transform: translateX(-200px) scaleX(-1); } } .animate-car-left { animation: car-left 16s linear infinite; } @keyframes light-blink { 0%, 100% { opacity: 1; box-shadow: 0 0 15px #fcd34d; } 50% { opacity: 0.6; box-shadow: 0 0 5px #fcd34d; } } .animate-light-blink { animation: light-blink 1s infinite; } @keyframes fade-in-down { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } } .animate-fade-in-down { animation: fade-in-down 0.8s ease-out forwards; } @keyframes fade-in-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } } .animate-fade-in-up { animation: fade-in-up 0.8s ease-out forwards; } @keyframes trainMove { from { left: 100%; } to { left: -300px; } } @keyframes slight-bounce { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-1px); } } .animate-slight-bounce { animation: slight-bounce 2s ease-in-out infinite; } @keyframes steam { 0% { opacity: 0.8; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-20px) scale(2.5); } } .animate-steam { animation: steam 2s ease-out infinite; } @keyframes wheels { 0% { transform: rotate(0deg); } 100% { transform: rotate(-360deg); } } .animate-wheels { animation: wheels 2s linear infinite; } @keyframes connecting-rod { 0% { transform: translateX(-1px) rotate(0deg); } 50% { transform: translateX(1px) rotate(180deg); } 100% { transform: translateX(-1px) rotate(360deg); } } .animate-connecting-rod { animation: connecting-rod 2s linear infinite; } @keyframes piston-move { 0% { transform: translateX(-2px); } 50% { transform: translateX(2px); } 100% { transform: translateX(-2px); } } .animate-piston { animation: piston-move 2s linear infinite; } .animation-delay-100 { animation-delay: 0.1s; } .animation-delay-200 { animation-delay: 0.2s; } .animation-delay-300 { animation-delay: 0.3s; } .animation-delay-400 { animation-delay: 0.4s; } .animation-delay-500 { animation-delay: 0.5s; } .animation-delay-600 { animation-delay: 0.6s; } .animation-delay-700 { animation-delay: 0.7s; } .animation-delay-800 { animation-delay: 0.8s; } .animation-delay-1000 { animation-delay: 1s; } .animation-delay-1200 { animation-delay: 1.2s; } .animation-delay-1500 { animation-delay: 1.5s; } .animation-delay-2000 { animation-delay: 2s; } .animation-delay-2500 { animation-delay: 2.5s; } .animation-delay-3000 { animation-delay: 3s; } 
 
-  const glassPanelStyle = { backgroundColor: currentThemeStyles.glassPanelBg, padding: '1.5rem', borderRadius: '1rem', boxShadow: currentThemeStyles.glassPanelShadow, backdropFilter: 'blur(12px)', border: currentThemeStyles.glassPanelBorder };
+  /* Responsive utility classes */
+  .md\\:hidden { display: none !important; }
+  .md\\:flex { display: flex !important; }
+  .lg\\:hidden { display: flex !important; }
+  .lg\\:block { display: block !important; }
+  .sm\\:inline { display: inline !important; }
+  
+  @media (min-width: 768px) {
+    .md\\:hidden { display: flex !important; }
+    .md\\:flex { display: flex !important; }
+  }
+  
+  @media (min-width: 1024px) {
+    .lg\\:hidden { display: none !important; }
+    .lg\\:block { display: block !important; }
+    .lg\\:flex { display: flex !important; }
+  }
+  
+  @media (min-width: 640px) {
+    .sm\\:inline { display: inline !important; }
+  }
+  `;
+
+  const glassPanelStyle = { backgroundColor: currentThemeStyles.glassPanelBg, padding: 'clamp(1rem, 3vw, 1.5rem)', borderRadius: '1rem', boxShadow: currentThemeStyles.glassPanelShadow, backdropFilter: 'blur(12px)', border: currentThemeStyles.glassPanelBorder };
+
+  // Responsive breakpoints
+  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+  const isTablet = typeof window !== 'undefined' && window.innerWidth > 768 && window.innerWidth <= 1024;
 
   if (loading) {
     return (
@@ -80,55 +107,223 @@ export default function SystemAdminDevicesPage() {
         <div className="animate-car-left animation-delay-1200" style={{ position: 'absolute', top: '15%', marginTop: '25px', right: '-110px', width: '110px', height: '55px', zIndex: 5, filter: 'drop-shadow(0 4px 3px rgba(0, 0, 0, 0.3))' }}><div style={{ position: 'relative', width: '100%', height: '100%' }}><div style={{ position: 'absolute', bottom: 0, width: '100%', height: '35px', background: 'linear-gradient(to bottom, #1e40af 0%, #1d4ed8 70%, #1e3a8a 100%)', borderRadius: '8px 12px 5px 5px', border: '1px solid #1e3a8a', boxShadow: 'inset 0 -3px 8px rgba(0, 0, 0, 0.2), inset -2px 0 6px rgba(255, 255, 255, 0.3)' }}></div><div style={{ position: 'absolute', bottom: '35px', left: '15px', right: '5px', height: '15px', background: 'linear-gradient(to bottom, #1e3a8a 0%, #1e40af 100%)', borderRadius: '5px 8px 0 0', border: '1px solid #1e3a8a', borderBottom: 'none' }}></div><div style={{ position: 'absolute', top: '8px', right: '5px', width: '25px', height: '15px', background: 'linear-gradient(to bottom right, rgba(219, 234, 254, 0.8) 0%, rgba(147, 197, 253, 0.8) 100%)', borderRadius: '3px', border: '1px solid #1e3a8a', boxShadow: 'inset 0 0 6px rgba(255, 255, 255, 0.6)' }}><div style={{ position: 'absolute', top: '2px', left: '3px', width: '15px', height: '2px', background: 'linear-gradient(to bottom, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.2) 100%)', borderRadius: '50%' }}></div></div><div style={{ position: 'absolute', top: '8px', left: '35px', right: '35px', height: '15px', background: 'linear-gradient(to bottom, rgba(219, 234, 254, 0.7) 0%, rgba(147, 197, 253, 0.7) 100%)', borderRadius: '3px 0 0 0', border: '1px solid #1e3a8a', boxShadow: 'inset 0 0 6px rgba(255, 255, 255, 0.6)' }}><div style={{ position: 'absolute', bottom: '3px', left: '8px', width: '6px', height: '8px', backgroundColor: 'rgba(0,0,0,0.8)', borderRadius: '3px 3px 0 0' }}></div><div style={{ position: 'absolute', bottom: '3px', right: '8px', width: '6px', height: '8px', backgroundColor: 'rgba(0,0,0,0.8)', borderRadius: '3px 3px 0 0' }}></div></div><div style={{ position: 'absolute', bottom: '8px', left: '40px', width: '25px', height: '25px', background: 'linear-gradient(to bottom, rgba(219, 234, 254, 0.6) 0%, rgba(147, 197, 253, 0.6) 100%)', borderRadius: '3px', border: '2px solid #1e3a8a', boxShadow: 'inset 0 0 5px rgba(255, 255, 255, 0.4)' }}><div style={{ position: 'absolute', top: '12px', right: '2px', width: '3px', height: '5px', background: 'linear-gradient(to bottom, #94a3b8 0%, #64748b 100%)', borderRadius: '2px', border: '1px solid #475569' }}></div></div><div style={{ position: 'absolute', top: '20px', left: '50%', transform: 'translateX(-50%)', width: '35px', height: '10px', backgroundColor: 'rgba(255, 255, 255, 0.9)', border: '1px solid #1e3a8a', borderRadius: '3px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)' }}><div style={{ fontSize: '5px', fontWeight: 'bold', color: '#1e3a8a', fontFamily: "'Noto Sans Sinhala', 'Iskoola Pota', sans-serif" }}>ශ්‍රී සේවා</div></div><div style={{ position: 'absolute', bottom: '10px', right: '3px', width: '8px', height: '6px', background: 'linear-gradient(to left, #fef3c7 0%, #fcd34d 100%)', borderRadius: '50%', border: '1px solid #1e3a8a', boxShadow: '0 0 8px rgba(252, 211, 77, 0.6)' }}><div style={{ position: 'absolute', top: '1px', right: '1px', width: '3px', height: '2px', backgroundColor: 'rgba(255, 255, 255, 0.8)', borderRadius: '50%' }}></div></div><div style={{ position: 'absolute', bottom: '8px', right: '-20px', width: '25px', height: '12px', background: 'linear-gradient(to right, rgba(252, 211, 77, 0.2) 0%, rgba(252, 211, 77, 0) 100%)', borderRadius: '50%', transform: 'scaleX(2)' }}></div><div className="animate-light-blink animation-delay-200" style={{ position: 'absolute', bottom: '18px', right: '8px', width: '5px', height: '5px', background: 'radial-gradient(circle, #fef3c7 0%, #fcd34d 100%)', borderRadius: '50%', border: '1px solid #1e3a8a', boxShadow: '0 0 6px rgba(252, 211, 77, 0.6)' }}></div><div className="animate-light-blink animation-delay-400" style={{ position: 'absolute', bottom: '10px', left: '5px', width: '6px', height: '4px', background: 'radial-gradient(circle, #f87171 50%, #ef4444 100%)', borderRadius: '2px', border: '1px solid #1e3a8a', boxShadow: '0 0 6px rgba(239, 68, 68, 0.6)' }}></div><div style={{ position: 'absolute', bottom: '-6px', right: '20px', width: '18px', height: '18px', backgroundColor: '#0f172a', borderRadius: '50%', border: '3px solid #94a3b8', boxSizing: 'border-box', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.5)', overflow: 'hidden' }}><div className="animate-wheels" style={{ position: 'absolute', inset: '1px', borderRadius: '50%', border: '1px solid #64748b', background: 'radial-gradient(circle at center, #e2e8f0 15%, transparent 15%), conic-gradient(#cbd5e1 0deg, #cbd5e1 30deg, transparent 30deg, transparent 60deg, #cbd5e1 60deg, #cbd5e1 90deg, transparent 90deg, transparent 120deg, #cbd5e1 120deg, #cbd5e1 150deg, transparent 150deg, transparent 180deg, #cbd5e1 180deg, #cbd5e1 210deg, transparent 210deg, transparent 240deg, #cbd5e1 240deg, #cbd5e1 270deg, transparent 270deg, transparent 300deg, #cbd5e1 300deg, #cbd5e1 330deg, transparent 330deg, transparent 360deg)' }}></div></div><div style={{ position: 'absolute', bottom: '-6px', left: '20px', width: '18px', height: '18px', backgroundColor: '#0f172a', borderRadius: '50%', border: '3px solid #94a3b8', boxSizing: 'border-box', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.5)', overflow: 'hidden' }}><div className="animate-wheels" style={{ position: 'absolute', inset: '1px', borderRadius: '50%', border: '1px solid #64748b', background: 'radial-gradient(circle at center, #e2e8f0 15%, transparent 15%), conic-gradient(#cbd5e1 0deg, #cbd5e1 30deg, transparent 30deg, transparent 60deg, #cbd5e1 60deg, #cbd5e1 90deg, transparent 90deg, transparent 120deg, #cbd5e1 120deg, #cbd5e1 150deg, transparent 150deg, transparent 180deg, #cbd5e1 180deg, #cbd5e1 210deg, transparent 210deg, transparent 240deg, #cbd5e1 240deg, #cbd5e1 270deg, transparent 270deg, transparent 300deg, #cbd5e1 300deg, #cbd5e1 330deg, transparent 330deg, transparent 360deg)' }}></div></div><div style={{ position: 'absolute', bottom: '2px', left: '50%', transform: 'translateX(-50%)', width: '22px', height: '6px', backgroundColor: 'white', borderRadius: '2px', border: '1px solid #1e3a8a', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2)' }}><div style={{ fontSize: '3px', fontWeight: 'bold', color: '#1f2937' }}>VN-7890</div></div><div style={{ position: 'absolute', bottom: '4px', left: '8px', width: '6px', height: '3px', background: 'linear-gradient(to right, #9ca3af 0%, #6b7280 100%)', borderRadius: '1px 0 0 1px', boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.4)' }}></div><div style={{ position: 'absolute', bottom: '4px', left: '3px', width: '7px', height: '7px', background: 'radial-gradient(circle, rgba(209, 213, 219, 0.8) 0%, rgba(209, 213, 219, 0) 70%)', borderRadius: '50%', opacity: 0.6, animation: 'steam 1.1s ease-out infinite' }}></div></div></div>
       </div>
 
-      <nav style={{ backgroundColor: 'rgba(30, 41, 59, 0.92)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(251, 191, 36, 0.3)', padding: '1rem 0', position: 'relative', zIndex: 10 }}>
-        <div style={{ maxWidth: '1600px', margin: '0 auto', padding: '0 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-            <Link href="/sysadmin/dashboard" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><ChevronLeftIcon width={16} height={16} /> Dashboard</Link>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><DevicePhoneMobileIcon width={24} height={24} color="#10b981" /><h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#f1f5f9', margin: 0 }}>Device Management</h1></div>
+      <nav style={{ backgroundColor: 'rgba(30, 41, 59, 0.92)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(251, 191, 36, 0.3)', padding: 'clamp(0.75rem, 2vw, 1rem) 0', position: 'relative', zIndex: 10 }}>
+        <div style={{ maxWidth: '1600px', margin: '0 auto', padding: '0 clamp(1rem, 3vw, 1.5rem)' }}>
+          {/* Mobile/Tablet Layout */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(0.5rem, 2vw, 1rem)' }} className="md:hidden">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <Link href="/sysadmin/dashboard" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: 'clamp(0.75rem, 3vw, 0.875rem)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><ChevronLeftIcon width={16} height={16} /> Dashboard</Link>
+              <ThemeSwitcher />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
+              <DevicePhoneMobileIcon width={20} height={20} color="#10b981" />
+              <h1 style={{ fontSize: 'clamp(1rem, 4vw, 1.25rem)', fontWeight: 'bold', color: '#f1f5f9', margin: 0, textAlign: 'center' }}>Device Management</h1>
+            </div>
+            <div style={{ display: 'flex', gap: 'clamp(0.5rem, 2vw, 0.75rem)', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <Link href="/sysadmin/devices/monitor" style={{ backgroundColor: '#374151', color: '#f9fafb', padding: 'clamp(0.5rem, 2vw, 0.65rem) clamp(0.75rem, 3vw, 1rem)', borderRadius: '0.5rem', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '500', fontSize: 'clamp(0.75rem, 3vw, 0.875rem)' }}><MapPinIcon width={18} height={18} />Map</Link>
+              <Link href="/sysadmin/devices/add" style={{ backgroundColor: '#10b981', color: 'white', padding: 'clamp(0.5rem, 2vw, 0.65rem) clamp(0.75rem, 3vw, 1rem)', borderRadius: '0.5rem', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '500', fontSize: 'clamp(0.75rem, 3vw, 0.875rem)' }}><PlusIcon width={18} height={18} />Add Device</Link>
+            </div>
           </div>
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            <ThemeSwitcher />
-            <Link href="/sysadmin/devices/monitor" style={{ backgroundColor: '#374151', color: '#f9fafb', padding: '0.75rem 1.5rem', borderRadius: '0.5rem', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '500' }}><MapPinIcon width={20} height={20} />Global Map</Link>
-            <Link href="/sysadmin/devices/add" style={{ backgroundColor: '#10b981', color: 'white', padding: '0.75rem 1.5rem', borderRadius: '0.5rem', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '500' }}><PlusIcon width={20} height={20} />Add Device</Link>
+
+          {/* Desktop Layout */}
+          <div style={{ display: 'none', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'clamp(0.75rem, 2vw, 1rem)' }} className="md:flex">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.75rem, 2vw, 1.5rem)' }}>
+              <Link href="/sysadmin/dashboard" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><ChevronLeftIcon width={16} height={16} /> Dashboard</Link>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><DevicePhoneMobileIcon width={24} height={24} color="#10b981" /><h1 style={{ fontSize: 'clamp(1.125rem, 3vw, 1.5rem)', fontWeight: 'bold', color: '#f1f5f9', margin: 0 }}>Device Management</h1></div>
+            </div>
+            <div style={{ display: 'flex', gap: 'clamp(0.5rem, 2vw, 1rem)', alignItems: 'center' }}>
+              <ThemeSwitcher />
+              <Link href="/sysadmin/devices/monitor" style={{ backgroundColor: '#374151', color: '#f9fafb', padding: 'clamp(0.5rem, 2vw, 0.75rem) clamp(1rem, 3vw, 1.5rem)', borderRadius: '0.5rem', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '500' }}><MapPinIcon width={20} height={20} /><span className="hidden sm:inline">Global Map</span></Link>
+              <Link href="/sysadmin/devices/add" style={{ backgroundColor: '#10b981', color: 'white', padding: 'clamp(0.5rem, 2vw, 0.75rem) clamp(1rem, 3vw, 1.5rem)', borderRadius: '0.5rem', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '500' }}><PlusIcon width={20} height={20} />Add Device</Link>
+            </div>
           </div>
         </div>
       </nav>
 
-      <div style={{ maxWidth: '1600px', margin: '0 auto', padding: '2rem 1.5rem', position: 'relative', zIndex: 10 }}>
+      <div style={{ maxWidth: '1600px', margin: '0 auto', padding: 'clamp(1.5rem, 4vw, 2rem) clamp(1rem, 3vw, 1.5rem)', position: 'relative', zIndex: 10 }}>
         {stats && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-            <div style={glassPanelStyle}><div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}><DevicePhoneMobileIcon width={32} height={32} color="#3b82f6" /><div><h3 style={{ color: '#3b82f6', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>{stats.totalDevices}</h3><p style={{ color: currentThemeStyles.textPrimary, margin: '0.5rem 0 0 0' }}>Total Devices</p></div></div></div>
-            <div style={glassPanelStyle}><div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}><CheckCircleIcon width={32} height={32} color="#10b981" /><div><h3 style={{ color: '#10b981', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>{stats.activeDevices}</h3><p style={{ color: currentThemeStyles.textPrimary, margin: '0.5rem 0 0 0' }}>Online</p></div></div></div>
-            <div style={glassPanelStyle}><div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}><XCircleIcon width={32} height={32} color="#ef4444" /><div><h3 style={{ color: '#ef4444', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>{stats.offlineDevices}</h3><p style={{ color: currentThemeStyles.textPrimary, margin: '0.5rem 0 0 0' }}>Offline</p></div></div></div>
-            <div style={glassPanelStyle}><div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}><ExclamationTriangleIcon width={32} height={32} color="#f59e0b" /><div><h3 style={{ color: '#f59e0b', fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>{stats.totalAlerts}</h3><p style={{ color: currentThemeStyles.textPrimary, margin: '0.5rem 0 0 0' }}>Alerts</p></div></div></div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))', gap: 'clamp(0.75rem, 2vw, 1.5rem)', marginBottom: '2rem' }}>
+            <div style={glassPanelStyle}><div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.5rem, 2vw, 1rem)' }}><DevicePhoneMobileIcon width={32} height={32} color="#3b82f6" /><div><h3 style={{ color: '#3b82f6', fontSize: 'clamp(1.5rem, 4vw, 2rem)', fontWeight: 'bold', margin: 0 }}>{stats.totalDevices}</h3><p style={{ color: currentThemeStyles.textPrimary, margin: '0.5rem 0 0 0' }}>Total Devices</p></div></div></div>
+            <div style={glassPanelStyle}><div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.5rem, 2vw, 1rem)' }}><CheckCircleIcon width={32} height={32} color="#10b981" /><div><h3 style={{ color: '#10b981', fontSize: 'clamp(1.5rem, 4vw, 2rem)', fontWeight: 'bold', margin: 0 }}>{stats.activeDevices}</h3><p style={{ color: currentThemeStyles.textPrimary, margin: '0.5rem 0 0 0' }}>Online</p></div></div></div>
+            <div style={glassPanelStyle}><div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.5rem, 2vw, 1rem)' }}><XCircleIcon width={32} height={32} color="#ef4444" /><div><h3 style={{ color: '#ef4444', fontSize: 'clamp(1.5rem, 4vw, 2rem)', fontWeight: 'bold', margin: 0 }}>{stats.offlineDevices}</h3><p style={{ color: currentThemeStyles.textPrimary, margin: '0.5rem 0 0 0' }}>Offline</p></div></div></div>
+            <div style={glassPanelStyle}><div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.5rem, 2vw, 1rem)' }}><ExclamationTriangleIcon width={32} height={32} color="#f59e0b" /><div><h3 style={{ color: '#f59e0b', fontSize: 'clamp(1.5rem, 4vw, 2rem)', fontWeight: 'bold', margin: 0 }}>{stats.totalAlerts}</h3><p style={{ color: currentThemeStyles.textPrimary, margin: '0.5rem 0 0 0' }}>Alerts</p></div></div></div>
           </div>
         )}
 
         <div style={{ ...glassPanelStyle, marginBottom: '2rem' }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center', marginBottom: '1rem' }}>
+          {/* Mobile/Tablet Filters Layout */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(0.75rem, 2vw, 1rem)' }} className="lg:hidden">
+            <div style={{ position: 'relative' }}>
+              <MagnifyingGlassIcon width={18} height={18} color="#94a3b8" style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)' }} />
+              <input type="text" placeholder="Search devices..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: '100%', padding: '0.75rem 0.75rem 0.75rem 2.5rem', borderRadius: '0.5rem', border: `1px solid ${currentThemeStyles.inputBorder}`, backgroundColor: currentThemeStyles.inputBg, color: currentThemeStyles.textPrimary, fontSize: 'clamp(0.875rem, 3vw, 1rem)', boxSizing: 'border-box', outline: 'none' }} />
+            </div>
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} style={{ flex: '1', minWidth: '120px', padding: '0.75rem', borderRadius: '0.5rem', border: `1px solid ${currentThemeStyles.inputBorder}`, backgroundColor: currentThemeStyles.inputBg, color: currentThemeStyles.textPrimary, fontSize: 'clamp(0.875rem, 3vw, 1rem)', outline: 'none' }}>
+                <option value="all">All Status</option><option value="online">Online</option><option value="offline">Offline</option><option value="maintenance">Maintenance</option>
+              </select>
+              <select value={filterType} onChange={(e) => setFilterType(e.target.value)} style={{ flex: '1', minWidth: '120px', padding: '0.75rem', borderRadius: '0.5rem', border: `1px solid ${currentThemeStyles.inputBorder}`, backgroundColor: currentThemeStyles.inputBg, color: currentThemeStyles.textPrimary, fontSize: 'clamp(0.875rem, 3vw, 1rem)', outline: 'none' }}>
+                <option value="all">All Types</option><option value="bus">Bus</option><option value="train">Train</option>
+              </select>
+              <button onClick={handleRefresh} disabled={refreshing} style={{ backgroundColor: '#3b82f6', color: 'white', padding: '0.75rem', borderRadius: '0.5rem', border: 'none', cursor: refreshing ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '50px', opacity: refreshing ? 0.7 : 1 }}>
+                <ArrowPathIcon width={18} height={18} className={refreshing ? 'animate-spin' : ''} />
+              </button>
+            </div>
+          </div>
+
+          {/* Desktop Filters Layout */}
+          <div style={{ display: 'none', flexWrap: 'wrap', gap: 'clamp(0.5rem, 2vw, 1rem)', alignItems: 'center', marginBottom: '1rem' }} className="lg:flex">
             <div style={{ position: 'relative', flex: '1 1 300px' }}><MagnifyingGlassIcon width={20} height={20} color="#94a3b8" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} /><input type="text" placeholder="Search devices by ID, Vehicle No..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: '100%', padding: '0.75rem 1rem 0.75rem 3rem', borderRadius: '0.5rem', border: `1px solid ${currentThemeStyles.inputBorder}`, backgroundColor: currentThemeStyles.inputBg, color: currentThemeStyles.textPrimary, fontSize: '1rem', boxSizing: 'border-box', outline: 'none' }} /></div>
             <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} style={{ padding: '0.75rem 1rem', borderRadius: '0.5rem', border: `1px solid ${currentThemeStyles.inputBorder}`, backgroundColor: currentThemeStyles.inputBg, color: currentThemeStyles.textPrimary, fontSize: '1rem', outline: 'none' }}><option value="all">All Status</option><option value="online">Online</option><option value="offline">Offline</option><option value="maintenance">Maintenance</option></select>
             <select value={filterType} onChange={(e) => setFilterType(e.target.value)} style={{ padding: '0.75rem 1rem', borderRadius: '0.5rem', border: `1px solid ${currentThemeStyles.inputBorder}`, backgroundColor: currentThemeStyles.inputBg, color: currentThemeStyles.textPrimary, fontSize: '1rem', outline: 'none' }}><option value="all">All Types</option><option value="bus">Bus</option><option value="train">Train</option></select>
+            <button onClick={handleRefresh} disabled={refreshing} style={{ backgroundColor: '#3b82f6', color: 'white', padding: '0.75rem 1rem', borderRadius: '0.5rem', border: 'none', cursor: refreshing ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', opacity: refreshing ? 0.7 : 1 }}>
+              <ArrowPathIcon width={20} height={20} className={refreshing ? 'animate-spin' : ''} />
+              Refresh
+            </button>
           </div>
-          {selectedDevices.length > 0 && (<div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}><span style={{ color: currentThemeStyles.textSecondary, fontSize: '0.875rem' }}>{selectedDevices.length} selected</span><button onClick={() => handleBulkAction('online')} style={{ backgroundColor: '#10b981', color: 'white', padding: '0.5rem 1rem', borderRadius: '0.375rem', border: 'none', cursor: 'pointer', fontSize: '0.875rem' }}>Set Online</button><button onClick={() => handleBulkAction('maintenance')} style={{ backgroundColor: '#f59e0b', color: 'white', padding: '0.5rem 1rem', borderRadius: '0.375rem', border: 'none', cursor: 'pointer', fontSize: '0.875rem' }}>Set Maintenance</button><button onClick={() => handleBulkAction('delete')} style={{ backgroundColor: '#ef4444', color: 'white', padding: '0.5rem 1rem', borderRadius: '0.375rem', border: 'none', cursor: 'pointer', fontSize: '0.875rem' }}>Delete</button></div>)}
+
+          {selectedDevices.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'clamp(0.5rem, 2vw, 0.75rem)', alignItems: 'center', padding: '1rem', backgroundColor: 'rgba(59, 130, 246, 0.1)', borderRadius: '0.5rem', marginTop: selectedDevices.length > 0 ? '1rem' : '0' }}>
+              <span style={{ color: currentThemeStyles.textSecondary, fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>{selectedDevices.length} selected</span>
+              <button onClick={() => handleBulkAction('online')} style={{ backgroundColor: '#10b981', color: 'white', padding: 'clamp(0.4rem, 2vw, 0.5rem) clamp(0.75rem, 3vw, 1rem)', borderRadius: '0.375rem', border: 'none', cursor: 'pointer', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>Set Online</button>
+              <button onClick={() => handleBulkAction('maintenance')} style={{ backgroundColor: '#f59e0b', color: 'white', padding: 'clamp(0.4rem, 2vw, 0.5rem) clamp(0.75rem, 3vw, 1rem)', borderRadius: '0.375rem', border: 'none', cursor: 'pointer', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>Set Maintenance</button>
+              <button onClick={() => handleBulkAction('delete')} style={{ backgroundColor: '#ef4444', color: 'white', padding: 'clamp(0.4rem, 2vw, 0.5rem) clamp(0.75rem, 3vw, 1rem)', borderRadius: '0.375rem', border: 'none', cursor: 'pointer', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>Delete</button>
+            </div>
+          )}
         </div>
 
         <div style={{ ...glassPanelStyle, padding: 0, overflow: 'hidden' }}>
-          <div style={{ overflowX: 'auto' }}>
+          {/* Mobile/Tablet Card Layout */}
+          <div style={{ display: 'flex', flexDirection: 'column' }} className="lg:hidden">
+            {devices.map((device, index) => (
+              <div key={device._id} style={{ 
+                padding: 'clamp(1rem, 3vw, 1.5rem)', 
+                borderBottom: index < devices.length - 1 ? `1px solid ${currentThemeStyles.inputBorder}` : 'none', 
+                backgroundColor: selectedDevices.includes(device._id) ? darkTheme.tableRowBgHover : currentThemeStyles.tableRowBg 
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <input type="checkbox" checked={selectedDevices.includes(device._id)} onChange={() => handleSelectDevice(device._id)} style={{ accentColor: '#3b82f6', transform: 'scale(1.2)' }} />
+                    <div>
+                      <div style={{ color: currentThemeStyles.textPrimary, fontWeight: '600', fontSize: 'clamp(1rem, 3vw, 1.125rem)' }}>{device.deviceId}</div>
+                      <div style={{ color: currentThemeStyles.textSecondary, fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>v{device.firmwareVersion}</div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <Link href={`/sysadmin/devices/${device._id}`} style={{ color: '#3b82f6', textDecoration: 'none', padding: '0.5rem', backgroundColor: 'rgba(59, 130, 246, 0.1)', borderRadius: '0.375rem' }}>
+                      <EyeIcon width={16} height={16} />
+                    </Link>
+                    <Link href={`/sysadmin/devices/${device._id}/edit`} style={{ color: '#f59e0b', textDecoration: 'none', padding: '0.5rem', backgroundColor: 'rgba(245, 158, 11, 0.1)', borderRadius: '0.375rem' }}>
+                      <PencilIcon width={16} height={16} />
+                    </Link>
+                    <button onClick={() => { setDeviceToDelete(device._id); setShowDeleteModal(true); }} style={{ color: '#ef4444', background: 'rgba(239, 68, 68, 0.1)', border: 'none', cursor: 'pointer', padding: '0.5rem', borderRadius: '0.375rem' }}>
+                      <TrashIcon width={16} height={16} />
+                    </button>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                  <div>
+                    <div style={{ color: currentThemeStyles.textMuted, fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', marginBottom: '0.25rem' }}>Vehicle</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <TruckIcon width={16} height={16} color={currentThemeStyles.textSecondary} />
+                      <div>
+                        <div style={{ color: currentThemeStyles.textPrimary, fontWeight: '500', fontSize: 'clamp(0.875rem, 2vw, 1rem)' }}>{device.vehicleNumber}</div>
+                        <div style={{ color: currentThemeStyles.textSecondary, fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', textTransform: 'capitalize' }}>{device.vehicleType}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div style={{ color: currentThemeStyles.textMuted, fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', marginBottom: '0.25rem' }}>Status</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span style={{ color: getStatusColor(device.status) }}>{getStatusIcon(device.status)}</span>
+                      <button onClick={() => handleUpdateDeviceStatus(device._id, device.status === 'online' ? 'maintenance' : 'online')} style={{ 
+                        background: 'none', 
+                        border: 'none', 
+                        color: getStatusColor(device.status), 
+                        fontWeight: '500', 
+                        textTransform: 'capitalize', 
+                        cursor: 'pointer', 
+                        padding: 0,
+                        fontSize: 'clamp(0.875rem, 2vw, 1rem)'
+                      }}>
+                        {device.status}
+                      </button>
+                    </div>
+                    {device.alerts.count > 0 && (
+                      <div style={{ color: '#ef4444', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', cursor: 'pointer', marginTop: '0.25rem' }} onClick={() => handleClearAlerts(device._id)}>
+                        {device.alerts.count} alerts (clear)
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                  <div>
+                    <div style={{ color: currentThemeStyles.textMuted, fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', marginBottom: '0.25rem' }}>Signal & Battery</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        {getSignalBars(device.signalStrength)}
+                        <span style={{ color: currentThemeStyles.textSecondary, fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>{device.signalStrength}/5</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <BoltIcon width={16} height={16} color={getBatteryColor(device.batteryLevel)} />
+                        <span style={{ color: getBatteryColor(device.batteryLevel), fontWeight: '500', fontSize: 'clamp(0.875rem, 2vw, 1rem)' }}>{device.batteryLevel}%</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div style={{ color: currentThemeStyles.textMuted, fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', marginBottom: '0.25rem' }}>Last Seen</div>
+                    <div style={{ color: device.status === 'online' ? '#10b981' : currentThemeStyles.textSecondary, fontSize: 'clamp(0.875rem, 2vw, 1rem)', fontWeight: '500' }}>
+                      {getTimeSince(device.lastSeen)}
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.5rem' }}>
+                  <div>
+                    <div style={{ color: currentThemeStyles.textMuted, fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', marginBottom: '0.25rem' }}>Location</div>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
+                      <MapPinIcon width={16} height={16} color={currentThemeStyles.textSecondary} style={{ marginTop: '0.125rem' }} />
+                      <div>
+                        <div style={{ color: currentThemeStyles.textPrimary, fontSize: 'clamp(0.875rem, 2vw, 1rem)' }}>{device.location.address}</div>
+                        <div style={{ color: currentThemeStyles.textSecondary, fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>
+                          {device.location.latitude.toFixed(4)}, {device.location.longitude.toFixed(4)}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ color: currentThemeStyles.textMuted, fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', marginBottom: '0.25rem' }}>Assigned To</div>
+                    <div>
+                      <div style={{ color: currentThemeStyles.textPrimary, fontSize: 'clamp(0.875rem, 2vw, 1rem)' }}>{device.assignedTo.name}</div>
+                      <div style={{ color: currentThemeStyles.textSecondary, fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', textTransform: 'capitalize' }}>
+                        {device.assignedTo.type.replace('_', ' ')}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop Table Layout */}
+          <div style={{ overflowX: 'auto', display: 'none' }} className="lg:block">
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '1200px' }}>
               <thead><tr style={{ backgroundColor: currentThemeStyles.tableHeaderBg, borderBottom: `1px solid ${currentThemeStyles.inputBorder}` }}><th style={{ padding: '1rem', textAlign: 'left', color: currentThemeStyles.textPrimary, fontWeight: '600' }}><input type="checkbox" checked={selectedDevices.length === devices.length && devices.length > 0} onChange={handleSelectAll} style={{ accentColor: '#3b82f6' }} /></th><th style={{ padding: '1rem', textAlign: 'left', color: currentThemeStyles.textPrimary, fontWeight: '600' }}>Device</th><th style={{ padding: '1rem', textAlign: 'left', color: currentThemeStyles.textPrimary, fontWeight: '600' }}>Vehicle</th><th style={{ padding: '1rem', textAlign: 'left', color: currentThemeStyles.textPrimary, fontWeight: '600' }}>Status</th><th style={{ padding: '1rem', textAlign: 'left', color: currentThemeStyles.textPrimary, fontWeight: '600' }}>Location</th><th style={{ padding: '1rem', textAlign: 'left', color: currentThemeStyles.textPrimary, fontWeight: '600' }}>Signal</th><th style={{ padding: '1rem', textAlign: 'left', color: currentThemeStyles.textPrimary, fontWeight: '600' }}>Battery</th><th style={{ padding: '1rem', textAlign: 'left', color: currentThemeStyles.textPrimary, fontWeight: '600' }}>Assigned To</th><th style={{ padding: '1rem', textAlign: 'left', color: currentThemeStyles.textPrimary, fontWeight: '600' }}>Last Seen</th><th style={{ padding: '1rem', textAlign: 'left', color: currentThemeStyles.textPrimary, fontWeight: '600' }}>Actions</th></tr></thead>
               <tbody>
                 {devices.map((device, index) => (
                   <tr key={device._id} style={{ borderBottom: index < devices.length - 1 ? `1px solid ${currentThemeStyles.inputBorder}` : 'none', backgroundColor: selectedDevices.includes(device._id) ? darkTheme.tableRowBgHover : currentThemeStyles.tableRowBg }}>
                     <td style={{ padding: '1rem' }}><input type="checkbox" checked={selectedDevices.includes(device._id)} onChange={() => handleSelectDevice(device._id)} style={{ accentColor: '#3b82f6' }} /></td>
-                    <td style={{ padding: '1rem' }}><div><div style={{ color: currentThemeStyles.textPrimary, fontWeight: '500' }}>{device.deviceId}</div><div style={{ color: currentThemeStyles.textSecondary, fontSize: '0.875rem' }}>v{device.firmwareVersion}</div></div></td>
-                    <td style={{ padding: '1rem' }}><div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><TruckIcon width={16} height={16} color={currentThemeStyles.textSecondary} /><div><div style={{ color: currentThemeStyles.textPrimary, fontWeight: '500' }}>{device.vehicleNumber}</div><div style={{ color: currentThemeStyles.textSecondary, fontSize: '0.875rem', textTransform: 'capitalize' }}>{device.vehicleType}</div></div></div></td>
+                    <td style={{ padding: '1rem' }}><div><div style={{ color: currentThemeStyles.textPrimary, fontWeight: '500' }}>{device.deviceId}</div><div style={{ color: currentThemeStyles.textSecondary, fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>v{device.firmwareVersion}</div></div></td>
+                    <td style={{ padding: '1rem' }}><div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><TruckIcon width={16} height={16} color={currentThemeStyles.textSecondary} /><div><div style={{ color: currentThemeStyles.textPrimary, fontWeight: '500' }}>{device.vehicleNumber}</div><div style={{ color: currentThemeStyles.textSecondary, fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', textTransform: 'capitalize' }}>{device.vehicleType}</div></div></div></td>
                     <td style={{ padding: '1rem' }}><div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><span style={{ color: getStatusColor(device.status) }}>{getStatusIcon(device.status)}</span><div><button onClick={() => handleUpdateDeviceStatus(device._id, device.status === 'online' ? 'maintenance' : 'online')} style={{ background: 'none', border: 'none', color: getStatusColor(device.status), fontWeight: '500', textTransform: 'capitalize', cursor: 'pointer', padding: 0 }}>{device.status}</button>{device.alerts.count > 0 && (<div style={{ color: '#ef4444', fontSize: '0.75rem', cursor: 'pointer' }} onClick={() => handleClearAlerts(device._id)}>{device.alerts.count} alerts (clear)</div>)}</div></div></td>
-                    <td style={{ padding: '1rem' }}><div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><MapPinIcon width={16} height={16} color={currentThemeStyles.textSecondary} /><div><div style={{ color: currentThemeStyles.textPrimary, fontSize: '0.875rem' }}>{device.location.address}</div><div style={{ color: currentThemeStyles.textSecondary, fontSize: '0.75rem' }}>{device.location.latitude.toFixed(4)}, {device.location.longitude.toFixed(4)}</div></div></div></td>
-                    <td style={{ padding: '1rem' }}><div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>{getSignalBars(device.signalStrength)}<span style={{ color: currentThemeStyles.textSecondary, fontSize: '0.875rem' }}>{device.signalStrength}/5</span></div></td>
+                    <td style={{ padding: '1rem' }}><div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><MapPinIcon width={16} height={16} color={currentThemeStyles.textSecondary} /><div><div style={{ color: currentThemeStyles.textPrimary, fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>{device.location.address}</div><div style={{ color: currentThemeStyles.textSecondary, fontSize: '0.75rem' }}>{device.location.latitude.toFixed(4)}, {device.location.longitude.toFixed(4)}</div></div></div></td>
+                    <td style={{ padding: '1rem' }}><div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>{getSignalBars(device.signalStrength)}<span style={{ color: currentThemeStyles.textSecondary, fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>{device.signalStrength}/5</span></div></td>
                     <td style={{ padding: '1rem' }}><div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><BoltIcon width={16} height={16} color={getBatteryColor(device.batteryLevel)} /><span style={{ color: getBatteryColor(device.batteryLevel), fontWeight: '500' }}>{device.batteryLevel}%</span></div></td>
-                    <td style={{ padding: '1rem' }}><div><div style={{ color: currentThemeStyles.textPrimary, fontSize: '0.875rem' }}>{device.assignedTo.name}</div><div style={{ color: currentThemeStyles.textSecondary, fontSize: '0.75rem', textTransform: 'capitalize' }}>{device.assignedTo.type.replace('_', ' ')}</div></div></td>
-                    <td style={{ padding: '1rem' }}><div style={{ color: device.status === 'online' ? '#10b981' : currentThemeStyles.textSecondary, fontSize: '0.875rem' }}>{getTimeSince(device.lastSeen)}</div></td>
+                    <td style={{ padding: '1rem' }}><div><div style={{ color: currentThemeStyles.textPrimary, fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>{device.assignedTo.name}</div><div style={{ color: currentThemeStyles.textSecondary, fontSize: '0.75rem', textTransform: 'capitalize' }}>{device.assignedTo.type.replace('_', ' ')}</div></div></td>
+                    <td style={{ padding: '1rem' }}><div style={{ color: device.status === 'online' ? '#10b981' : currentThemeStyles.textSecondary, fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>{getTimeSince(device.lastSeen)}</div></td>
                     <td style={{ padding: '1rem' }}><div style={{ display: 'flex', gap: '0.5rem' }}><Link href={`/sysadmin/devices/${device._id}`} style={{ color: '#3b82f6', textDecoration: 'none', padding: '0.25rem' }}><EyeIcon width={16} height={16} /></Link><Link href={`/sysadmin/devices/${device._id}/edit`} style={{ color: '#f59e0b', textDecoration: 'none', padding: '0.25rem' }}><PencilIcon width={16} height={16} /></Link><button onClick={() => { setDeviceToDelete(device._id); setShowDeleteModal(true); }} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem' }}><TrashIcon width={16} height={16} /></button></div></td>
                   </tr>
                 ))}
@@ -137,24 +332,116 @@ export default function SystemAdminDevicesPage() {
           </div>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2rem', color: currentThemeStyles.textSecondary }}>
-          <div>Showing {devices.length} of {pagination.totalDevices} devices (Page {pagination.currentPage} of {pagination.totalPages})</div>
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <button onClick={() => handlePageChange(pagination.currentPage - 1)} disabled={!pagination.hasPrev} style={{ backgroundColor: pagination.hasPrev ? '#374151' : '#1f2937', color: pagination.hasPrev ? '#f9fafb' : '#6b7280', padding: '0.5rem', border: 'none', borderRadius: '0.375rem', cursor: pagination.hasPrev ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center' }}><ChevronLeftIcon width={16} height={16} /></button>
-            <span style={{ padding: '0.5rem 1rem', backgroundColor: '#374151', borderRadius: '0.375rem', color: '#f9fafb' }}>{pagination.currentPage}</span>
-            <button onClick={() => handlePageChange(pagination.currentPage + 1)} disabled={!pagination.hasNext} style={{ backgroundColor: pagination.hasNext ? '#374151' : '#1f2937', color: pagination.hasNext ? '#f9fafb' : '#6b7280', padding: '0.5rem', border: 'none', borderRadius: '0.375rem', cursor: pagination.hasNext ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center' }}><ChevronRightIcon width={16} height={16} /></button>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'clamp(0.75rem, 2vw, 1rem)', marginTop: '2rem', color: currentThemeStyles.textSecondary }}>
+          <div style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>
+            Showing {devices.length} of {pagination.totalDevices} devices
+            <span className="hidden sm:inline"> (Page {pagination.currentPage} of {pagination.totalPages})</span>
+          </div>
+          <div style={{ display: 'flex', gap: 'clamp(0.375rem, 1vw, 0.5rem)', alignItems: 'center' }}>
+            <button 
+              onClick={() => handlePageChange(pagination.currentPage - 1)} 
+              disabled={!pagination.hasPrev} 
+              style={{ 
+                backgroundColor: pagination.hasPrev ? '#374151' : '#1f2937', 
+                color: pagination.hasPrev ? '#f9fafb' : '#6b7280', 
+                padding: 'clamp(0.5rem, 2vw, 0.75rem)', 
+                border: 'none', 
+                borderRadius: '0.375rem', 
+                cursor: pagination.hasPrev ? 'pointer' : 'not-allowed', 
+                display: 'flex', 
+                alignItems: 'center',
+                minWidth: '40px',
+                justifyContent: 'center'
+              }}
+            >
+              <ChevronLeftIcon width={16} height={16} />
+            </button>
+            <span style={{ 
+              padding: 'clamp(0.5rem, 2vw, 0.75rem) clamp(0.75rem, 3vw, 1rem)', 
+              backgroundColor: '#374151', 
+              borderRadius: '0.375rem', 
+              color: '#f9fafb',
+              fontSize: 'clamp(0.875rem, 2vw, 1rem)',
+              minWidth: '40px',
+              textAlign: 'center'
+            }}>
+              {pagination.currentPage}
+            </span>
+            <button 
+              onClick={() => handlePageChange(pagination.currentPage + 1)} 
+              disabled={!pagination.hasNext} 
+              style={{ 
+                backgroundColor: pagination.hasNext ? '#374151' : '#1f2937', 
+                color: pagination.hasNext ? '#f9fafb' : '#6b7280', 
+                padding: 'clamp(0.5rem, 2vw, 0.75rem)', 
+                border: 'none', 
+                borderRadius: '0.375rem', 
+                cursor: pagination.hasNext ? 'pointer' : 'not-allowed', 
+                display: 'flex', 
+                alignItems: 'center',
+                minWidth: '40px',
+                justifyContent: 'center'
+              }}
+            >
+              <ChevronRightIcon width={16} height={16} />
+            </button>
           </div>
         </div>
       </div>
 
       {showDeleteModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, backdropFilter: 'blur(8px)' }}>
-          <div style={{ ...glassPanelStyle, maxWidth: '400px', width: '90%', backgroundColor: 'rgba(30, 41, 59, 0.95)' }}>
-            <h3 style={{ color: '#f1f5f9', marginBottom: '1rem' }}>Confirm Deletion</h3>
-            <p style={{ color: '#94a3b8', marginBottom: '2rem' }}>Are you sure you want to delete this device? This action cannot be undone.</p>
-            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
-              <button onClick={() => setShowDeleteModal(false)} disabled={deleting} style={{ backgroundColor: '#374151', color: '#f9fafb', padding: '0.5rem 1rem', border: 'none', borderRadius: '0.5rem', cursor: deleting ? 'not-allowed' : 'pointer', opacity: deleting ? 0.7 : 1 }}>Cancel</button>
-              <button onClick={() => deviceToDelete && handleDeleteDevice(deviceToDelete)} disabled={deleting} style={{ backgroundColor: '#ef4444', color: 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: '0.5rem', cursor: deleting ? 'not-allowed' : 'pointer', opacity: deleting ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>{deleting && <ArrowPathIcon width={16} height={16} className="animate-spin" />}{deleting ? 'Deleting...' : 'Delete'}</button>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, backdropFilter: 'blur(8px)', padding: 'clamp(1rem, 4vw, 2rem)' }}>
+          <div style={{ 
+            ...glassPanelStyle, 
+            maxWidth: '400px', 
+            width: '100%', 
+            backgroundColor: 'rgba(30, 41, 59, 0.95)',
+            margin: 'clamp(1rem, 4vw, 2rem)'
+          }}>
+            <h3 style={{ color: '#f1f5f9', marginBottom: '1rem', fontSize: 'clamp(1.125rem, 4vw, 1.25rem)' }}>Confirm Deletion</h3>
+            <p style={{ color: '#94a3b8', marginBottom: '2rem', fontSize: 'clamp(0.875rem, 3vw, 1rem)', lineHeight: '1.5' }}>
+              Are you sure you want to delete this device? This action cannot be undone.
+            </p>
+            <div style={{ display: 'flex', gap: 'clamp(0.5rem, 2vw, 1rem)', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+              <button 
+                onClick={() => setShowDeleteModal(false)} 
+                disabled={deleting} 
+                style={{ 
+                  backgroundColor: '#374151', 
+                  color: '#f9fafb', 
+                  padding: 'clamp(0.5rem, 2vw, 0.75rem) clamp(1rem, 4vw, 1.5rem)', 
+                  border: 'none', 
+                  borderRadius: '0.5rem', 
+                  cursor: deleting ? 'not-allowed' : 'pointer', 
+                  opacity: deleting ? 0.7 : 1,
+                  fontSize: 'clamp(0.875rem, 3vw, 1rem)',
+                  minWidth: '80px'
+                }}
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={() => deviceToDelete && handleDeleteDevice(deviceToDelete)} 
+                disabled={deleting} 
+                style={{ 
+                  backgroundColor: '#ef4444', 
+                  color: 'white', 
+                  padding: 'clamp(0.5rem, 2vw, 0.75rem) clamp(1rem, 4vw, 1.5rem)', 
+                  border: 'none', 
+                  borderRadius: '0.5rem', 
+                  cursor: deleting ? 'not-allowed' : 'pointer', 
+                  opacity: deleting ? 0.7 : 1, 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '0.5rem',
+                  fontSize: 'clamp(0.875rem, 3vw, 1rem)',
+                  minWidth: '100px',
+                  justifyContent: 'center'
+                }}
+              >
+                {deleting && <ArrowPathIcon width={16} height={16} className="animate-spin" />}
+                {deleting ? 'Deleting...' : 'Delete'}
+              </button>
             </div>
           </div>
         </div>
