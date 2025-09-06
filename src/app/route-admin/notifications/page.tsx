@@ -1,7 +1,7 @@
 // src/app/route-admin/notifications/page.tsx - Route Admin Notifications Page
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -27,8 +27,13 @@ function RouteAdminNotificationsContent() {
   const [showFilters, setShowFilters] = useState(false);
 
   // Emergency notifications integration
-  const { alerts: realtimeAlerts, unreadCount, criticalCount, markAsRead, markAllAsRead } = useEmergencyAlerts();
+  const { alerts: realtimeAlerts, unreadCount, criticalCount, markAsRead } = useEmergencyAlerts();
   const { connectionStatus } = useEmergencyContext();
+
+  // Local function to mark all alerts as read
+  const markAllAsRead = useCallback(() => {
+    realtimeAlerts.filter(alert => !alert.read).forEach(alert => markAsRead(alert.id));
+  }, [realtimeAlerts, markAsRead]);
 
   // Filter alerts relevant to route admins
   const routeRelevantAlerts = realtimeAlerts.filter(alert => 
@@ -522,7 +527,7 @@ function RouteAdminNotificationsContent() {
                       borderRadius: '0.5rem',
                       fontSize: '0.875rem'
                     }}>
-                      <strong>Emergency Details:</strong> {alert.emergency.location?.address || 'Location not specified'}
+                      <strong>Emergency Details:</strong> {(alert.emergency as any).location?.address || 'Location not specified'}
                     </div>
                   )}
                 </div>

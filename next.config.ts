@@ -2,7 +2,6 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  swcMinify: true,
   
   // Ensure proper static file handling
   async headers() {
@@ -24,10 +23,9 @@ const nextConfig: NextConfig = {
     forceSwcTransforms: true,
   },
   
-  // Better error overlay
+  // Updated dev indicators configuration
   devIndicators: {
-    buildActivity: true,
-    buildActivityPosition: 'bottom-right',
+    position: 'bottom-right',
   },
 };
 
