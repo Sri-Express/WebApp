@@ -18,6 +18,7 @@ import {
 import { useTheme } from '@/app/context/ThemeContext';
 import ThemeSwitcher from '@/app/components/ThemeSwitcher';
 import AnimatedBackground from '@/app/sysadmin/components/AnimatedBackground'; // IMPORT THE ANIMATED BACKGROUND
+import RealTimeEmergencyClient, { useEmergencyAlerts, useEmergencyContext } from '@/app/components/RealTimeEmergencyClient';
 
 interface Route {
   _id: string;
@@ -170,7 +171,7 @@ const mockStats: DashboardStats = {
   }
 };
 
-export default function RouteAdminDashboard() {
+function RouteAdminDashboardContent() {
   const { theme } = useTheme();
   const [loading, setLoading] = useState(true);
   const [hasAssignedRoute, setHasAssignedRoute] = useState(false);
@@ -179,6 +180,23 @@ export default function RouteAdminDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [usingMockData, setUsingMockData] = useState(false);
+
+  // Emergency notifications integration
+  const { alerts: realtimeAlerts, unreadCount, criticalCount } = useEmergencyAlerts();
+  const { connectionStatus } = useEmergencyContext();
+
+  // Filter alerts relevant to route admins
+  const routeRelevantAlerts = realtimeAlerts.filter(alert => 
+    alert.recipients.includes('all') || 
+    alert.recipients.includes('route_admins') ||
+    alert.recipients.includes('emergency_responders') ||
+    alert.type === 'emergency_created' ||
+    (alert.emergency && (
+      alert.message.toLowerCase().includes('route') ||
+      alert.message.toLowerCase().includes('vehicle') ||
+      alert.message.toLowerCase().includes('bus')
+    ))
+  );
 
   useEffect(() => {
     loadDashboard();
@@ -601,6 +619,7 @@ export default function RouteAdminDashboard() {
             {[
               { name: 'Manage Vehicles', href: '/route-admin/vehicles', icon: TruckIcon, color: '#10b981', desc: 'Assign or remove vehicles' },
               { name: 'View Analytics', href: '/route-admin/analytics', icon: ChartBarIcon, color: '#3b82f6', desc: 'Route performance data' },
+              { name: 'Notifications', href: '/route-admin/notifications', icon: BellIcon, color: '#dc2626', desc: 'Emergency & system alerts', badge: unreadCount > 0 ? unreadCount : null },
               { name: 'Manage Schedules', href: '/route-admin/schedules', icon: ClockIcon, color: '#f59e0b', desc: 'Update route schedules' },
               { name: 'Profile Settings', href: '/route-admin/profile', icon: UserIcon, color: '#8b5cf6', desc: 'Update your profile' }
             ].map((action, index) => (
@@ -615,11 +634,34 @@ export default function RouteAdminDashboard() {
                   gap: '1rem',
                   transition: 'all 0.3s ease',
                   cursor: 'pointer',
-                  animation: `fade-in-up 0.5s ease-out ${index * 0.1}s both`
+                  animation: `fade-in-up 0.5s ease-out ${index * 0.1}s both`,
+                  position: 'relative'
                 }}>
                   <action.icon width={24} height={24} color={action.color} />
                   <div>
-                    <h3 style={{ color: currentThemeStyles.textPrimary, margin: 0, fontSize: '1rem' }}>{action.name}</h3>
+                    <h3 style={{ 
+                      color: currentThemeStyles.textPrimary, 
+                      margin: 0, 
+                      fontSize: '1rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}>
+                      {action.name}
+                      {action.badge && (
+                        <span style={{
+                          backgroundColor: '#dc2626',
+                          color: 'white',
+                          padding: '0.125rem 0.375rem',
+                          borderRadius: '0.375rem',
+                          fontSize: '0.75rem',
+                          fontWeight: '600',
+                          animation: 'pulse 2s infinite'
+                        }}>
+                          {action.badge}
+                        </span>
+                      )}
+                    </h3>
                     <p style={{ color: currentThemeStyles.textSecondary, margin: '0.25rem 0 0 0', fontSize: '0.875rem' }}>
                       {action.desc}
                     </p>
@@ -681,7 +723,137 @@ export default function RouteAdminDashboard() {
             </div>
           </div>
         )}
+
+        {/* Emergency Notifications Section */}
+        {(routeRelevantAlerts.length > 0 || criticalCount > 0) && (
+          <div className="animate-fade-in-up" style={{
+            backgroundColor: currentThemeStyles.glassPanelBg,
+            padding: '2rem',
+            borderRadius: '0.75rem',
+            border: currentThemeStyles.glassPanelBorder,
+            backdropFilter: 'blur(12px)',
+            boxShadow: currentThemeStyles.glassPanelShadow,
+            marginTop: '2rem',
+            animationDelay: '0.7s'
+          }}>
+            <h2 style={{
+              color: currentThemeStyles.textPrimary,
+              fontSize: '1.25rem',
+              fontWeight: 'bold',
+              marginBottom: '1.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}>
+              <BellIcon width={20} height={20} color="#dc2626" />
+              Emergency Notifications
+              {unreadCount > 0 && (
+                <span style={{
+                  backgroundColor: '#dc2626',
+                  color: 'white',
+                  padding: '0.25rem 0.5rem',
+                  borderRadius: '0.375rem',
+                  fontSize: '0.75rem',
+                  fontWeight: '600'
+                }}>
+                  {unreadCount} new
+                </span>
+              )}
+            </h2>
+
+            {routeRelevantAlerts.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '400px', overflowY: 'auto' }}>
+                {routeRelevantAlerts.slice(0, 5).map((alert) => (
+                  <div key={alert.id} style={{
+                    padding: '1rem',
+                    borderRadius: '0.5rem',
+                    backgroundColor: alert.read ? currentThemeStyles.cardBg : (alert.priority === 'critical' ? 'rgba(220, 38, 38, 0.1)' : currentThemeStyles.cardBg),
+                    border: `1px solid ${alert.priority === 'critical' ? '#dc2626' : currentThemeStyles.cardBorder}`,
+                    borderLeft: `4px solid ${alert.priority === 'critical' ? '#dc2626' : alert.priority === 'high' ? '#ea580c' : '#f59e0b'}`
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <span style={{ fontSize: '1.25rem' }}>
+                          {alert.priority === 'critical' ? '🚨' : alert.priority === 'high' ? '⚠️' : '📢'}
+                        </span>
+                        <span style={{ fontWeight: 'bold', color: currentThemeStyles.textPrimary }}>
+                          {alert.title}
+                        </span>
+                        <span style={{
+                          backgroundColor: alert.priority === 'critical' ? '#dc2626' : alert.priority === 'high' ? '#ea580c' : '#f59e0b',
+                          color: 'white',
+                          padding: '0.125rem 0.5rem',
+                          borderRadius: '0.25rem',
+                          fontSize: '0.75rem',
+                          fontWeight: '600',
+                          textTransform: 'uppercase'
+                        }}>
+                          {alert.priority}
+                        </span>
+                        {!alert.read && (
+                          <span style={{
+                            backgroundColor: '#3b82f6',
+                            color: 'white',
+                            padding: '0.125rem 0.375rem',
+                            borderRadius: '0.25rem',
+                            fontSize: '0.625rem',
+                            fontWeight: '600'
+                          }}>
+                            NEW
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <p style={{ 
+                      color: currentThemeStyles.textSecondary, 
+                      marginBottom: '0.5rem', 
+                      lineHeight: '1.4' 
+                    }}>
+                      {alert.message}
+                    </p>
+                    <div style={{ 
+                      color: currentThemeStyles.textMuted, 
+                      fontSize: '0.875rem' 
+                    }}>
+                      {new Date(alert.timestamp).toLocaleString()}
+                    </div>
+                  </div>
+                ))}
+                
+                <Link href="/route-admin/notifications" style={{
+                  textDecoration: 'none',
+                  color: '#3b82f6',
+                  textAlign: 'center',
+                  padding: '0.75rem',
+                  borderRadius: '0.5rem',
+                  border: '1px solid #3b82f6',
+                  backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                  transition: 'all 0.2s ease'
+                }}>
+                  View All Notifications →
+                </Link>
+              </div>
+            ) : (
+              <div style={{
+                textAlign: 'center',
+                padding: '2rem',
+                color: currentThemeStyles.textSecondary
+              }}>
+                <BellIcon width={48} height={48} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
+                <div>No emergency notifications</div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
+  );
+}
+
+export default function RouteAdminDashboard() {
+  return (
+    <RealTimeEmergencyClient enableSound={true} enablePushNotifications={true}>
+      <RouteAdminDashboardContent />
+    </RealTimeEmergencyClient>
   );
 }
