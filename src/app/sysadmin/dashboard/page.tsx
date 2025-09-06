@@ -149,26 +149,26 @@ export default function SriExpressAdminDashboard() {
       <AnimatedBackground currentThemeStyles={currentThemeStyles} />
 
       <nav style={{ backgroundColor: 'rgba(30, 41, 59, 0.92)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(251, 191, 36, 0.3)', padding: '1rem 0', position: 'relative', zIndex: 10 }}>
-        <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <ShieldCheckIcon width={32} height={32} color="#dc2626" />
+        <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: '200px' }}>
+            <ShieldCheckIcon width={32} height={32} color="#dc2626" className="sm:w-8 sm:h-8" />
             <div>
-              <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ffffff', margin: 0, textShadow: '0 4px 8px rgba(0, 0, 0, 0.7)' }}><span style={{ fontSize: '2rem', marginRight: '0.5rem', textShadow: '0 4px 8px rgba(0, 0, 0, 0.7), 0 0 30px rgba(250, 204, 21, 0.4)' }}>ශ්‍රී</span> E<span style={{ color: '#DC2626' }}>x</span>press Control</h1>
-              <p style={{ fontSize: '0.875rem', color: '#94a3b8', margin: 0 }}>System Administration Console {error && <span style={{ color: '#f59e0b' }}>⚠ Using fallback data</span>}</p>
+              <h1 style={{ fontSize: 'clamp(1rem, 3vw, 1.5rem)', fontWeight: 'bold', color: '#ffffff', margin: 0, textShadow: '0 4px 8px rgba(0, 0, 0, 0.7)' }}><span style={{ fontSize: 'clamp(1.2rem, 4vw, 2rem)', marginRight: '0.5rem', textShadow: '0 4px 8px rgba(0, 0, 0, 0.7), 0 0 30px rgba(250, 204, 21, 0.4)' }}>ශ්‍රී</span> E<span style={{ color: '#DC2626' }}>x</span>press Control</h1>
+              <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: '#94a3b8', margin: 0 }}>System Administration Console {error && <span style={{ color: '#f59e0b' }}>⚠ Using fallback data</span>}</p>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 'clamp(0.5rem, 2vw, 1rem)', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
             <ThemeSwitcher />
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#94a3b8', fontSize: '0.875rem', cursor: 'pointer' }}><input type="checkbox" checked={autoRefresh} onChange={(e) => setAutoRefresh(e.target.checked)} style={{ accentColor: '#3b82f6' }} />Auto Refresh</label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#94a3b8', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', cursor: 'pointer' }}><input type="checkbox" checked={autoRefresh} onChange={(e) => setAutoRefresh(e.target.checked)} style={{ accentColor: '#3b82f6' }} /><span className="hidden sm:inline">Auto Refresh</span></label>
             <div style={{ position: 'relative' }}><BellIcon width={20} height={20} color="#F59E0B" />{alerts.length > 0 && <div style={{ position: 'absolute', top: '-4px', right: '-4px', width: '16px', height: '16px', backgroundColor: '#ef4444', borderRadius: '50%', fontSize: '0.625rem', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{alerts.length}</div>}</div>
-            <div style={{ backgroundColor: '#dc2626', color: 'white', padding: '0.5rem 1rem', borderRadius: '0.5rem', fontSize: '0.875rem' }}>SUPERUSER</div>
-            <span style={{ color: '#94a3b8' }}>Welcome, {user?.name || 'Administrator'}</span>
-            <button onClick={handleLogout} style={{ backgroundColor: '#374151', color: '#f9fafb', padding: '0.5rem 1rem', border: 'none', borderRadius: '0.5rem', cursor: 'pointer' }}>Logout</button>
+            <div style={{ backgroundColor: '#dc2626', color: 'white', padding: '0.25rem 0.5rem', borderRadius: '0.5rem', fontSize: 'clamp(0.7rem, 2vw, 0.875rem)' }}>SUPERUSER</div>
+            <span style={{ color: '#94a3b8', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', display: 'none' }} className="md:inline">Welcome, {user?.name || 'Administrator'}</span>
+            <button onClick={handleLogout} style={{ backgroundColor: '#374151', color: '#f9fafb', padding: '0.5rem 1rem', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>Logout</button>
           </div>
         </div>
       </nav>
 
-      <div style={{ width: '100%', minHeight: 'calc(100vh - 100px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem', position: 'relative', zIndex: 10 }}>
+      <div style={{ width: '100%', minHeight: 'calc(100vh - 100px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'clamp(0.5rem, 3vw, 2rem)', position: 'relative', zIndex: 10 }}>
         <div className="animate-fade-in-up" style={{ width: '100%', maxWidth: '1600px', margin: '0 auto' }}>
           
           {error && (
@@ -183,34 +183,34 @@ export default function SriExpressAdminDashboard() {
             </div>
           )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem', marginBottom: '2rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))', gap: 'clamp(1rem, 3vw, 2rem)', marginBottom: 'clamp(1rem, 3vw, 2rem)' }}>
             {stats && [ { label: 'Total Users', value: stats.totalUsers.toLocaleString(), icon: UsersIcon, color: '#3b82f6' }, { label: 'Active Devices', value: stats.activeDevices, icon: DevicePhoneMobileIcon, color: '#10b981' }, { label: 'Fleet Companies', value: fleetStats?.total || 0, icon: TruckIcon, color: '#f59e0b' }, { label: 'System Uptime', value: `${stats.systemUptime}%`, icon: ServerIcon, color: '#8b5cf6' } ].map((metric, index) => (
-              <div key={metric.label} style={{ backgroundColor: currentThemeStyles.glassPanelBg, padding: '2rem', borderRadius: '1rem', boxShadow: currentThemeStyles.glassPanelShadow, backdropFilter: 'blur(12px)', border: currentThemeStyles.glassPanelBorder, animation: `fade-in-up 0.8s ease-out ${index * 0.1}s both` }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <metric.icon width={32} height={32} color={metric.color} />
-                  <div>
-                    <h3 style={{ color: metric.color, fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>{metric.value}</h3>
-                    <p style={{ color: currentThemeStyles.textPrimary, margin: '0.5rem 0 0 0', fontWeight: '600' }}>{metric.label}</p>
+              <div key={metric.label} style={{ backgroundColor: currentThemeStyles.glassPanelBg, padding: 'clamp(1rem, 3vw, 2rem)', borderRadius: '1rem', boxShadow: currentThemeStyles.glassPanelShadow, backdropFilter: 'blur(12px)', border: currentThemeStyles.glassPanelBorder, animation: `fade-in-up 0.8s ease-out ${index * 0.1}s both` }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.5rem, 2vw, 1rem)', flexWrap: 'wrap' }}>
+                  <metric.icon width={32} height={32} color={metric.color} style={{ minWidth: '24px', width: 'clamp(24px, 5vw, 32px)', height: 'clamp(24px, 5vw, 32px)' }} />
+                  <div style={{ flex: 1, minWidth: '120px' }}>
+                    <h3 style={{ color: metric.color, fontSize: 'clamp(1.5rem, 4vw, 2rem)', fontWeight: 'bold', margin: 0 }}>{metric.value}</h3>
+                    <p style={{ color: currentThemeStyles.textPrimary, margin: '0.25rem 0 0 0', fontWeight: '600', fontSize: 'clamp(0.875rem, 2.5vw, 1rem)' }}>{metric.label}</p>
                   </div>
                 </div>
               </div>
             ))}
           </div>
 
-          <div style={{ backgroundColor: currentThemeStyles.glassPanelBg, padding: '2rem', borderRadius: '1rem', boxShadow: currentThemeStyles.glassPanelShadow, backdropFilter: 'blur(12px)', border: currentThemeStyles.glassPanelBorder, marginBottom: '2rem' }}>
-            <h2 style={{ color: currentThemeStyles.textPrimary, fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1.5rem' }}>System Controls</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
+          <div style={{ backgroundColor: currentThemeStyles.glassPanelBg, padding: 'clamp(1rem, 3vw, 2rem)', borderRadius: '1rem', boxShadow: currentThemeStyles.glassPanelShadow, backdropFilter: 'blur(12px)', border: currentThemeStyles.glassPanelBorder, marginBottom: 'clamp(1rem, 3vw, 2rem)' }}>
+            <h2 style={{ color: currentThemeStyles.textPrimary, fontSize: 'clamp(1.25rem, 3vw, 1.5rem)', fontWeight: 'bold', marginBottom: 'clamp(1rem, 3vw, 1.5rem)' }}>System Controls</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
               {quickActions.map((action, index) => (
                 <Link key={action.name} href={action.href} style={{ textDecoration: 'none' }}>
-                  <div style={{ backgroundColor: currentThemeStyles.quickActionBg, padding: '1.5rem', borderRadius: '0.75rem', border: action.urgent ? '2px solid #f59e0b' : currentThemeStyles.quickActionBorder, transition: 'all 0.3s ease', cursor: 'pointer', position: 'relative', animation: `fade-in-up 0.6s ease-out ${index * 0.1}s both` }}>
+                  <div style={{ backgroundColor: currentThemeStyles.quickActionBg, padding: 'clamp(1rem, 2.5vw, 1.5rem)', borderRadius: '0.75rem', border: action.urgent ? '2px solid #f59e0b' : currentThemeStyles.quickActionBorder, transition: 'all 0.3s ease', cursor: 'pointer', position: 'relative', animation: `fade-in-up 0.6s ease-out ${index * 0.1}s both` }}>
                     {action.urgent && <div style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', width: '8px', height: '8px', backgroundColor: '#f59e0b', borderRadius: '50%', animation: 'light-blink 2s infinite' }} />}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <action.icon width={24} height={24} color="#F59E0B" />
-                      <div style={{ flex: 1 }}>
-                        <h3 style={{ color: currentThemeStyles.textPrimary, fontSize: '1.1rem', fontWeight: '600', margin: 0 }}>{action.name}</h3>
-                        <p style={{ color: currentThemeStyles.textSecondary, fontSize: '0.875rem', margin: '0.25rem 0 0 0' }}>{action.desc}</p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.5rem, 2vw, 1rem)', flexWrap: 'wrap' }}>
+                      <action.icon width={24} height={24} color="#F59E0B" style={{ minWidth: '20px', width: 'clamp(20px, 4vw, 24px)', height: 'clamp(20px, 4vw, 24px)' }} />
+                      <div style={{ flex: 1, minWidth: '150px' }}>
+                        <h3 style={{ color: currentThemeStyles.textPrimary, fontSize: 'clamp(1rem, 2.5vw, 1.1rem)', fontWeight: '600', margin: 0 }}>{action.name}</h3>
+                        <p style={{ color: currentThemeStyles.textSecondary, fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', margin: '0.25rem 0 0 0' }}>{action.desc}</p>
                       </div>
-                      {action.count !== undefined && (<div style={{ backgroundColor: '#F59E0B', color: 'white', padding: '0.5rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 'bold', minWidth: '40px', textAlign: 'center' }}>{action.count.toLocaleString()}</div>)}
+                      {action.count !== undefined && (<div style={{ backgroundColor: '#F59E0B', color: 'white', padding: 'clamp(0.375rem, 1.5vw, 0.5rem) clamp(0.5rem, 2vw, 0.75rem)', borderRadius: '0.5rem', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: 'bold', minWidth: '35px', textAlign: 'center' }}>{action.count.toLocaleString()}</div>)}
                     </div>
                   </div>
                 </Link>
@@ -218,10 +218,10 @@ export default function SriExpressAdminDashboard() {
             </div>
           </div>
 
-          <div style={{ backgroundColor: currentThemeStyles.glassPanelBg, padding: '2rem', borderRadius: '1rem', boxShadow: currentThemeStyles.glassPanelShadow, backdropFilter: 'blur(12px)', border: currentThemeStyles.glassPanelBorder }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-              <h2 style={{ color: currentThemeStyles.textPrimary, fontSize: '1.5rem', fontWeight: 'bold', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}><ExclamationTriangleIcon width={24} height={24} color="#f59e0b" />System Alerts</h2>
-              <div style={{ display: 'flex', gap: '1rem', fontSize: '0.875rem' }}>
+          <div style={{ backgroundColor: currentThemeStyles.glassPanelBg, padding: 'clamp(1rem, 3vw, 2rem)', borderRadius: '1rem', boxShadow: currentThemeStyles.glassPanelShadow, backdropFilter: 'blur(12px)', border: currentThemeStyles.glassPanelBorder }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'clamp(1rem, 3vw, 1.5rem)', flexWrap: 'wrap', gap: '1rem' }}>
+              <h2 style={{ color: currentThemeStyles.textPrimary, fontSize: 'clamp(1.25rem, 3vw, 1.5rem)', fontWeight: 'bold', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}><ExclamationTriangleIcon width={24} height={24} color="#f59e0b" style={{ minWidth: '20px', width: 'clamp(20px, 4vw, 24px)', height: 'clamp(20px, 4vw, 24px)' }} />System Alerts</h2>
+              <div style={{ display: 'flex', gap: 'clamp(0.5rem, 2vw, 1rem)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', flexWrap: 'wrap' }}>
                 <span style={{ color: '#ef4444' }}>{alerts.filter(a => a.priority === 'high').length} High</span>
                 <span style={{ color: '#f59e0b' }}>{alerts.filter(a => a.priority === 'medium').length} Medium</span>
                 <span style={{ color: '#3b82f6' }}>{alerts.filter(a => a.priority === 'low').length} Low</span>
@@ -230,14 +230,14 @@ export default function SriExpressAdminDashboard() {
             {alerts.length > 0 ? (
               <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
                 {alerts.map((alert, index) => (
-                  <div key={alert.id} style={{ backgroundColor: currentThemeStyles.alertBg, padding: '1rem', borderRadius: '0.5rem', marginBottom: '1rem', borderLeft: `4px solid ${alert.type === 'error' ? '#ef4444' : alert.type === 'warning' ? '#f59e0b' : '#3b82f6'}`, animation: `fade-in-up 0.5s ease-out ${index * 0.1}s both` }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div key={alert.id} style={{ backgroundColor: currentThemeStyles.alertBg, padding: 'clamp(0.75rem, 2.5vw, 1rem)', borderRadius: '0.5rem', marginBottom: '1rem', borderLeft: `4px solid ${alert.type === 'error' ? '#ef4444' : alert.type === 'warning' ? '#f59e0b' : '#3b82f6'}`, animation: `fade-in-up 0.5s ease-out ${index * 0.1}s both` }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', flexWrap: 'wrap' }}>
                       <div style={{ flex: 1 }}>
-                        <p style={{ color: currentThemeStyles.textPrimary, margin: 0, fontWeight: '500' }}>{alert.title}</p>
-                        <p style={{ color: currentThemeStyles.textSecondary, fontSize: '0.875rem', margin: '0.25rem 0', lineHeight: '1.4' }}>{alert.message}</p>
-                        <div style={{ display: 'flex', gap: '1rem', fontSize: '0.75rem', color: currentThemeStyles.textMuted }}><span>Category: {alert.category}</span><span>{new Date(alert.timestamp).toLocaleString()}</span></div>
+                        <p style={{ color: currentThemeStyles.textPrimary, margin: 0, fontWeight: '500', fontSize: 'clamp(0.875rem, 2.5vw, 1rem)' }}>{alert.title}</p>
+                        <p style={{ color: currentThemeStyles.textSecondary, fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', margin: '0.25rem 0', lineHeight: '1.4' }}>{alert.message}</p>
+                        <div style={{ display: 'flex', gap: 'clamp(0.5rem, 2vw, 1rem)', fontSize: 'clamp(0.65rem, 1.8vw, 0.75rem)', color: currentThemeStyles.textMuted, flexWrap: 'wrap' }}><span>Category: {alert.category}</span><span>{new Date(alert.timestamp).toLocaleString()}</span></div>
                       </div>
-                      <div style={{ backgroundColor: alert.type === 'error' ? '#ef4444' : alert.type === 'warning' ? '#f59e0b' : '#3b82f6', color: 'white', padding: '0.25rem 0.75rem', borderRadius: '0.25rem', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', marginLeft: '1rem' }}>{alert.priority}</div>
+                      <div style={{ backgroundColor: alert.type === 'error' ? '#ef4444' : alert.type === 'warning' ? '#f59e0b' : '#3b82f6', color: 'white', padding: 'clamp(0.25rem, 1vw, 0.25rem) clamp(0.5rem, 2vw, 0.75rem)', borderRadius: '0.25rem', fontSize: 'clamp(0.65rem, 1.8vw, 0.75rem)', fontWeight: '600', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{alert.priority}</div>
                     </div>
                   </div>
                 ))}
