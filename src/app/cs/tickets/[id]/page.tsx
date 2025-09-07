@@ -8,7 +8,7 @@ import ThemeSwitcher from '@/app/components/ThemeSwitcher';
 import AnimatedBackground from '@/app/cs/components/AnimatedBackground';
 import { ArrowLeftIcon, Squares2X2Icon, TicketIcon, UserCircleIcon, CalendarDaysIcon, PencilSquareIcon, CheckCircleIcon, ArrowUpCircleIcon, XCircleIcon, InformationCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 
-// --- Interfaces (Unchanged) ---
+// --- Interfaces (Updated to match backend structure) ---
 interface ITicket {
   _id: string;
   ticketId: string;
@@ -17,13 +17,12 @@ interface ITicket {
   category: string;
   priority: 'low' | 'medium' | 'high' | 'urgent';
   status: 'open' | 'in_progress' | 'pending_customer' | 'resolved' | 'closed';
-  customerInfo: { name: string; email: string; phone?: string; customerId?: string; };
-  assignedAgent?: { id: string; name: string; email: string; };
-  source: string;
+  customerInfo: { name: string; email: string; phone?: string; previousTickets?: number; };
+  assignedAgent?: { _id: string; name: string; email: string; role: string; };
   tags: string[];
-  timeline: Array<{ _id: string; action: string; description: string; performedBy: { name: string; role: string; }; timestamp: string; metadata?: Record<string, unknown>; }>;
-  resolution?: { solution: string; resolvedAt: string; customerSatisfaction?: number; };
-  escalation?: { escalated: boolean; escalatedAt?: string; reason?: string; escalatedTo?: string; };
+  timeline: Array<{ _id?: string; action: string; note?: string; agent?: any; timestamp: string; systemGenerated?: boolean; }>;
+  resolution?: { solution: string; resolvedAt: string; resolvedBy: any; customerSatisfaction?: number; feedback?: string; };
+  escalation?: { escalated: boolean; escalatedAt?: string; reason?: string; escalatedTo?: string; escalatedBy?: any; };
   createdAt: string;
   updatedAt: string;
 }
@@ -62,7 +61,7 @@ export default function TicketDetails() {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/cs/tickets/${ticketId}`, { headers: { Authorization: `Bearer ${token}` } });
       if (!response.ok) throw new Error(`Failed to fetch ticket: ${response.statusText}`);
       const result = await response.json();
-      if (result.success) setTicket(result.data);
+      if (result.success) setTicket(result.data.ticket);
       else throw new Error(result.message || 'Failed to load ticket');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load ticket');
@@ -107,16 +106,33 @@ export default function TicketDetails() {
   const resolveTicket = async () => {
     if (!resolutionText.trim() || !ticket) return;
     setUpdatingStatus(true);
+    setError(null); // Clear any previous errors
     try {
       const token = localStorage.getItem('cs_token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/cs/tickets/${ticket._id}/resolve`, { method: 'PUT', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ solution: resolutionText }) });
-      if (response.ok) {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/cs/tickets/${ticket._id}/resolve`, { 
+        method: 'PUT', 
+        headers: { 
+          Authorization: `Bearer ${token}`, 
+          'Content-Type': 'application/json' 
+        }, 
+        body: JSON.stringify({ solution: resolutionText }) 
+      });
+      
+      const result = await response.json();
+      
+      if (response.ok && result.success) {
         setResolutionText('');
         setShowResolutionForm(false);
         if (token) fetchTicket(token, ticket._id);
-      } else throw new Error('Failed to resolve ticket');
+        setError(null); // Clear any errors on success
+      } else {
+        throw new Error(result.message || 'Failed to resolve ticket');
+      }
     } catch (err) {
-      setError('Failed to resolve ticket');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to resolve ticket';
+      setError(`Resolve Error: ${errorMessage}`);
+      console.error('Resolve ticket error:', err);
+      // Don't redirect, just show the error and stay on the page
     } finally {
       setUpdatingStatus(false);
     }
@@ -221,7 +237,7 @@ export default function TicketDetails() {
                   <div><div style={{ fontSize: '0.875rem', color: currentThemeStyles.textSecondary, marginBottom: '0.25rem' }}>Status</div><span style={{ padding: '0.25rem 0.75rem', fontSize: '1rem', fontWeight: '600', borderRadius: '9999px', backgroundColor: getStatusColor(ticket.status) + '20', color: getStatusColor(ticket.status) }}>{getStatusDisplay(ticket.status)}</span></div>
                   <div><div style={{ fontSize: '0.875rem', color: currentThemeStyles.textSecondary, marginBottom: '0.25rem' }}>Priority</div><span style={{ padding: '0.25rem 0.75rem', fontSize: '1rem', fontWeight: '600', borderRadius: '9999px', backgroundColor: getPriorityColor(ticket.priority) + '20', color: getPriorityColor(ticket.priority) }}>{getPriorityDisplay(ticket.priority)}</span></div>
                   <div><div style={{ fontSize: '0.875rem', color: currentThemeStyles.textSecondary, marginBottom: '0.25rem' }}>Category</div><div style={{ fontSize: '1rem', color: currentThemeStyles.textPrimary, textTransform: 'capitalize' }}>{ticket.category.replace('_', ' ')}</div></div>
-                  <div><div style={{ fontSize: '0.875rem', color: currentThemeStyles.textSecondary, marginBottom: '0.25rem' }}>Source</div><div style={{ fontSize: '1rem', color: currentThemeStyles.textPrimary, textTransform: 'capitalize' }}>{ticket.source}</div></div>
+                  <div><div style={{ fontSize: '0.875rem', color: currentThemeStyles.textSecondary, marginBottom: '0.25rem' }}>Source</div><div style={{ fontSize: '1rem', color: currentThemeStyles.textPrimary, textTransform: 'capitalize' }}>Web Portal</div></div>
                 </div>
                 <div style={{ marginBottom: '1.5rem' }}>
                   <div style={{ fontSize: '0.875rem', color: currentThemeStyles.textSecondary, marginBottom: '0.25rem' }}>Description</div>
@@ -251,12 +267,14 @@ export default function TicketDetails() {
                 <h3 style={{ fontSize: '1.5rem', fontWeight: '600', color: currentThemeStyles.textPrimary, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}><CalendarDaysIcon width={28} height={28} /> Timeline</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   {ticket.timeline.map((item, index) => (
-                    <div key={item._id} style={{ display: 'flex', gap: '1rem', paddingBottom: index < ticket.timeline.length - 1 ? '1rem' : '0', borderBottom: index < ticket.timeline.length - 1 ? `1px solid ${currentThemeStyles.inputBorder}` : 'none' }}>
+                    <div key={item._id || index} style={{ display: 'flex', gap: '1rem', paddingBottom: index < ticket.timeline.length - 1 ? '1rem' : '0', borderBottom: index < ticket.timeline.length - 1 ? `1px solid ${currentThemeStyles.inputBorder}` : 'none' }}>
                       <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#3b82f6', marginTop: '0.5rem', flexShrink: 0 }}></div>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: '1rem', fontWeight: '500', color: currentThemeStyles.textPrimary, marginBottom: '0.25rem' }}>{item.action}</div>
-                        <div style={{ fontSize: '1rem', color: currentThemeStyles.textSecondary, marginBottom: '0.25rem' }}>{item.description}</div>
-                        <div style={{ fontSize: '0.875rem', color: currentThemeStyles.textMuted }}>{item.performedBy.name} • {new Date(item.timestamp).toLocaleString()}</div>
+                        <div style={{ fontSize: '1rem', fontWeight: '500', color: currentThemeStyles.textPrimary, marginBottom: '0.25rem', textTransform: 'capitalize' }}>{item.action.replace('_', ' ')}</div>
+                        {item.note && <div style={{ fontSize: '1rem', color: currentThemeStyles.textSecondary, marginBottom: '0.25rem' }}>{item.note}</div>}
+                        <div style={{ fontSize: '0.875rem', color: currentThemeStyles.textMuted }}>
+                          {item.systemGenerated ? 'System' : (item.agent?.name || 'Agent')} • {new Date(item.timestamp).toLocaleString()}
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -281,7 +299,7 @@ export default function TicketDetails() {
                   <div><div style={{ fontSize: '0.875rem', color: currentThemeStyles.textSecondary }}>Name</div><div style={{ fontSize: '1rem', color: currentThemeStyles.textPrimary, fontWeight: '500' }}>{ticket.customerInfo.name}</div></div>
                   <div><div style={{ fontSize: '0.875rem', color: currentThemeStyles.textSecondary }}>Email</div><div style={{ fontSize: '1rem', color: currentThemeStyles.textPrimary }}>{ticket.customerInfo.email}</div></div>
                   {ticket.customerInfo.phone && <div><div style={{ fontSize: '0.875rem', color: currentThemeStyles.textSecondary }}>Phone</div><div style={{ fontSize: '1rem', color: currentThemeStyles.textPrimary }}>{ticket.customerInfo.phone}</div></div>}
-                  {ticket.customerInfo.customerId && <div><div style={{ fontSize: '0.875rem', color: currentThemeStyles.textSecondary }}>Customer ID</div><div style={{ fontSize: '1rem', color: currentThemeStyles.textPrimary }}>{ticket.customerInfo.customerId}</div></div>}
+                  {ticket.customerInfo.previousTickets !== undefined && <div><div style={{ fontSize: '0.875rem', color: currentThemeStyles.textSecondary }}>Previous Tickets</div><div style={{ fontSize: '1rem', color: currentThemeStyles.textPrimary }}>{ticket.customerInfo.previousTickets}</div></div>}
                 </div>
               </div>
 
