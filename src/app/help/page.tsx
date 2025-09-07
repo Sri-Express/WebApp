@@ -453,6 +453,9 @@ export default function HelpPage() {
             <Link href="/contact" className={`${styles.contactButton} ${styles.buttonHover}`}>
               Contact Support
             </Link>
+            <Link href="/support" className={`${styles.contactButton} ${styles.buttonHover}`}>
+              Track Ticket
+            </Link>
             <a href="tel:+94112345678" className={`${styles.callButton} ${styles.buttonHover}`}>
               Call: +94 11 234 5678
             </a>
