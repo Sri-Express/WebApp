@@ -12,6 +12,9 @@ import {
   EyeIcon,
   ClockIcon
 } from '@heroicons/react/24/outline';
+import { useTheme } from '@/app/context/ThemeContext';
+import ThemeSwitcher from '@/app/components/ThemeSwitcher';
+import AnimatedBackground from '@/app/sysadmin/components/AnimatedBackground';
 
 interface Route {
   _id: string;
@@ -77,6 +80,7 @@ interface Assignment {
 }
 
 export default function RouteAdminVehicles() {
+  const { theme } = useTheme();
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -224,93 +228,151 @@ export default function RouteAdminVehicles() {
     return new Date(dateString).toLocaleString();
   };
 
+  // Theme definitions
+  const lightTheme = {
+    mainBg: '#fffbeb',
+    bgGradient: 'linear-gradient(to bottom right, #fffbeb, #fef3c7, #fde68a)',
+    glassPanelBg: 'rgba(255, 255, 255, 0.92)',
+    glassPanelBorder: '1px solid rgba(251, 191, 36, 0.3)',
+    glassPanelShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 10px 20px -5px rgba(0, 0, 0, 0.1)',
+    textPrimary: '#1f2937',
+    textSecondary: '#4B5563',
+    textMuted: '#6B7280',
+    cardBg: 'rgba(249, 250, 251, 0.8)',
+    cardBorder: '1px solid rgba(209, 213, 219, 0.5)',
+  };
+
+  const darkTheme = {
+    mainBg: '#0f172a',
+    bgGradient: 'linear-gradient(to bottom right, #0f172a, #1e293b, #334155)',
+    glassPanelBg: 'rgba(30, 41, 59, 0.8)',
+    glassPanelBorder: '1px solid rgba(251, 191, 36, 0.3)',
+    glassPanelShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35), 0 10px 20px -5px rgba(0, 0, 0, 0.2)',
+    textPrimary: '#f1f5f9',
+    textSecondary: '#94a3b8',
+    textMuted: '#64748b',
+    cardBg: 'rgba(51, 65, 85, 0.8)',
+    cardBorder: '1px solid rgba(75, 85, 99, 0.5)',
+  };
+
+  const currentThemeStyles = theme === 'dark' ? darkTheme : lightTheme;
+
   if (loading) {
     return (
-      <div style={{
-        display: 'flex',
+      <div style={{ 
+        backgroundColor: currentThemeStyles.mainBg, 
+        minHeight: '100vh', 
+        display: 'flex', 
+        alignItems: 'center', 
         justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '80vh',
-        color: '#f1f5f9'
+        position: 'relative'
       }}>
-        Loading vehicle management...
+        <AnimatedBackground currentThemeStyles={currentThemeStyles} />
+        <div style={{ textAlign: 'center', color: currentThemeStyles.textPrimary, position: 'relative', zIndex: 10 }}>
+          <div style={{ width: '40px', height: '40px', border: '4px solid #f3f4f6', borderTop: '4px solid #3b82f6', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 1rem' }}></div>
+          <p>Loading vehicle management...</p>
+        </div>
+        <style jsx>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
 
   if (!route) {
     return (
-      <div style={{ padding: '2rem' }}>
-        <div style={{
-          backgroundColor: '#7c2d12',
-          border: '1px solid #991b1b',
-          borderRadius: '0.75rem',
-          padding: '2rem',
-          textAlign: 'center'
-        }}>
-          <ExclamationTriangleIcon width={48} height={48} color="#fed7a1" style={{ margin: '0 auto 1rem' }} />
-          <h2 style={{ color: '#fed7a1', fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>
-            No Route Assigned
-          </h2>
-          <p style={{ color: '#fecaca' }}>
-            You need an assigned route to manage vehicle assignments.
-          </p>
+      <div style={{ 
+        backgroundColor: currentThemeStyles.mainBg, 
+        minHeight: '100vh',
+        position: 'relative'
+      }}>
+        <AnimatedBackground currentThemeStyles={currentThemeStyles} />
+        <div style={{ padding: '2rem', position: 'relative', zIndex: 10 }}>
+          <div style={{
+            backgroundColor: currentThemeStyles.glassPanelBg,
+            border: currentThemeStyles.glassPanelBorder,
+            borderRadius: '0.75rem',
+            padding: 'clamp(1rem, 3vw, 2rem)',
+            textAlign: 'center',
+            backdropFilter: 'blur(12px)',
+            boxShadow: currentThemeStyles.glassPanelShadow
+          }}>
+            <ExclamationTriangleIcon width={48} height={48} color="#f59e0b" style={{ margin: '0 auto 1rem' }} />
+            <h2 style={{ color: currentThemeStyles.textPrimary, fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>
+              No Route Assigned
+            </h2>
+            <p style={{ color: currentThemeStyles.textSecondary }}>
+              You need an assigned route to manage vehicle assignments.
+            </p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: '2rem' }}>
-      {/* Header */}
-      <div style={{
-        backgroundColor: '#1e293b',
-        padding: '2rem',
-        borderRadius: '0.75rem',
-        border: '1px solid #334155',
-        marginBottom: '2rem'
-      }}>
+    <div style={{
+      backgroundColor: currentThemeStyles.mainBg,
+      minHeight: '100vh',
+      position: 'relative',
+      overflow: 'hidden'
+    }}>
+      <AnimatedBackground currentThemeStyles={currentThemeStyles} />
+      <div style={{ padding: 'clamp(1rem, 3vw, 2rem)', position: 'relative', zIndex: 10 }}>
+        {/* Header */}
         <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'flex-start',
-          marginBottom: '1rem'
+          backgroundColor: currentThemeStyles.glassPanelBg,
+          padding: '2rem',
+          borderRadius: '0.75rem',
+          border: currentThemeStyles.glassPanelBorder,
+          marginBottom: '2rem',
+          backdropFilter: 'blur(12px)',
+          boxShadow: currentThemeStyles.glassPanelShadow
         }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            marginBottom: '1rem',
+            flexWrap: 'wrap',
+            gap: '1rem'
+          }}>
           <div>
             <h1 style={{
-              color: '#f1f5f9',
-              fontSize: '2rem',
+              color: currentThemeStyles.textPrimary,
+              fontSize: 'clamp(1.5rem, 4vw, 2rem)',
               fontWeight: 'bold',
               marginBottom: '0.5rem'
             }}>
               Vehicle Assignment Management
             </h1>
-            <p style={{ color: '#94a3b8', margin: 0 }}>
+            <p style={{ color: currentThemeStyles.textSecondary, margin: 0, fontSize: 'clamp(0.875rem, 2.5vw, 1rem)' }}>
               Route: <strong style={{ color: '#8b5cf6' }}>{route.name}</strong> ({route.routeId})
             </p>
           </div>
 
-          {totalAvailableVehicles > 0 && (
-            <button
-              onClick={() => setShowAssignModal(true)}
-              style={{
-                backgroundColor: '#10b981',
-                color: 'white',
-                padding: '0.75rem 1.5rem',
-                borderRadius: '0.5rem',
-                border: 'none',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                fontSize: '0.875rem',
-                fontWeight: '500'
-              }}
-            >
-              <PlusIcon width={16} height={16} />
-              Assign Vehicles
-            </button>
-          )}
+          <div style={{ display: 'flex', gap: 'clamp(0.5rem, 2vw, 1rem)', alignItems: 'center', flexWrap: 'wrap' }}>
+            <ThemeSwitcher />
+            {totalAvailableVehicles > 0 && (
+              <button
+                onClick={() => setShowAssignModal(true)}
+                style={{
+                  backgroundColor: '#10b981',
+                  color: 'white',
+                  padding: 'clamp(0.5rem, 2vw, 0.75rem) clamp(1rem, 3vw, 1.5rem)',
+                  borderRadius: '0.5rem',
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
+                  fontWeight: '500'
+                }}
+              >
+                <PlusIcon width={16} height={16} />
+                Assign Vehicles
+              </button>
+            )}
+          </div>
         </div>
 
         <div style={{
@@ -320,94 +382,116 @@ export default function RouteAdminVehicles() {
           marginTop: '1.5rem'
         }}>
           <div style={{
-            backgroundColor: '#334155',
+            backgroundColor: currentThemeStyles.cardBg,
             padding: '1rem',
             borderRadius: '0.5rem',
-            textAlign: 'center'
+            textAlign: 'center',
+            border: currentThemeStyles.cardBorder,
+            backdropFilter: 'blur(8px)'
           }}>
             <div style={{ color: '#3b82f6', fontSize: '1.5rem', fontWeight: 'bold' }}>
               {assignments.length}
             </div>
-            <div style={{ color: '#94a3b8', fontSize: '0.875rem' }}>Assigned Vehicles</div>
+            <div style={{ color: currentThemeStyles.textSecondary, fontSize: '0.875rem' }}>Assigned Vehicles</div>
           </div>
 
           <div style={{
-            backgroundColor: '#334155',
+            backgroundColor: currentThemeStyles.cardBg,
             padding: '1rem',
             borderRadius: '0.5rem',
-            textAlign: 'center'
+            textAlign: 'center',
+            border: currentThemeStyles.cardBorder,
+            backdropFilter: 'blur(8px)'
           }}>
             <div style={{ color: '#10b981', fontSize: '1.5rem', fontWeight: 'bold' }}>
               {assignments.filter(a => a.vehicleId.status === 'online').length}
             </div>
-            <div style={{ color: '#94a3b8', fontSize: '0.875rem' }}>Online</div>
+            <div style={{ color: currentThemeStyles.textSecondary, fontSize: '0.875rem' }}>Online</div>
           </div>
 
           <div style={{
-            backgroundColor: '#334155',
+            backgroundColor: currentThemeStyles.cardBg,
             padding: '1rem',
             borderRadius: '0.5rem',
-            textAlign: 'center'
+            textAlign: 'center',
+            border: currentThemeStyles.cardBorder,
+            backdropFilter: 'blur(8px)'
           }}>
             <div style={{ color: '#f59e0b', fontSize: '1.5rem', fontWeight: 'bold' }}>
               {totalAvailableVehicles}
             </div>
-            <div style={{ color: '#94a3b8', fontSize: '0.875rem' }}>Available to Assign</div>
+            <div style={{ color: currentThemeStyles.textSecondary, fontSize: '0.875rem' }}>Available to Assign</div>
           </div>
 
           <div style={{
-            backgroundColor: '#334155',
+            backgroundColor: currentThemeStyles.cardBg,
             padding: '1rem',
             borderRadius: '0.5rem',
-            textAlign: 'center'
+            textAlign: 'center',
+            border: currentThemeStyles.cardBorder,
+            backdropFilter: 'blur(8px)'
           }}>
             <div style={{ color: '#8b5cf6', fontSize: '1.5rem', fontWeight: 'bold' }}>
               {availableFleets.length}
             </div>
-            <div style={{ color: '#94a3b8', fontSize: '0.875rem' }}>Partner Fleets</div>
+            <div style={{ color: currentThemeStyles.textSecondary, fontSize: '0.875rem' }}>Partner Fleets</div>
           </div>
         </div>
       </div>
 
       {error && (
         <div style={{
-          backgroundColor: 'rgba(127, 29, 29, 0.8)',
-          border: '1px solid #991b1b',
-          borderRadius: '0.5rem',
-          padding: '1rem',
-          marginBottom: '2rem',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.5rem'
+          position: 'relative',
+          zIndex: 10,
+          padding: '0 2rem',
+          marginBottom: '2rem'
         }}>
-          <ExclamationTriangleIcon width={20} height={20} color="#fca5a5" />
-          <span style={{ color: '#fecaca' }}>{error}</span>
-          <button
-            onClick={() => setError(null)}
-            style={{
-              backgroundColor: 'transparent',
-              border: 'none',
-              color: '#fca5a5',
-              cursor: 'pointer',
-              marginLeft: 'auto'
-            }}
-          >
-            ×
-          </button>
+          <div style={{
+            backgroundColor: 'rgba(127, 29, 29, 0.8)',
+            border: '1px solid #991b1b',
+            borderRadius: '0.5rem',
+            padding: '1rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            backdropFilter: 'blur(8px)'
+          }}>
+            <ExclamationTriangleIcon width={20} height={20} color="#fca5a5" />
+            <span style={{ color: '#fecaca' }}>{error}</span>
+            <button
+              onClick={() => setError(null)}
+              style={{
+                backgroundColor: 'transparent',
+                border: 'none',
+                color: '#fca5a5',
+                cursor: 'pointer',
+                marginLeft: 'auto'
+              }}
+            >
+              ×
+            </button>
+          </div>
         </div>
       )}
 
       {/* Currently Assigned Vehicles */}
       <div style={{
-        backgroundColor: '#1e293b',
-        padding: '2rem',
-        borderRadius: '0.75rem',
-        border: '1px solid #334155',
+        position: 'relative',
+        zIndex: 10,
+        padding: '0 2rem',
         marginBottom: '2rem'
       }}>
+      <div style={{
+        backgroundColor: currentThemeStyles.glassPanelBg,
+        padding: 'clamp(1rem, 3vw, 2rem)',
+        borderRadius: '0.75rem',
+        border: currentThemeStyles.glassPanelBorder,
+        backdropFilter: 'blur(12px)',
+        boxShadow: currentThemeStyles.glassPanelShadow
+      }}>
         <h2 style={{
-          color: '#f1f5f9',
-          fontSize: '1.25rem',
+          color: currentThemeStyles.textPrimary,
+          fontSize: 'clamp(1.125rem, 3vw, 1.25rem)',
           fontWeight: 'bold',
           marginBottom: '1.5rem',
           display: 'flex',
@@ -421,15 +505,16 @@ export default function RouteAdminVehicles() {
         {assignments.length > 0 ? (
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-            gap: '1.5rem'
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(350px, 100%), 1fr))',
+            gap: 'clamp(1rem, 3vw, 1.5rem)'
           }}>
             {assignments.map((assignment) => (
               <div key={assignment._id} style={{
-                backgroundColor: '#334155',
-                padding: '1.5rem',
+                backgroundColor: currentThemeStyles.cardBg,
+                padding: 'clamp(1rem, 3vw, 1.5rem)',
                 borderRadius: '0.5rem',
-                border: '1px solid #475569'
+                border: currentThemeStyles.cardBorder,
+                backdropFilter: 'blur(8px)'
               }}>
                 <div style={{
                   display: 'flex',
@@ -439,16 +524,16 @@ export default function RouteAdminVehicles() {
                 }}>
                   <div>
                     <h3 style={{
-                      color: '#f1f5f9',
-                      fontSize: '1.1rem',
+                      color: currentThemeStyles.textPrimary,
+                      fontSize: 'clamp(1rem, 2.5vw, 1.1rem)',
                       fontWeight: 'bold',
                       marginBottom: '0.5rem'
                     }}>
                       {assignment.vehicleId.vehicleNumber}
                     </h3>
                     <p style={{
-                      color: '#94a3b8',
-                      fontSize: '0.875rem',
+                      color: currentThemeStyles.textSecondary,
+                      fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
                       margin: 0
                     }}>
                       Fleet: {assignment.fleetId.companyName}
@@ -469,29 +554,29 @@ export default function RouteAdminVehicles() {
                 </div>
 
                 <div style={{
-                  backgroundColor: '#1e293b',
-                  padding: '1rem',
+                  backgroundColor: theme === 'dark' ? '#1e293b' : 'rgba(243, 244, 246, 0.5)',
+                  padding: 'clamp(0.75rem, 2.5vw, 1rem)',
                   borderRadius: '0.5rem',
                   marginBottom: '1rem'
                 }}>
                   <div style={{ marginBottom: '0.5rem' }}>
-                    <span style={{ color: '#94a3b8', fontSize: '0.875rem' }}>Assigned: </span>
-                    <span style={{ color: '#f1f5f9', fontSize: '0.875rem' }}>
+                    <span style={{ color: currentThemeStyles.textSecondary, fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>Assigned: </span>
+                    <span style={{ color: currentThemeStyles.textPrimary, fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>
                       {formatDateTime(assignment.assignedAt)}
                     </span>
                   </div>
                   
                   <div style={{ marginBottom: '0.5rem' }}>
-                    <span style={{ color: '#94a3b8', fontSize: '0.875rem' }}>Assigned by: </span>
-                    <span style={{ color: '#f1f5f9', fontSize: '0.875rem' }}>
+                    <span style={{ color: currentThemeStyles.textSecondary, fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>Assigned by: </span>
+                    <span style={{ color: currentThemeStyles.textPrimary, fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>
                       {assignment.assignedBy.name}
                     </span>
                   </div>
 
                   {assignment.vehicleId.batteryLevel && (
                     <div style={{ marginBottom: '0.5rem' }}>
-                      <span style={{ color: '#94a3b8', fontSize: '0.875rem' }}>Battery: </span>
-                      <span style={{ color: '#f1f5f9', fontSize: '0.875rem' }}>
+                      <span style={{ color: currentThemeStyles.textSecondary, fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>Battery: </span>
+                      <span style={{ color: currentThemeStyles.textPrimary, fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>
                         {assignment.vehicleId.batteryLevel}%
                       </span>
                     </div>
@@ -499,8 +584,8 @@ export default function RouteAdminVehicles() {
 
                   {assignment.schedules && assignment.schedules.length > 0 && (
                     <div>
-                      <span style={{ color: '#94a3b8', fontSize: '0.875rem' }}>Schedule: </span>
-                      <span style={{ color: '#f1f5f9', fontSize: '0.875rem' }}>
+                      <span style={{ color: currentThemeStyles.textSecondary, fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>Schedule: </span>
+                      <span style={{ color: currentThemeStyles.textPrimary, fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>
                         {assignment.schedules[0].startTime} - {assignment.schedules[0].endTime}
                       </span>
                     </div>
@@ -516,10 +601,10 @@ export default function RouteAdminVehicles() {
                     style={{
                       backgroundColor: '#3b82f6',
                       color: 'white',
-                      padding: '0.5rem 1rem',
+                      padding: 'clamp(0.375rem, 1.5vw, 0.5rem) clamp(0.75rem, 2.5vw, 1rem)',
                       borderRadius: '0.375rem',
                       border: 'none',
-                      fontSize: '0.875rem',
+                      fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
@@ -537,10 +622,10 @@ export default function RouteAdminVehicles() {
                     style={{
                       backgroundColor: '#ef4444',
                       color: 'white',
-                      padding: '0.5rem 1rem',
+                      padding: 'clamp(0.375rem, 1.5vw, 0.5rem) clamp(0.75rem, 2.5vw, 1rem)',
                       borderRadius: '0.375rem',
                       border: 'none',
-                      fontSize: '0.875rem',
+                      fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
@@ -559,8 +644,8 @@ export default function RouteAdminVehicles() {
         ) : (
           <div style={{
             textAlign: 'center',
-            padding: '3rem',
-            color: '#94a3b8'
+            padding: 'clamp(2rem, 5vw, 3rem)',
+            color: currentThemeStyles.textSecondary
           }}>
             <TruckIcon width={48} height={48} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
             <p>No vehicles assigned to this route yet.</p>
@@ -570,7 +655,7 @@ export default function RouteAdminVehicles() {
                 style={{
                   backgroundColor: '#10b981',
                   color: 'white',
-                  padding: '0.75rem 1.5rem',
+                  padding: 'clamp(0.5rem, 2vw, 0.75rem) clamp(1rem, 3vw, 1.5rem)',
                   borderRadius: '0.5rem',
                   border: 'none',
                   cursor: 'pointer',
@@ -583,18 +668,27 @@ export default function RouteAdminVehicles() {
           </div>
         )}
       </div>
+      </div>
 
       {/* Available Vehicles by Fleet */}
       {totalAvailableVehicles > 0 && (
         <div style={{
-          backgroundColor: '#1e293b',
-          padding: '2rem',
+          position: 'relative',
+          zIndex: 10,
+          padding: '0 2rem',
+          marginBottom: '2rem'
+        }}>
+        <div style={{
+          backgroundColor: currentThemeStyles.glassPanelBg,
+          padding: 'clamp(1rem, 3vw, 2rem)',
           borderRadius: '0.75rem',
-          border: '1px solid #334155'
+          border: currentThemeStyles.glassPanelBorder,
+          backdropFilter: 'blur(12px)',
+          boxShadow: currentThemeStyles.glassPanelShadow
         }}>
           <h2 style={{
-            color: '#f1f5f9',
-            fontSize: '1.25rem',
+            color: currentThemeStyles.textPrimary,
+            fontSize: 'clamp(1.125rem, 3vw, 1.25rem)',
             fontWeight: 'bold',
             marginBottom: '1.5rem',
             display: 'flex',
@@ -607,27 +701,28 @@ export default function RouteAdminVehicles() {
 
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-            gap: '2rem'
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(350px, 100%), 1fr))',
+            gap: 'clamp(1rem, 3vw, 2rem)'
           }}>
             {availableFleets.map((fleetData) => (
               <div key={fleetData.fleet._id} style={{
-                backgroundColor: '#334155',
-                padding: '1.5rem',
+                backgroundColor: currentThemeStyles.cardBg,
+                padding: 'clamp(1rem, 3vw, 1.5rem)',
                 borderRadius: '0.5rem',
-                border: '1px solid #475569'
+                border: currentThemeStyles.cardBorder,
+                backdropFilter: 'blur(8px)'
               }}>
                 <h3 style={{
-                  color: '#f1f5f9',
-                  fontSize: '1.1rem',
+                  color: currentThemeStyles.textPrimary,
+                  fontSize: 'clamp(1rem, 2.5vw, 1.1rem)',
                   fontWeight: 'bold',
                   marginBottom: '1rem'
                 }}>
                   {fleetData.fleet.companyName}
                 </h3>
                 <p style={{
-                  color: '#94a3b8',
-                  fontSize: '0.875rem',
+                  color: currentThemeStyles.textSecondary,
+                  fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
                   marginBottom: '1rem'
                 }}>
                   {fleetData.vehicleCount} compatible vehicles available
@@ -640,12 +735,14 @@ export default function RouteAdminVehicles() {
                 }}>
                   {fleetData.vehicles.map((vehicle) => (
                     <div key={vehicle._id} style={{
-                      backgroundColor: '#1e293b',
-                      padding: '0.75rem',
+                      backgroundColor: theme === 'dark' ? '#1e293b' : 'rgba(243, 244, 246, 0.5)',
+                      padding: 'clamp(0.5rem, 2vw, 0.75rem)',
                       borderRadius: '0.375rem',
                       display: 'flex',
                       justifyContent: 'space-between',
-                      alignItems: 'center'
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      flexWrap: 'wrap'
                     }}>
                       <div style={{
                         display: 'flex',
@@ -660,15 +757,15 @@ export default function RouteAdminVehicles() {
                         }} />
                         <div>
                           <div style={{
-                            color: '#f1f5f9',
-                            fontSize: '0.875rem',
+                            color: currentThemeStyles.textPrimary,
+                            fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
                             fontWeight: '500'
                           }}>
                             {vehicle.vehicleNumber}
                           </div>
                           <div style={{
-                            color: '#94a3b8',
-                            fontSize: '0.75rem'
+                            color: currentThemeStyles.textSecondary,
+                            fontSize: 'clamp(0.7rem, 1.8vw, 0.75rem)'
                           }}>
                             {vehicle.vehicleType} • {vehicle.status}
                           </div>
@@ -680,6 +777,7 @@ export default function RouteAdminVehicles() {
               </div>
             ))}
           </div>
+        </div>
         </div>
       )}
 
@@ -695,21 +793,24 @@ export default function RouteAdminVehicles() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          zIndex: 1000
+          zIndex: 1000,
+          padding: '1rem'
         }}>
           <div style={{
-            backgroundColor: '#1e293b',
-            padding: '2rem',
+            backgroundColor: currentThemeStyles.glassPanelBg,
+            padding: 'clamp(1rem, 3vw, 2rem)',
             borderRadius: '0.75rem',
-            border: '1px solid #334155',
+            border: currentThemeStyles.glassPanelBorder,
+            backdropFilter: 'blur(12px)',
+            boxShadow: currentThemeStyles.glassPanelShadow,
             maxWidth: '600px',
-            width: '90%',
+            width: '100%',
             maxHeight: '80vh',
             overflow: 'auto'
           }}>
             <h3 style={{
-              color: '#f1f5f9',
-              fontSize: '1.25rem',
+              color: currentThemeStyles.textPrimary,
+              fontSize: 'clamp(1.125rem, 3vw, 1.25rem)',
               fontWeight: 'bold',
               marginBottom: '1rem'
             }}>
@@ -717,8 +818,9 @@ export default function RouteAdminVehicles() {
             </h3>
             
             <p style={{
-              color: '#94a3b8',
-              marginBottom: '1.5rem'
+              color: currentThemeStyles.textSecondary,
+              marginBottom: '1.5rem',
+              fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
             }}>
               Select vehicles from any fleet to assign to <strong>{route.name}</strong>
             </p>
@@ -733,8 +835,8 @@ export default function RouteAdminVehicles() {
                   marginBottom: '1.5rem'
                 }}>
                   <h4 style={{
-                    color: '#f1f5f9',
-                    fontSize: '1rem',
+                    color: currentThemeStyles.textPrimary,
+                    fontSize: 'clamp(0.925rem, 2.5vw, 1rem)',
                     fontWeight: '600',
                     marginBottom: '0.75rem'
                   }}>
@@ -746,11 +848,12 @@ export default function RouteAdminVehicles() {
                       display: 'flex',
                       alignItems: 'center',
                       gap: '0.75rem',
-                      padding: '0.75rem',
-                      backgroundColor: '#334155',
+                      padding: 'clamp(0.5rem, 2vw, 0.75rem)',
+                      backgroundColor: currentThemeStyles.cardBg,
                       borderRadius: '0.5rem',
                       marginBottom: '0.5rem',
-                      cursor: 'pointer'
+                      cursor: 'pointer',
+                      border: currentThemeStyles.cardBorder
                     }}>
                       <input
                         type="checkbox"
@@ -766,14 +869,14 @@ export default function RouteAdminVehicles() {
                       />
                       <div style={{ flex: 1 }}>
                         <div style={{
-                          color: '#f1f5f9',
+                          color: currentThemeStyles.textPrimary,
                           fontWeight: '500'
                         }}>
                           {vehicle.vehicleNumber}
                         </div>
                         <div style={{
-                          color: '#94a3b8',
-                          fontSize: '0.875rem'
+                          color: currentThemeStyles.textSecondary,
+                          fontSize: 'clamp(0.75rem, 2vw, 0.875rem)'
                         }}>
                           {vehicle.vehicleType} • {vehicle.status}
                         </div>
@@ -843,15 +946,18 @@ export default function RouteAdminVehicles() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          zIndex: 1000
+          zIndex: 1000,
+          padding: '1rem'
         }}>
           <div style={{
-            backgroundColor: '#1e293b',
-            padding: '2rem',
+            backgroundColor: currentThemeStyles.glassPanelBg,
+            padding: 'clamp(1rem, 3vw, 2rem)',
             borderRadius: '0.75rem',
-            border: '1px solid #334155',
+            border: currentThemeStyles.glassPanelBorder,
+            backdropFilter: 'blur(12px)',
+            boxShadow: currentThemeStyles.glassPanelShadow,
             maxWidth: '500px',
-            width: '90%'
+            width: '100%'
           }}>
             <div style={{
               display: 'flex',
@@ -860,8 +966,8 @@ export default function RouteAdminVehicles() {
               marginBottom: '1.5rem'
             }}>
               <h3 style={{
-                color: '#f1f5f9',
-                fontSize: '1.25rem',
+                color: currentThemeStyles.textPrimary,
+                fontSize: 'clamp(1.125rem, 3vw, 1.25rem)',
                 fontWeight: 'bold',
                 margin: 0
               }}>
@@ -871,7 +977,7 @@ export default function RouteAdminVehicles() {
                 onClick={() => setSelectedAssignment(null)}
                 style={{
                   backgroundColor: 'transparent',
-                  color: '#94a3b8',
+                  color: currentThemeStyles.textSecondary,
                   border: 'none',
                   cursor: 'pointer',
                   fontSize: '1.5rem'
@@ -882,29 +988,30 @@ export default function RouteAdminVehicles() {
             </div>
 
             <div style={{
-              backgroundColor: '#334155',
-              padding: '1.5rem',
+              backgroundColor: currentThemeStyles.cardBg,
+              padding: 'clamp(1rem, 3vw, 1.5rem)',
+              border: currentThemeStyles.cardBorder,
               borderRadius: '0.5rem'
             }}>
               <div style={{ marginBottom: '1rem' }}>
-                <span style={{ color: '#94a3b8', fontSize: '0.875rem' }}>Vehicle:</span>
-                <p style={{ color: '#f1f5f9', margin: '0.25rem 0 0 0', fontWeight: '600' }}>
+                <span style={{ color: currentThemeStyles.textSecondary, fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>Vehicle:</span>
+                <p style={{ color: currentThemeStyles.textPrimary, margin: '0.25rem 0 0 0', fontWeight: '600' }}>
                   {selectedAssignment.vehicleId.vehicleNumber}
                 </p>
               </div>
 
               <div style={{ marginBottom: '1rem' }}>
-                <span style={{ color: '#94a3b8', fontSize: '0.875rem' }}>Fleet:</span>
-                <p style={{ color: '#f1f5f9', margin: '0.25rem 0 0 0' }}>
+                <span style={{ color: currentThemeStyles.textSecondary, fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>Fleet:</span>
+                <p style={{ color: currentThemeStyles.textPrimary, margin: '0.25rem 0 0 0' }}>
                   {selectedAssignment.fleetId.companyName}
                 </p>
-                <p style={{ color: '#94a3b8', margin: '0.25rem 0 0 0', fontSize: '0.875rem' }}>
+                <p style={{ color: currentThemeStyles.textSecondary, margin: '0.25rem 0 0 0', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>
                   Contact: {selectedAssignment.fleetId.contactNumber}
                 </p>
               </div>
 
               <div style={{ marginBottom: '1rem' }}>
-                <span style={{ color: '#94a3b8', fontSize: '0.875rem' }}>Status:</span>
+                <span style={{ color: currentThemeStyles.textSecondary, fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>Status:</span>
                 <p style={{
                   color: getStatusColor(selectedAssignment.vehicleId.status),
                   margin: '0.25rem 0 0 0',
@@ -916,28 +1023,28 @@ export default function RouteAdminVehicles() {
               </div>
 
               <div style={{ marginBottom: '1rem' }}>
-                <span style={{ color: '#94a3b8', fontSize: '0.875rem' }}>Assigned:</span>
-                <p style={{ color: '#f1f5f9', margin: '0.25rem 0 0 0' }}>
+                <span style={{ color: currentThemeStyles.textSecondary, fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>Assigned:</span>
+                <p style={{ color: currentThemeStyles.textPrimary, margin: '0.25rem 0 0 0' }}>
                   {formatDateTime(selectedAssignment.assignedAt)}
                 </p>
-                <p style={{ color: '#94a3b8', margin: '0.25rem 0 0 0', fontSize: '0.875rem' }}>
+                <p style={{ color: currentThemeStyles.textSecondary, margin: '0.25rem 0 0 0', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>
                   By: {selectedAssignment.assignedBy.name}
                 </p>
               </div>
 
               {selectedAssignment.schedules && selectedAssignment.schedules.length > 0 && (
                 <div>
-                  <span style={{ color: '#94a3b8', fontSize: '0.875rem' }}>Schedule:</span>
+                  <span style={{ color: currentThemeStyles.textSecondary, fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>Schedule:</span>
                   <div style={{
-                    backgroundColor: '#1e293b',
+                    backgroundColor: currentThemeStyles.glassPanelBg,
                     padding: '0.75rem',
                     borderRadius: '0.375rem',
                     marginTop: '0.5rem'
                   }}>
-                    <p style={{ color: '#f1f5f9', margin: 0 }}>
+                    <p style={{ color: currentThemeStyles.textPrimary, margin: 0 }}>
                       {selectedAssignment.schedules[0].startTime} - {selectedAssignment.schedules[0].endTime}
                     </p>
-                    <p style={{ color: '#94a3b8', margin: '0.25rem 0 0 0', fontSize: '0.875rem' }}>
+                    <p style={{ color: currentThemeStyles.textSecondary, margin: '0.25rem 0 0 0', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>
                       Days: {selectedAssignment.schedules[0].daysOfWeek.join(', ')}
                     </p>
                   </div>
@@ -968,6 +1075,7 @@ export default function RouteAdminVehicles() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }
