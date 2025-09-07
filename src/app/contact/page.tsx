@@ -15,6 +15,7 @@ export default function ContactPage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [ticketInfo, setTicketInfo] = useState<{ticketId: string, estimatedResponse: string} | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -28,21 +29,52 @@ export default function ContactPage() {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setIsSubmitting(false);
-    setShowSuccess(true);
-    setFormData({
-      name: '',
-      email: '',
-      phone: '',
-      subject: '',
-      category: '',
-      message: ''
-    });
-    
-    setTimeout(() => setShowSuccess(false), 5000);
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/cs/tickets/submit`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          subject: formData.subject,
+          message: formData.message,
+          category: formData.category || 'general'
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setTicketInfo({
+          ticketId: result.data.ticketId,
+          estimatedResponse: result.data.estimatedResponse
+        });
+        setShowSuccess(true);
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          subject: '',
+          category: '',
+          message: ''
+        });
+        
+        setTimeout(() => {
+          setShowSuccess(false);
+          setTicketInfo(null);
+        }, 15000);
+      } else {
+        throw new Error(result.message || 'Failed to submit ticket');
+      }
+    } catch (error) {
+      console.error('Error submitting ticket:', error);
+      alert(`Error submitting ticket: ${error instanceof Error ? error.message : 'Please try again'}`);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -404,7 +436,14 @@ export default function ContactPage() {
 
               {showSuccess && (
                 <div className={styles.successMessage}>
-                  ✅ Thank you for your message! We&apos;ll get back to you within 2 hours.
+                  ✅ Support ticket submitted successfully!
+                  {ticketInfo && (
+                    <div style={{ marginTop: '10px', padding: '10px', backgroundColor: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.3)', borderRadius: '8px' }}>
+                      <strong>Your Ticket ID: {ticketInfo.ticketId}</strong><br/>
+                      Expected response time: {ticketInfo.estimatedResponse}<br/>
+                      <a href="/support" style={{ color: '#059669', textDecoration: 'underline' }}>Track your ticket here</a>
+                    </div>
+                  )}
                 </div>
               )}
 
