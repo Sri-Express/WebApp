@@ -353,41 +353,8 @@ function RouteAdminDashboardContent() {
       <style jsx>{animationStyles}</style>
       <AnimatedBackground currentThemeStyles={currentThemeStyles} />
 
-      {/* Navigation */}
-      <nav style={{ 
-        backgroundColor: currentThemeStyles.navBg, 
-        backdropFilter: 'blur(12px)', 
-        borderBottom: currentThemeStyles.glassPanelBorder, 
-        padding: '1rem 0',
-        position: 'relative',
-        zIndex: 10
-      }}>
-        <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <MapIcon width={32} height={32} color="#8b5cf6" />
-            <div>
-              <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ffffff', margin: 0 }}>
-                Route Administration
-              </h1>
-              <p style={{ fontSize: '0.875rem', color: '#94a3b8', margin: 0 }}>
-                Route Management Dashboard
-                {usingMockData && <span style={{ color: '#f59e0b', marginLeft: '0.5rem' }}>⚠ Using demo data</span>}
-              </p>
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            <ThemeSwitcher />
-            <div style={{ position: 'relative' }}>
-              <BellIcon width={20} height={20} color="#F59E0B" />
-              <div style={{ position: 'absolute', top: '-4px', right: '-4px', width: '16px', height: '16px', backgroundColor: '#ef4444', borderRadius: '50%', fontSize: '0.625rem', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>3</div>
-            </div>
-            <div style={{ backgroundColor: '#8b5cf6', color: 'white', padding: '0.5rem 1rem', borderRadius: '0.5rem', fontSize: '0.875rem' }}>ROUTE ADMIN</div>
-          </div>
-        </div>
-      </nav>
-
       <div style={{ padding: '2rem', position: 'relative', zIndex: 10 }}>
-        {/* Welcome Header */}
+        {/* Route Info Header */}
         <div className="animate-fade-in-up" style={{
           backgroundColor: currentThemeStyles.glassPanelBg,
           padding: '2rem',
@@ -395,19 +362,32 @@ function RouteAdminDashboardContent() {
           border: currentThemeStyles.glassPanelBorder,
           marginBottom: '2rem',
           backdropFilter: 'blur(12px)',
-          boxShadow: currentThemeStyles.glassPanelShadow
+          boxShadow: currentThemeStyles.glassPanelShadow,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
         }}>
-          <h1 style={{
-            color: currentThemeStyles.textPrimary,
-            fontSize: '2rem',
-            fontWeight: 'bold',
-            marginBottom: '0.5rem'
-          }}>
-            Welcome to Route Administration
-          </h1>
-          <p style={{ color: currentThemeStyles.textSecondary }}>
-            Managing route: <strong style={{ color: '#8b5cf6' }}>{assignedRoute?.name}</strong>
-          </p>
+          <div>
+            <h1 style={{
+              color: currentThemeStyles.textPrimary,
+              fontSize: '2rem',
+              fontWeight: 'bold',
+              marginBottom: '0.5rem'
+            }}>
+              {assignedRoute?.name}
+            </h1>
+            <p style={{ color: currentThemeStyles.textSecondary, margin: 0 }}>
+              Route ID: <strong style={{ color: '#8b5cf6' }}>{assignedRoute?.routeId}</strong>
+              {usingMockData && <span style={{ color: '#f59e0b', marginLeft: '1rem' }}>⚠ Using demo data</span>}
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <ThemeSwitcher />
+            <div style={{ position: 'relative' }}>
+              <BellIcon width={20} height={20} color="#F59E0B" />
+              <div style={{ position: 'absolute', top: '-4px', right: '-4px', width: '16px', height: '16px', backgroundColor: '#ef4444', borderRadius: '50%', fontSize: '0.625rem', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>3</div>
+            </div>
+          </div>
         </div>
 
         {/* Stats Cards */}
