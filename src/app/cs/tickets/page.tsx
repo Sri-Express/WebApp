@@ -157,14 +157,14 @@ export default function CSTickets() {
 
       {/* --- Navigation Bar --- */}
       <nav style={{ backgroundColor: 'rgba(30, 41, 59, 0.92)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(251, 191, 36, 0.3)', padding: '1rem 0', position: 'relative', zIndex: 10 }}>
-        <div style={{ maxWidth: '1600px', margin: '0 auto', padding: '0 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <div style={{ maxWidth: '1600px', margin: '0 auto', padding: '0 clamp(1rem, 3vw, 1.5rem)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.5rem, 2vw, 1rem)', minWidth: '200px' }}>
             <TicketIcon width={32} height={32} color="#3b82f6" />
             <div>
-              <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ffffff', margin: 0, textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)' }}>
-                <span style={{ fontSize: '2rem', marginRight: '0.5rem' }}>ශ්‍රී</span> E<span style={{ color: '#DC2626' }}>x</span>press Support
+              <h1 style={{ fontSize: 'clamp(1rem, 3vw, 1.5rem)', fontWeight: 'bold', color: '#ffffff', margin: 0, textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)' }}>
+                <span style={{ fontSize: 'clamp(1.2rem, 4vw, 2rem)', marginRight: '0.5rem' }}>ශ්‍රී</span> E<span style={{ color: '#DC2626' }}>x</span>press Support
               </h1>
-              <p style={{ fontSize: '0.875rem', color: '#94a3b8', margin: 0 }}>Customer Service Ticket Queue</p>
+              <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: '#94a3b8', margin: 0 }}>Customer Service Ticket Queue</p>
             </div>
           </div>
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
