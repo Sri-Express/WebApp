@@ -15,6 +15,7 @@ import {
 interface ChatSession {
   _id: string;
   sessionId: string;
+  customerId: string;
   customerInfo: {
     name: string;
     email: string;
@@ -454,7 +455,7 @@ export default function CSChat() {
                       <p style={{ fontSize: '0.8rem', color: currentThemeStyles.textSecondary, margin: '0.25rem 0 0 0' }}>{selectedChat.customerInfo.email}</p>
                     </div>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <button onClick={() => router.push(`/cs/customers/${selectedChat.customerInfo.id}`)} style={{ padding: '0.5rem 1rem', backgroundColor: currentThemeStyles.quickActionBg, color: currentThemeStyles.textPrimary, border: currentThemeStyles.quickActionBorder, borderRadius: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><UserCircleIcon width={16}/> Profile</button>
+                      <button onClick={() => router.push(`/cs/customers/${selectedChat.customerId || selectedChat._id}`)} style={{ padding: '0.5rem 1rem', backgroundColor: currentThemeStyles.quickActionBg, color: currentThemeStyles.textPrimary, border: currentThemeStyles.quickActionBorder, borderRadius: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><UserCircleIcon width={16}/> Profile</button>
                       <button onClick={() => endChat(selectedChat._id)} style={{ padding: '0.5rem 1rem', backgroundColor: '#ef4444', color: 'white', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><ArrowUturnLeftIcon width={16}/> End Chat</button>
                     </div>
                   </div>
