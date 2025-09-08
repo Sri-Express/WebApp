@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { EnvelopeIcon, KeyIcon, EyeIcon, EyeSlashIcon, SunIcon, MoonIcon } from '@heroicons/react/24/outline';
 import { useTheme } from '@/app/context/ThemeContext';
-import AnimatedBackground from '@/app/cs/components/AnimatedBackground';
+import AnimatedBackground from '@/app/components/AnimatedBackground2';
 
 // Simple ThemeSwitcher component
 const ThemeSwitcher = () => {
@@ -128,8 +128,8 @@ export default function CSLoginPage() {
         
         console.log('Login successful, redirecting to dashboard...');
         
-        // Redirect to chat page instead of dashboard
-        router.push('/cs/chat');
+        // Redirect to dashboard
+        router.push('/cs/dashboard');
       } else {
         throw new Error(`Access Denied. Role "${userRole}" does not have permission to access this portal. Required roles: customer_service, system_admin`);
       }
@@ -243,7 +243,7 @@ export default function CSLoginPage() {
       <ThemeSwitcher />
       
       {/* Use the AnimatedBackground component instead of hardcoded background */}
-      <AnimatedBackground currentThemeStyles={currentThemeStyles} />
+      <AnimatedBackground theme={theme} />
 
       {/* Login Form Container */}
       <div style={{
