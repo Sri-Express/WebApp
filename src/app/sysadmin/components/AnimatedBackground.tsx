@@ -59,6 +59,7 @@ const animationStyles = `
   .animation-delay-20000 { animation-delay: 20s; }
   .animation-delay-25000 { animation-delay: 25s; }
   .animation-delay-30000 { animation-delay: 30s; }
+  .animation-delay-35000 { animation-delay: 35s; }
 `;
 
 const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ currentThemeStyles }) => {
@@ -184,27 +185,8 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ currentThemeSty
                 </div>
             </div>
         </div>
-        {/* Lorry */}
-        <div className="animate-car-right animation-delay-100" style={{ position: 'absolute', top: '15%', marginTop: '10px', left: '-150px', width: '150px', height: '70px', zIndex: 5, filter: 'drop-shadow(0 4px 3px rgba(0, 0, 0, 0.3))' }}>
-            <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-                <div style={{ position: 'absolute', bottom: 0, right: 0, width: '50px', height: '45px', background: 'linear-gradient(to bottom, #059669 0%, #047857 70%, #065f46 100%)', borderRadius: '3px 8px 3px 3px', border: '1px solid #064e3b', boxShadow: 'inset 0 -3px 8px rgba(0, 0, 0, 0.2), inset -2px 0 6px rgba(255, 255, 255, 0.3)' }}></div>
-                <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100px', height: '40px', background: 'linear-gradient(to bottom, #f3f4f6 0%, #e5e7eb 70%, #d1d5db 100%)', borderRadius: '3px', border: '1px solid #9ca3af', boxShadow: 'inset 0 -3px 8px rgba(0, 0, 0, 0.1)' }}></div>
-                <div style={{ position: 'absolute', top: '8px', right: '5px', width: '35px', height: '20px', background: 'linear-gradient(to bottom right, rgba(219, 234, 254, 0.8) 0%, rgba(147, 197, 253, 0.8) 100%)', borderRadius: '3px', border: '2px solid #047857', boxShadow: 'inset 0 0 8px rgba(255, 255, 255, 0.6)' }}><div style={{ position: 'absolute', top: '3px', left: '5px', width: '20px', height: '2px', background: 'linear-gradient(to bottom, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.2) 100%)', borderRadius: '50%' }}></div></div>
-                <div style={{ position: 'absolute', top: '15px', right: '8px', width: '15px', height: '15px', background: 'linear-gradient(to bottom, rgba(219, 234, 254, 0.7) 0%, rgba(147, 197, 253, 0.7) 100%)', borderRadius: '2px', border: '2px solid #047857' }}><div style={{ position: 'absolute', bottom: '3px', left: '50%', transform: 'translateX(-50%)', width: '6px', height: '8px', backgroundColor: 'rgba(0,0,0,0.8)', borderRadius: '3px 3px 0 0' }}></div></div>
-                <div style={{ position: 'absolute', top: '10px', left: '40px', width: '30px', height: '15px', backgroundColor: 'rgba(255, 255, 255, 0.9)', border: '1px solid #047857', borderRadius: '3px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)' }}><div style={{ fontSize: '6px', fontWeight: 'bold', color: '#047857', fontFamily: "'Noto Sans Sinhala', 'Iskoola Pota', sans-serif" }}>බෙදාහැරීම්</div></div>
-                <div style={{ position: 'absolute', bottom: '8px', right: '3px', width: '8px', height: '6px', background: 'linear-gradient(to left, #fef3c7 0%, #fcd34d 100%)', borderRadius: '30%', border: '1px solid #064e3b', boxShadow: '0 0 8px rgba(252, 211, 77, 0.7)' }}><div style={{ position: 'absolute', top: '1px', right: '1px', width: '3px', height: '3px', background: 'radial-gradient(circle, #fef9c3 0%, #fef3c7 100%)', borderRadius: '50%' }}></div></div>
-                <div style={{ position: 'absolute', bottom: '15px', right: '3px', width: '8px', height: '12px', background: 'linear-gradient(to bottom, #374151 0%, #1f2937 100%)', borderRadius: '2px' }}><div style={{ position: 'absolute', top: '2px', left: '1px', right: '1px', height: '1px', backgroundColor: '#6b7280' }}></div><div style={{ position: 'absolute', top: '5px', left: '1px', right: '1px', height: '1px', backgroundColor: '#6b7280' }}></div><div style={{ position: 'absolute', top: '8px', left: '1px', right: '1px', height: '1px', backgroundColor: '#6b7280' }}></div></div>
-                <div className="animate-light-blink animation-delay-300" style={{ position: 'absolute', bottom: '20px', right: '5px', width: '5px', height: '5px', background: 'radial-gradient(circle, #fef3c7 0%, #fcd34d 100%)', borderRadius: '50%', border: '1px solid #064e3b', boxShadow: '0 0 6px rgba(252, 211, 77, 0.6)' }}></div>
-                <div className="animate-light-blink animation-delay-700" style={{ position: 'absolute', bottom: '18px', left: '5px', width: '10px', height: '6px', background: 'radial-gradient(circle, #f87171 50%, #ef4444 100%)', borderRadius: '2px', border: '1px solid #064e3b', boxShadow: '0 0 8px rgba(239, 68, 68, 0.6)' }}></div>
-                <div style={{ position: 'absolute', bottom: '-8px', right: '15px', width: '20px', height: '20px', backgroundColor: '#0f172a', borderRadius: '50%', border: '3px solid #94a3b8', boxSizing: 'border-box', boxShadow: '0 3px 5px rgba(0, 0, 0, 0.5)', overflow: 'hidden' }}><div className="animate-wheels" style={{ position: 'absolute', inset: '1px', borderRadius: '50%', border: '2px solid #64748b', background: 'radial-gradient(circle at center, #e2e8f0 15%, transparent 15%), conic-gradient(#cbd5e1 0deg, #cbd5e1 30deg, transparent 30deg, transparent 60deg, #cbd5e1 60deg, #cbd5e1 90deg, transparent 90deg, transparent 120deg, #cbd5e1 120deg, #cbd5e1 150deg, transparent 150deg, transparent 180deg, #cbd5e1 180deg, #cbd5e1 210deg, transparent 210deg, transparent 240deg, #cbd5e1 240deg, #cbd5e1 270deg, transparent 270deg, transparent 300deg, #cbd5e1 300deg, #cbd5e1 330deg, transparent 330deg, transparent 360deg)' }}></div></div>
-                <div style={{ position: 'absolute', bottom: '-8px', left: '15px', width: '20px', height: '20px', backgroundColor: '#0f172a', borderRadius: '50%', border: '3px solid #94a3b8', boxSizing: 'border-box', boxShadow: '0 3px 5px rgba(0, 0, 0, 0.5)', overflow: 'hidden' }}><div className="animate-wheels" style={{ position: 'absolute', inset: '1px', borderRadius: '50%', border: '2px solid #64748b', background: 'radial-gradient(circle at center, #e2e8f0 15%, transparent 15%), conic-gradient(#cbd5e1 0deg, #cbd5e1 30deg, transparent 30deg, transparent 60deg, #cbd5e1 60deg, #cbd5e1 90deg, transparent 90deg, transparent 120deg, #cbd5e1 120deg, #cbd5e1 150deg, transparent 150deg, transparent 180deg, #cbd5e1 180deg, #cbd5e1 210deg, transparent 210deg, transparent 240deg, #cbd5e1 240deg, #cbd5e1 270deg, transparent 270deg, transparent 300deg, #cbd5e1 300deg, #cbd5e1 330deg, transparent 330deg, transparent 360deg)' }}></div></div>
-                <div style={{ position: 'absolute', bottom: '3px', left: '50%', transform: 'translateX(-50%)', width: '25px', height: '8px', backgroundColor: 'white', borderRadius: '2px', border: '1px solid #047857', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)' }}><div style={{ fontSize: '4px', fontWeight: 'bold', color: '#1f2937' }}>DL-9876</div></div>
-                <div style={{ position: 'absolute', bottom: '5px', left: '5px', width: '6px', height: '3px', background: 'linear-gradient(to bottom, #9ca3af 0%, #6b7280 100%)', borderRadius: '2px 0 0 2px', boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.4)' }}></div>
-                <div style={{ position: 'absolute', bottom: '5px', left: '-8px', width: '8px', height: '8px', background: 'radial-gradient(circle, rgba(209, 213, 219, 0.8) 0%, rgba(209, 213, 219, 0) 70%)', borderRadius: '50%', opacity: 0.6, animation: 'steam 1.2s ease-out infinite' }}></div>
-            </div>
-        </div>
         {/* School Bus */}
-        <div className="animate-car-right animation-delay-30000" style={{ position: 'absolute', top: '15%', marginTop: '15px', left: '-140px', width: '140px', height: '65px', zIndex: 5, filter: 'drop-shadow(0 4px 3px rgba(0, 0, 0, 0.3))' }}>
+        <div className="animate-car-right animation-delay-8000" style={{ position: 'absolute', top: '15%', marginTop: '-20px', left: '-700px', width: '140px', height: '65px', zIndex: 5, filter: 'drop-shadow(0 4px 3px rgba(0, 0, 0, 0.3))' }}>
             <div style={{ position: 'relative', width: '100%', height: '100%' }}>
                 {/* Main body */}
                 <div style={{ position: 'absolute', bottom: 0, width: '100%', height: '40px', background: 'linear-gradient(to bottom, #f97316 0%, #ea580c 70%, #c2410c 100%)', borderRadius: '10px 12px 6px 6px', border: '1px solid #9a3412', boxShadow: 'inset 0 -3px 8px rgba(0, 0, 0, 0.2), inset 2px 0 6px rgba(255, 255, 255, 0.3)' }}></div>
@@ -233,6 +215,162 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ currentThemeSty
                 <div className="animate-light-blink animation-delay-600" style={{ position: 'absolute', top: '3px', right: '5px', width: '6px', height: '6px', background: 'radial-gradient(circle, #fbbf24 0%, #f59e0b 100%)', borderRadius: '50%', border: '1px solid #9a3412', boxShadow: '0 0 8px rgba(251, 191, 36, 0.6)' }}></div>
             </div>
         </div>
+        {/* Double Decker Bus */}
+        <div className="animate-car-right animation-delay-5000" style={{ position: 'absolute', top: '15%', marginTop: '-40px', left: '-180px', width: '180px', height: '96px', zIndex: 5, filter: 'drop-shadow(0 6px 10px rgba(0, 0, 0, 0.4))' }}>
+            <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                {/* Base shadow */}
+                <div style={{ position: 'absolute', bottom: '-12px', left: '10px', right: '10px', height: '8px', background: 'radial-gradient(ellipse, rgba(0,0,0,0.6) 0%, transparent 70%)', borderRadius: '50%', opacity: 0.3 }}></div>
+                
+                {/* Lower deck main body */}
+                <div style={{ position: 'absolute', bottom: 0, width: '100%', height: '44px', background: 'linear-gradient(145deg, #dc2626 0%, #b91c1c 40%, #991b1b 70%, #7f1d1d 100%)', borderRadius: '16px 12px 8px 8px', border: '1px solid #991b1b', boxShadow: 'inset 0 -4px 12px rgba(0, 0, 0, 0.3), inset 3px 0 8px rgba(255, 255, 255, 0.2), inset 0 2px 4px rgba(255, 255, 255, 0.1)' }}>
+                    {/* Body panels */}
+                    <div style={{ position: 'absolute', top: '8px', left: '32px', right: '32px', bottom: '8px', background: 'linear-gradient(135deg, rgba(220, 38, 38, 0.3) 0%, rgba(185, 28, 28, 0.1) 100%)', borderRadius: '8px', border: '1px solid #b91c1c', boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.1)' }}></div>
+                </div>
+                
+                {/* Upper deck */}
+                <div style={{ position: 'absolute', bottom: '44px', left: '18px', right: '18px', height: '36px', background: 'linear-gradient(145deg, #dc2626 0%, #b91c1c 40%, #991b1b 70%, #7f1d1d 100%)', borderRadius: '14px 14px 0 0', border: '1px solid #991b1b', boxShadow: 'inset 0 -3px 8px rgba(0, 0, 0, 0.3), inset 2px 0 6px rgba(255, 255, 255, 0.2), inset 0 2px 4px rgba(255, 255, 255, 0.1)' }}>
+                    {/* Upper deck panels */}
+                    <div style={{ position: 'absolute', top: '8px', left: '8px', right: '8px', bottom: '8px', background: 'linear-gradient(135deg, rgba(220, 38, 38, 0.3) 0%, rgba(185, 28, 28, 0.1) 100%)', borderRadius: '8px', border: '1px solid #b91c1c', boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.1)' }}></div>
+                </div>
+                
+                {/* Roof with ventilation */}
+                <div style={{ position: 'absolute', top: 0, left: '20px', right: '20px', height: '10px', background: 'linear-gradient(to bottom, #991b1b 0%, #dc2626 30%, #b91c1c 70%, #991b1b 100%)', borderRadius: '12px 12px 6px 6px', border: '1px solid #991b1b', boxShadow: 'inset 0 3px 6px rgba(255, 255, 255, 0.2), 0 2px 4px rgba(0, 0, 0, 0.3)' }}>
+                    {/* Roof vents */}
+                    <div style={{ position: 'absolute', top: '4px', left: '16px', right: '16px', height: '4px', backgroundColor: '#991b1b', borderRadius: '2px', opacity: 0.6 }}></div>
+                    <div style={{ position: 'absolute', top: '12px', left: '24px', right: '24px', height: '4px', backgroundColor: '#991b1b', borderRadius: '2px', opacity: 0.4 }}></div>
+                </div>
+                
+                {/* Driver's cab */}
+                <div style={{ position: 'absolute', bottom: '12px', left: 0, width: '36px', height: '36px', background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 50%, #991b1b 100%)', borderRadius: '16px 10px 0 8px', boxShadow: 'inset 2px 2px 6px rgba(255, 255, 255, 0.3), inset -1px -1px 4px rgba(0, 0, 0, 0.2)' }}>
+                    {/* Cab door outline */}
+                    <div style={{ position: 'absolute', top: '4px', left: '4px', right: '4px', bottom: '24px', background: 'linear-gradient(135deg, rgba(220, 38, 38, 0.2) 0%, transparent 100%)', borderRadius: '8px', border: '1px solid #b91c1c' }}></div>
+                </div>
+                
+                {/* Lower deck windows */}
+                <div style={{ position: 'absolute', top: '38px', left: '42px', right: '22px', height: '20px', background: 'linear-gradient(160deg, rgba(135, 206, 235, 0.9) 0%, rgba(176, 224, 230, 0.7) 30%, rgba(219, 234, 254, 0.6) 70%, rgba(147, 197, 253, 0.8) 100%)', borderRadius: '6px', border: '2px solid #7f1d1d', boxShadow: 'inset 0 0 12px rgba(255, 255, 255, 0.7), 0 2px 4px rgba(0, 0, 0, 0.2)', overflow: 'hidden' }}>
+                    <div style={{ display: 'flex', height: '100%', width: '100%' }}>
+                        {Array(7).fill(0).map((_, i) => (
+                            <div key={i} style={{ flex: '1', height: '100%', position: 'relative', borderRight: i < 6 ? '2px solid #7f1d1d' : 'none' }}>
+                                {/* Window reflections */}
+                                <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '33%', background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.6) 0%, transparent 100%)' }}></div>
+                                {/* Passenger silhouettes */}
+                                {i % 3 === 1 && (
+                                    <div style={{ position: 'absolute', bottom: '2px', left: '50%', transform: 'translateX(-50%)', width: '4px', height: '6px', backgroundColor: 'rgba(0,0,0,0.6)', borderRadius: '2px 2px 0 0' }}></div>
+                                )}
+                                {/* Interior details */}
+                                {i % 2 === 0 && (
+                                    <div style={{ position: 'absolute', bottom: '4px', left: '4px', width: '4px', height: '4px', background: '#fef3c7', borderRadius: '50%', opacity: 0.7 }}></div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+                
+                {/* Upper deck windows */}
+                <div style={{ position: 'absolute', top: '12px', left: '32px', right: '32px', height: '22px', background: 'linear-gradient(160deg, rgba(135, 206, 235, 0.9) 0%, rgba(176, 224, 230, 0.7) 30%, rgba(219, 234, 254, 0.6) 70%, rgba(147, 197, 253, 0.8) 100%)', borderRadius: '6px', border: '2px solid #7f1d1d', boxShadow: 'inset 0 0 12px rgba(255, 255, 255, 0.7), 0 2px 4px rgba(0, 0, 0, 0.2)', overflow: 'hidden' }}>
+                    <div style={{ display: 'flex', height: '100%', width: '100%' }}>
+                        {Array(6).fill(0).map((_, i) => (
+                            <div key={i} style={{ flex: '1', height: '100%', position: 'relative', borderRight: i < 5 ? '2px solid #7f1d1d' : 'none' }}>
+                                {/* Window reflections */}
+                                <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '33%', background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.6) 0%, transparent 100%)' }}></div>
+                                {/* Passenger silhouettes */}
+                                {i % 2 === 1 && (
+                                    <div style={{ position: 'absolute', bottom: '3px', left: '50%', transform: 'translateX(-50%)', width: '4px', height: '7px', backgroundColor: 'rgba(0,0,0,0.6)', borderRadius: '2px 2px 0 0' }}></div>
+                                )}
+                                {/* Upper deck interior lights */}
+                                {i % 3 === 0 && (
+                                    <div style={{ position: 'absolute', top: '4px', left: '4px', width: '4px', height: '4px', background: '#fef3c7', borderRadius: '50%', opacity: 0.8 }}></div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+                
+                {/* Driver window */}
+                <div style={{ position: 'absolute', top: '18px', left: '6px', width: '24px', height: '28px', background: 'linear-gradient(160deg, rgba(135, 206, 235, 0.9) 0%, rgba(176, 224, 230, 0.7) 30%, rgba(219, 234, 254, 0.6) 70%, rgba(147, 197, 253, 0.8) 100%)', borderRadius: '6px', border: '2px solid #7f1d1d', boxShadow: 'inset 0 0 8px rgba(255, 255, 255, 0.7), 0 2px 4px rgba(0, 0, 0, 0.2)' }}>
+                    {/* Window reflection */}
+                    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '33%', background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.7) 0%, transparent 100%)', borderRadius: '4px 4px 0 0' }}></div>
+                    {/* Windshield wipers */}
+                    <div style={{ position: 'absolute', bottom: '8px', left: '8px', width: '16px', height: '2px', background: '#374151', borderRadius: '2px', opacity: 0.6, transform: 'rotate(15deg)' }}></div>
+                </div>
+                
+                {/* Route displays */}
+                <div style={{ position: 'absolute', top: '64px', left: '50%', transform: 'translateX(-50%)', width: '70px', height: '12px', backgroundColor: 'rgba(255, 255, 255, 0.98)', borderRadius: '4px', border: '2px solid #7f1d1d', boxShadow: '0 2px 6px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ fontSize: '6px', fontWeight: 'bold', color: '#7f1d1d', fontFamily: "'Noto Sans Sinhala', 'Iskoola Pota', sans-serif", textAlign: 'center' }}>255 කොට්ටාව-ගල්කිස්ස</div>
+                </div>
+                
+                {/* Front route number */}
+                <div className="animate-light-blink" style={{ position: 'absolute', top: '24px', left: '2px', width: '18px', height: '14px', backgroundColor: 'rgba(255, 255, 255, 0.95)', borderRadius: '3px', border: '2px solid #7f1d1d', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3), inset 0 0 4px rgba(255, 255, 0, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ fontSize: '7px', fontWeight: 'bold', color: '#7f1d1d', textShadow: '0 0 2px rgba(255, 255, 0, 0.5)' }}>255</div>
+                </div>
+                
+                {/* Side route number */}
+                <div style={{ position: 'absolute', top: '45px', right: '2px', width: '16px', height: '10px', backgroundColor: 'rgba(255, 255, 255, 0.95)', borderRadius: '2px', border: '1px solid #7f1d1d', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ fontSize: '5px', fontWeight: 'bold', color: '#7f1d1d' }}>255</div>
+                </div>
+                
+                {/* Driver silhouette */}
+                <div style={{ position: 'absolute', bottom: '28px', left: '16px', width: '10px', height: '12px', backgroundColor: 'rgba(0,0,0,0.8)', borderRadius: '5px 5px 0 0' }}>
+                    {/* Driver's head */}
+                    <div style={{ position: 'absolute', top: '-4px', left: '50%', transform: 'translateX(-50%)', width: '12px', height: '12px', background: '#a16207', borderRadius: '50%', opacity: 0.9 }}></div>
+                    {/* Driver's hands on steering wheel */}
+                    <div style={{ position: 'absolute', top: '8px', left: '4px', width: '4px', height: '4px', background: '#a16207', borderRadius: '50%', opacity: 0.7 }}></div>
+                    <div style={{ position: 'absolute', top: '8px', right: '4px', width: '4px', height: '4px', background: '#a16207', borderRadius: '50%', opacity: 0.7 }}></div>
+                </div>
+                
+                {/* Side mirrors */}
+                <div style={{ position: 'absolute', top: '32px', left: '-2px', width: '3px', height: '2px', background: 'linear-gradient(45deg, #64748b 0%, #94a3b8 100%)', borderRadius: '1px', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3)' }}></div>
+                
+                {/* Headlights */}
+                <div className="animate-light-blink" style={{ position: 'absolute', bottom: '22px', left: '2px', width: '10px', height: '8px', background: 'radial-gradient(circle, #fef9c3 0%, #fef3c7 30%, #fcd34d 100%)', borderRadius: '50%', border: '1px solid #7f1d1d', boxShadow: '0 0 12px rgba(252, 211, 77, 0.8), inset 0 0 4px rgba(255, 255, 255, 0.6)' }}>
+                    <div style={{ position: 'absolute', top: '1px', left: '1px', width: '4px', height: '4px', background: 'radial-gradient(circle, #ffffff 0%, #fef9c3 100%)', borderRadius: '50%' }}></div>
+                </div>
+                
+                <div className="animate-light-blink animation-delay-100" style={{ position: 'absolute', bottom: '12px', left: '2px', width: '10px', height: '8px', background: 'radial-gradient(circle, #fef9c3 0%, #fef3c7 30%, #fcd34d 100%)', borderRadius: '50%', border: '1px solid #7f1d1d', boxShadow: '0 0 12px rgba(252, 211, 77, 0.8), inset 0 0 4px rgba(255, 255, 255, 0.6)' }}>
+                    <div style={{ position: 'absolute', top: '1px', left: '1px', width: '4px', height: '4px', background: 'radial-gradient(circle, #ffffff 0%, #fef9c3 100%)', borderRadius: '50%' }}></div>
+                </div>
+                
+                {/* Wheels */}
+                <div style={{ position: 'absolute', bottom: '-10px', left: '24px', width: '24px', height: '24px', backgroundColor: '#0f172a', borderRadius: '50%', border: '4px solid #94a3b8', boxSizing: 'border-box', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.6)', overflow: 'hidden' }}>
+                    <div className="animate-wheels" style={{ position: 'absolute', inset: '2px', borderRadius: '50%', border: '2px solid #64748b', background: 'radial-gradient(circle at center, #f8fafc 10%, #e2e8f0 20%, transparent 25%), conic-gradient(#cbd5e1 0deg, #cbd5e1 15deg, transparent 15deg, transparent 30deg, #cbd5e1 30deg, #cbd5e1 45deg, transparent 45deg, transparent 60deg, #cbd5e1 60deg, #cbd5e1 75deg, transparent 75deg, transparent 90deg, #cbd5e1 90deg, #cbd5e1 105deg, transparent 105deg, transparent 120deg, #cbd5e1 120deg, #cbd5e1 135deg, transparent 135deg, transparent 150deg, #cbd5e1 150deg, #cbd5e1 165deg, transparent 165deg, transparent 180deg, #cbd5e1 180deg, #cbd5e1 195deg, transparent 195deg, transparent 210deg, #cbd5e1 210deg, #cbd5e1 225deg, transparent 225deg, transparent 240deg, #cbd5e1 240deg, #cbd5e1 255deg, transparent 255deg, transparent 270deg, #cbd5e1 270deg, #cbd5e1 285deg, transparent 285deg, transparent 300deg, #cbd5e1 300deg, #cbd5e1 315deg, transparent 315deg, transparent 330deg, #cbd5e1 330deg, #cbd5e1 345deg, transparent 345deg, transparent 360deg)' }}>
+                        {/* Center cap */}
+                        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '8px', height: '8px', background: '#e2e8f0', borderRadius: '50%', border: '1px solid #64748b' }}></div>
+                    </div>
+                </div>
+                
+                <div style={{ position: 'absolute', bottom: '-10px', right: '24px', width: '24px', height: '24px', backgroundColor: '#0f172a', borderRadius: '50%', border: '4px solid #94a3b8', boxSizing: 'border-box', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.6)', overflow: 'hidden' }}>
+                    <div className="animate-wheels" style={{ position: 'absolute', inset: '2px', borderRadius: '50%', border: '2px solid #64748b', background: 'radial-gradient(circle at center, #f8fafc 10%, #e2e8f0 20%, transparent 25%), conic-gradient(#cbd5e1 0deg, #cbd5e1 15deg, transparent 15deg, transparent 30deg, #cbd5e1 30deg, #cbd5e1 45deg, transparent 45deg, transparent 60deg, #cbd5e1 60deg, #cbd5e1 75deg, transparent 75deg, transparent 90deg, #cbd5e1 90deg, #cbd5e1 105deg, transparent 105deg, transparent 120deg, #cbd5e1 120deg, #cbd5e1 135deg, transparent 135deg, transparent 150deg, #cbd5e1 150deg, #cbd5e1 165deg, transparent 165deg, transparent 180deg, #cbd5e1 180deg, #cbd5e1 195deg, transparent 195deg, transparent 210deg, #cbd5e1 210deg, #cbd5e1 225deg, transparent 225deg, transparent 240deg, #cbd5e1 240deg, #cbd5e1 255deg, transparent 255deg, transparent 270deg, #cbd5e1 270deg, #cbd5e1 285deg, transparent 285deg, transparent 300deg, #cbd5e1 300deg, #cbd5e1 315deg, transparent 315deg, transparent 330deg, #cbd5e1 330deg, #cbd5e1 345deg, transparent 345deg, transparent 360deg)' }}>
+                        {/* Center cap */}
+                        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '8px', height: '8px', background: '#e2e8f0', borderRadius: '50%', border: '1px solid #64748b' }}></div>
+                    </div>
+                </div>
+                
+                {/* License plate */}
+                <div style={{ position: 'absolute', bottom: '2px', left: '50%', transform: 'translateX(-50%)', width: '32px', height: '8px', backgroundColor: 'white', borderRadius: '2px', border: '2px solid #7f1d1d', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ fontSize: '4px', fontWeight: 'bold', color: '#1f2937', letterSpacing: '0.5px' }}>WP BUS-255</div>
+                </div>
+                
+                {/* Door handle */}
+                <div style={{ position: 'absolute', bottom: '28px', right: '38px', width: '4px', height: '14px', background: 'linear-gradient(to bottom, #9ca3af 0%, #6b7280 100%)', borderRadius: '2px', border: '1px solid #64748b', boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.3)' }}></div>
+                
+                {/* Bus steps */}
+                <div style={{ position: 'absolute', bottom: '8px', right: '35px', width: '8px', height: '3px', background: 'linear-gradient(to bottom, #64748b 0%, #475569 100%)', borderRadius: '1px', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3)' }}></div>
+                
+                {/* Taillights */}
+                <div className="animate-light-blink animation-delay-300" style={{ position: 'absolute', bottom: '18px', right: '2px', width: '8px', height: '6px', background: 'radial-gradient(circle, #fca5a5 0%, #f87171 50%, #ef4444 100%)', borderRadius: '3px', border: '1px solid #7f1d1d', boxShadow: '0 0 8px rgba(239, 68, 68, 0.7), inset 0 1px 2px rgba(255, 255, 255, 0.3)' }}></div>
+                
+                <div className="animate-light-blink animation-delay-800" style={{ position: 'absolute', bottom: '26px', right: '2px', width: '8px', height: '6px', background: 'radial-gradient(circle, #fca5a5 0%, #f87171 50%, #ef4444 100%)', borderRadius: '3px', border: '1px solid #7f1d1d', boxShadow: '0 0 8px rgba(239, 68, 68, 0.7), inset 0 1px 2px rgba(255, 255, 255, 0.3)' }}></div>
+                
+                {/* Indicator lights */}
+                <div className="animate-light-blink animation-delay-1200" style={{ position: 'absolute', bottom: '34px', right: '2px', width: '6px', height: '4px', background: 'radial-gradient(circle, #fed7aa 0%, #fb923c 50%, #f59e0b 100%)', borderRadius: '2px', border: '1px solid #d97706', boxShadow: '0 0 6px rgba(245, 158, 11, 0.6)' }}></div>
+                
+                {/* Exhaust pipe */}
+                <div style={{ position: 'absolute', bottom: '6px', right: '8px', width: '8px', height: '5px', background: 'linear-gradient(to bottom, #9ca3af 0%, #6b7280 100%)', borderRadius: '0 3px 3px 0', boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.4)' }}></div>
+                
+                {/* Exhaust smoke */}
+                <div style={{ position: 'absolute', bottom: '8px', right: '4px', width: '8px', height: '8px', background: 'radial-gradient(circle, rgba(209, 213, 219, 0.7) 0%, rgba(209, 213, 219, 0) 70%)', borderRadius: '50%', opacity: 0.6, animation: 'steam 1.5s ease-out infinite' }}></div>
+            </div>
+        </div>
         {/* Motorcycle */}
         <div className="animate-car-right animation-delay-1000" style={{ position: 'absolute', top: '60%', marginTop: '40px', left: '-60px', width: '60px', height: '35px', zIndex: 5, filter: 'drop-shadow(0 4px 3px rgba(0, 0, 0, 0.3))' }}>
             <div style={{ position: 'relative', width: '100%', height: '100%' }}>
@@ -249,7 +387,7 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ currentThemeSty
             </div>
         </div>
         {/* Taxi Cab */}
-        <div className="animate-car-right animation-delay-15000" style={{ position: 'absolute', top: '60%', marginTop: '35px', left: '-110px', width: '110px', height: '50px', zIndex: 5, filter: 'drop-shadow(0 4px 3px rgba(0, 0, 0, 0.3))' }}>
+        <div className="animate-car-right animation-delay-15000" style={{ position: 'absolute', top: '60%', marginTop: '10px', left: '-110px', width: '110px', height: '50px', zIndex: 5, filter: 'drop-shadow(0 4px 3px rgba(0, 0, 0, 0.3))' }}>
             <div style={{ position: 'relative', width: '100%', height: '100%' }}>
                 {/* Main body */}
                 <div style={{ position: 'absolute', bottom: 0, width: '100%', height: '28px', background: 'linear-gradient(to bottom, #fbbf24 0%, #f59e0b 70%, #d97706 100%)', borderRadius: '15px 10px 5px 5px', border: '1px solid #b45309' }}>
