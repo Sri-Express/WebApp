@@ -22,6 +22,9 @@ interface ChatSession {
   };
   assignedAgent?: {
     name: string;
+    rating?: number;
+    totalRatings?: number;
+    responseTime?: number;
   };
   feedback?: {
     rating: number;
@@ -50,6 +53,7 @@ export default function CustomerChatWidget({ userId, userName, userEmail }: Cust
   const [ratingComment, setRatingComment] = useState('');
   const [isSubmittingRating, setIsSubmittingRating] = useState(false);
   const [ratingSubmitted, setRatingSubmitted] = useState(false);
+  const [ratingSkipped, setRatingSkipped] = useState(false); // New state to track skipped rating
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -63,11 +67,22 @@ export default function CustomerChatWidget({ userId, userName, userEmail }: Cust
 
   // Monitor chat status for rating prompt
   useEffect(() => {
-    if (chatSession?.status === 'ended' && !ratingSubmitted && !chatSession.feedback) {
-      setShowRating(true);
+    // Only show rating if:
+    // 1. Chat session exists (was actually started)
+    // 2. Status is explicitly 'ended' 
+    // 3. There are messages (indicating actual conversation occurred)
+    // 4. Rating hasn't been submitted or skipped
+    if (chatSession?.status === 'ended' && 
+        messages.length > 0 && 
+        !ratingSubmitted && 
+        !ratingSkipped) {
+      // Show rating modal automatically after a small delay
+      const timer = setTimeout(() => {
+        setShowRating(true);
+      }, 2000);
+      return () => clearTimeout(timer);
     }
-    // FIXED: Added 'chatSession.feedback' to the dependency array to resolve the ESLint warning.
-  }, [chatSession?.status, ratingSubmitted, chatSession?.feedback]);
+  }, [chatSession?.status, ratingSubmitted, ratingSkipped, messages.length]);
 
   useEffect(() => {
     if (!chatSession || !isOpen) return;
@@ -78,10 +93,13 @@ export default function CustomerChatWidget({ userId, userName, userEmail }: Cust
         if (response.ok) {
           const data = await response.json();
           if (data.success && data.data.chat) {
+            // Update messages if they changed
             if (JSON.stringify(messages) !== JSON.stringify(data.data.chat.messages)) {
               setMessages(data.data.chat.messages || []);
             }
-            setChatSession(prev => prev ? { ...prev, ...data.data.chat } : null);
+            
+            // Force update chat session completely to ensure status changes are detected
+            setChatSession(data.data.chat);
           }
         }
       } catch (error) {
@@ -89,7 +107,7 @@ export default function CustomerChatWidget({ userId, userName, userEmail }: Cust
       }
     };
 
-    const interval = setInterval(pollMessages, 3000);
+    const interval = setInterval(pollMessages, 1500); // Poll every 1.5 seconds for faster updates
     return () => clearInterval(interval);
   }, [chatSession, isOpen, messages]);
 
@@ -194,6 +212,24 @@ export default function CustomerChatWidget({ userId, userName, userEmail }: Cust
     } finally {
       setIsSubmittingRating(false);
     }
+  };
+
+  const startNewChat = async () => {
+    // Clear everything immediately - visual reset
+    setChatSession(null);
+    setMessages([]);
+    setNewMessage('');
+    setError(null);
+    setShowRating(false);
+    setSelectedRating(0);
+    setRatingComment('');
+    setRatingSubmitted(false);
+    setRatingSkipped(false);
+    
+    // Wait a brief moment to ensure UI updates, then start fresh chat
+    setTimeout(async () => {
+      await startChat();
+    }, 100);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -366,6 +402,64 @@ export default function CustomerChatWidget({ userId, userName, userEmail }: Cust
           </div>
         ) : (
           <>
+            {/* Agent Info Panel - Show when agent is assigned */}
+            {chatSession.assignedAgent && chatSession.status === 'active' && (
+              <div style={{
+                backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                border: '1px solid rgba(16, 185, 129, 0.3)',
+                borderRadius: '12px',
+                padding: '12px',
+                marginBottom: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px'
+              }}>
+                <div style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '50%',
+                  backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'white',
+                  fontWeight: 'bold',
+                  fontSize: '16px'
+                }}>
+                  {chatSession.assignedAgent.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                    <span style={{ color: '#f1f5f9', fontWeight: '600', fontSize: '14px' }}>
+                      {chatSession.assignedAgent.name}
+                    </span>
+                    <span style={{ fontSize: '12px', opacity: 0.8, color: '#6ee7b7' }}>
+                      🟢 Online
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    {chatSession.assignedAgent.rating && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <span style={{ color: '#fbbf24', fontSize: '14px' }}>⭐</span>
+                        <span style={{ color: '#d1d5db', fontSize: '12px' }}>
+                          {chatSession.assignedAgent.rating.toFixed(1)} 
+                          ({chatSession.assignedAgent.totalRatings || 0} ratings)
+                        </span>
+                      </div>
+                    )}
+                    {chatSession.assignedAgent.responseTime && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <span style={{ color: '#3b82f6', fontSize: '12px' }}>⚡</span>
+                        <span style={{ color: '#d1d5db', fontSize: '12px' }}>
+                          Avg response: {Math.round(chatSession.assignedAgent.responseTime)}s
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {messages.map((message) => (
               <div
                 key={message.messageId}
@@ -399,21 +493,42 @@ export default function CustomerChatWidget({ userId, userName, userEmail }: Cust
               </div>
             ))}
             
-            {/* Chat ended message with rating prompt */}
-            {chatSession.status === 'ended' && ratingSubmitted && (
+
+            {/* Show thank you message after rating submitted */}
+            {ratingSubmitted && (
               <div style={{
                 backgroundColor: 'rgba(16, 185, 129, 0.2)',
                 color: '#6ee7b7',
-                padding: '12px',
-                borderRadius: '8px',
+                padding: '16px',
+                borderRadius: '12px',
                 textAlign: 'center',
-                border: '1px solid rgba(16, 185, 129, 0.3)'
+                border: '1px solid rgba(16, 185, 129, 0.3)',
+                marginBottom: '12px'
               }}>
-                <div style={{ fontSize: '1.2rem', marginBottom: '4px' }}>🙏</div>
-                <div style={{ fontWeight: '600', marginBottom: '4px' }}>Thanks for your feedback!</div>
-                <div style={{ fontSize: '12px', opacity: 0.8 }}>
-                  You rated this conversation {getRatingEmoji(chatSession.feedback?.rating || 0)} {chatSession.feedback?.rating}/5
+                <div style={{ fontSize: '1.2rem', marginBottom: '8px' }}>🙏</div>
+                <div style={{ fontWeight: '600', marginBottom: '8px' }}>Thanks for your feedback!</div>
+                <div style={{ fontSize: '12px', opacity: 0.8, marginBottom: '16px' }}>
+                  You rated this conversation {getRatingEmoji(chatSession?.feedback?.rating || selectedRating || 0)} {chatSession?.feedback?.rating || selectedRating}/5
                 </div>
+                <button
+                  onClick={startNewChat}
+                  disabled={isConnecting}
+                  style={{
+                    backgroundColor: 'rgba(59, 130, 246, 0.9)',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    cursor: isConnecting ? 'not-allowed' : 'pointer',
+                    fontWeight: '600',
+                    fontSize: '16px',
+                    opacity: isConnecting ? 0.6 : 1,
+                    transition: 'all 0.2s ease',
+                    boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3)'
+                  }}
+                >
+                  {isConnecting ? '🔄 Starting...' : '🚀 Start New Chat'}
+                </button>
               </div>
             )}
             
@@ -436,8 +551,9 @@ export default function CustomerChatWidget({ userId, userName, userEmail }: Cust
         )}
       </div>
 
+
       {/* Input Area */}
-      {chatSession && chatSession.status !== 'ended' && (
+      {chatSession && chatSession.status !== 'ended' && !getStatusDisplay().text.includes('ended') && (
         <div style={{
           padding: '16px',
           borderTop: '1px solid rgba(255, 255, 255, 0.1)',
@@ -492,23 +608,26 @@ export default function CustomerChatWidget({ userId, userName, userEmail }: Cust
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          backgroundColor: 'rgba(0, 0, 0, 0.9)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           padding: '20px',
-          borderRadius: '16px'
+          borderRadius: '16px',
+          zIndex: 1001
         }}>
           <div style={{
-            backgroundColor: 'rgba(30, 41, 59, 0.95)',
-            padding: '24px',
-            borderRadius: '12px',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            maxWidth: '320px',
+            backgroundColor: 'rgba(30, 41, 59, 0.98)',
+            padding: '28px',
+            borderRadius: '16px',
+            border: '2px solid rgba(59, 130, 246, 0.5)',
+            maxWidth: '340px',
             width: '100%',
-            textAlign: 'center'
+            textAlign: 'center',
+            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5)'
           }}>
-            <h3 style={{ margin: '0 0 16px 0', color: '#f1f5f9' }}>
+            <div style={{ fontSize: '2rem', marginBottom: '12px' }}>⭐</div>
+            <h3 style={{ margin: '0 0 16px 0', color: '#f1f5f9', fontSize: '1.4rem' }}>
               Rate Your Experience
             </h3>
             <p style={{ margin: '0 0 20px 0', fontSize: '14px', color: '#9ca3af' }}>
@@ -550,17 +669,25 @@ export default function CustomerChatWidget({ userId, userName, userEmail }: Cust
             
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
               <button
-                onClick={() => setShowRating(false)}
+                onClick={() => {
+                  setShowRating(false);
+                  setRatingSkipped(true); // Mark as skipped
+                  // Automatically reset to new chat after skipping
+                  setTimeout(() => {
+                    startNewChat();
+                  }, 1000);
+                }}
                 style={{
                   padding: '8px 16px',
-                  backgroundColor: 'transparent',
-                  color: '#9ca3af',
+                  backgroundColor: 'rgba(75, 85, 99, 0.8)',
+                  color: 'white',
                   border: '1px solid rgba(156, 163, 175, 0.3)',
                   borderRadius: '6px',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  fontWeight: '600'
                 }}
               >
-                Skip
+                Skip & Start New Chat
               </button>
               <button
                 onClick={submitRating}
