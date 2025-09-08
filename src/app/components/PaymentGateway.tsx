@@ -6,6 +6,7 @@ interface PaymentGatewayProps {
   onPaymentSuccess: (paymentResult?: any) => void;
   onPaymentCancel?: () => void;
   onPaymentError?: (error: string) => void;
+  currentThemeStyles?: any; // Add theme support
 }
 
 interface BookingData {
@@ -29,7 +30,8 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({
   bookingId, 
   onPaymentSuccess, 
   onPaymentCancel,
-  onPaymentError 
+  onPaymentError,
+  currentThemeStyles // Receive theme styles as prop
 }) => {
   const [booking, setBooking] = useState<BookingData | null>(null);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
@@ -37,6 +39,21 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({
   const [processing, setProcessing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  // Default theme styles if not provided (fallback to light theme)
+  const defaultThemeStyles = {
+    glassPanelBg: 'rgba(255, 255, 255, 0.92)',
+    glassPanelBorder: '1px solid rgba(251, 191, 36, 0.3)',
+    glassPanelShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 10px 20px -5px rgba(0, 0, 0, 0.1)',
+    textPrimary: '#1f2937',
+    textSecondary: '#4B5563',
+    textMuted: '#6B7280',
+    quickActionBg: 'rgba(249, 250, 251, 0.8)',
+    quickActionBorder: '1px solid rgba(209, 213, 219, 0.5)',
+    alertBg: 'rgba(249, 250, 251, 0.6)'
+  };
+
+  const themeStyles = currentThemeStyles || defaultThemeStyles;
 
   const getToken = () => localStorage.getItem('token');
 
@@ -57,10 +74,10 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({
           
           // Set default payment methods
           setPaymentMethods([
-            { id: 'card', name: '💳 Credit/Debit Card', fee: 0, available: true },
-            { id: 'bank', name: '🏦 Bank Transfer', fee: 0, available: true },
-            { id: 'digital_wallet', name: '📱 Digital Wallet', fee: 25, available: true },
-            { id: 'cash', name: '💵 Cash on Booking', fee: 0, available: true }
+            { id: 'card', name: 'Credit/Debit Card', fee: 0, available: true },
+            { id: 'bank', name: 'Bank Transfer', fee: 0, available: true },
+            { id: 'digital_wallet', name: 'Digital Wallet', fee: 25, available: true },
+            { id: 'cash', name: 'Cash on Booking', fee: 0, available: true }
           ]);
           
           setLoading(false);
@@ -92,10 +109,10 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({
           const data = await response.json();
           setBooking(data.booking);
           setPaymentMethods(data.paymentMethods || [
-            { id: 'card', name: '💳 Credit/Debit Card', fee: 0, available: true },
-            { id: 'bank', name: '🏦 Bank Transfer', fee: 0, available: true },
-            { id: 'digital_wallet', name: '📱 Digital Wallet', fee: 25, available: true },
-            { id: 'cash', name: '💵 Cash on Booking', fee: 0, available: true }
+            { id: 'card', name: 'Credit/Debit Card', fee: 0, available: true },
+            { id: 'bank', name: 'Bank Transfer', fee: 0, available: true },
+            { id: 'digital_wallet', name: 'Digital Wallet', fee: 25, available: true },
+            { id: 'cash', name: 'Cash on Booking', fee: 0, available: true }
           ]);
         } else {
           setError('Failed to load payment information');
@@ -111,7 +128,6 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({
     loadGatewayData();
   }, [bookingData, bookingId]);
 
-  // 🔥 FIXED: Added the missing handlePayment function
   const handlePayment = async () => {
     if (!booking) return;
 
@@ -187,21 +203,23 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({
         justifyContent: 'center', 
         alignItems: 'center', 
         minHeight: '300px',
-        backgroundColor: 'white',
+        backgroundColor: themeStyles.glassPanelBg,
         borderRadius: '0.75rem',
-        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+        boxShadow: themeStyles.glassPanelShadow,
+        backdropFilter: 'blur(12px)',
+        border: themeStyles.glassPanelBorder
       }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{
             width: '40px',
             height: '40px',
-            border: '4px solid #f3f4f6',
+            border: `4px solid ${themeStyles.quickActionBorder.split(' ')[3]}`,
             borderTop: '4px solid #F59E0B',
             borderRadius: '50%',
             animation: 'spin 1s linear infinite',
             margin: '0 auto 16px'
           }}></div>
-          <div style={{ color: '#6B7280' }}>Loading payment gateway...</div>
+          <div style={{ color: themeStyles.textSecondary }}>Loading payment gateway...</div>
         </div>
       </div>
     );
@@ -210,14 +228,16 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({
   if (!booking) {
     return (
       <div style={{ 
-        backgroundColor: 'white', 
+        backgroundColor: themeStyles.glassPanelBg, 
         padding: '2rem', 
         borderRadius: '0.75rem', 
         textAlign: 'center',
-        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+        boxShadow: themeStyles.glassPanelShadow,
+        backdropFilter: 'blur(12px)',
+        border: themeStyles.glassPanelBorder
       }}>
         <h3 style={{ color: '#DC2626', marginBottom: '1rem' }}>Payment Error</h3>
-        <p style={{ color: '#6B7280' }}>Unable to load booking information</p>
+        <p style={{ color: themeStyles.textSecondary }}>Unable to load booking information</p>
         <button 
           onClick={onPaymentCancel}
           style={{
@@ -238,46 +258,48 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({
 
   return (
     <div style={{ 
-      backgroundColor: 'white', 
+      backgroundColor: themeStyles.glassPanelBg, 
       padding: '2rem', 
       borderRadius: '0.75rem',
-      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+      boxShadow: themeStyles.glassPanelShadow,
+      backdropFilter: 'blur(12px)',
+      border: themeStyles.glassPanelBorder,
       maxWidth: '500px',
       margin: '0 auto'
     }}>
       {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1F2937', margin: 0 }}>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: themeStyles.textPrimary, margin: 0 }}>
           🏦 Sri Express Payment Gateway
         </h2>
-        <p style={{ color: '#6B7280', marginTop: '0.5rem' }}>
+        <p style={{ color: themeStyles.textSecondary, marginTop: '0.5rem' }}>
           Secure Payment Processing (Simulation)
         </p>
       </div>
 
       {/* Booking Summary */}
       <div style={{ 
-        backgroundColor: '#F9FAFB', 
+        backgroundColor: themeStyles.alertBg, 
         padding: '1rem', 
         borderRadius: '0.5rem', 
         marginBottom: '1.5rem',
-        border: '1px solid #E5E7EB'
+        border: themeStyles.quickActionBorder
       }}>
-        <h3 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.5rem' }}>
+        <h3 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.5rem', color: themeStyles.textPrimary }}>
           Payment Summary
         </h3>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-          <span>Booking ID:</span>
-          <span style={{ fontFamily: 'monospace' }}>{booking.bookingId}</span>
+          <span style={{ color: themeStyles.textSecondary }}>Booking ID:</span>
+          <span style={{ fontFamily: 'monospace', color: themeStyles.textPrimary }}>{booking.bookingId}</span>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-          <span>Amount:</span>
+          <span style={{ color: themeStyles.textSecondary }}>Amount:</span>
           <span style={{ fontWeight: '600', color: '#F59E0B' }}>
             Rs. {booking.amount.toLocaleString()}
           </span>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <span>Status:</span>
+          <span style={{ color: themeStyles.textSecondary }}>Status:</span>
           <span style={{ 
             color: booking.paymentStatus === 'completed' ? '#10B981' : '#F59E0B',
             textTransform: 'capitalize'
@@ -289,7 +311,7 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({
 
       {/* Payment Methods */}
       <div style={{ marginBottom: '1.5rem' }}>
-        <h3 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '1rem' }}>
+        <h3 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '1rem', color: themeStyles.textPrimary }}>
           Select Payment Method
         </h3>
         <div style={{ display: 'grid', gap: '0.5rem' }}>
@@ -301,10 +323,10 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({
                 alignItems: 'center',
                 padding: '1rem',
                 border: '2px solid',
-                borderColor: selectedMethod === method.id ? '#F59E0B' : '#E5E7EB',
+                borderColor: selectedMethod === method.id ? '#F59E0B' : themeStyles.quickActionBorder.split(' ')[3],
                 borderRadius: '0.5rem',
                 cursor: 'pointer',
-                backgroundColor: selectedMethod === method.id ? '#FEF3C7' : 'white',
+                backgroundColor: selectedMethod === method.id ? 'rgba(245, 158, 11, 0.1)' : themeStyles.quickActionBg,
                 transition: 'all 0.2s'
               }}
             >
@@ -317,9 +339,9 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({
                 style={{ marginRight: '0.75rem' }}
               />
               <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: '500' }}>{method.name}</div>
+                <div style={{ fontWeight: '500', color: themeStyles.textPrimary }}>{method.name}</div>
                 {method.fee > 0 && (
-                  <div style={{ fontSize: '0.8rem', color: '#6B7280' }}>
+                  <div style={{ fontSize: '0.8rem', color: themeStyles.textMuted }}>
                     Processing fee: Rs. {method.fee}
                   </div>
                 )}
@@ -338,7 +360,7 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({
       {/* Error Message */}
       {error && (
         <div style={{
-          backgroundColor: '#FEE2E2',
+          backgroundColor: 'rgba(254, 226, 226, 0.8)',
           color: '#DC2626',
           padding: '1rem',
           borderRadius: '0.5rem',
@@ -396,7 +418,7 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({
         textAlign: 'center', 
         marginTop: '1.5rem', 
         fontSize: '0.8rem', 
-        color: '#6B7280' 
+        color: themeStyles.textMuted 
       }}>
         🔒 This is a simulation environment. No real money will be charged.
       </div>

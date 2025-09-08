@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTheme } from '@/app/context/ThemeContext';
 import PaymentGateway from '@/app/components/PaymentGateway';
 import ThemeSwitcher from '@/app/components/ThemeSwitcher';
+import AnimatedBackground from '@/app/components/AnimatedBackground';
 import Link from 'next/link';
 import { ShieldCheckIcon } from '@heroicons/react/24/outline';
 
@@ -14,10 +15,123 @@ export default function PaymentGatewayPage() {
   const [bookingData, setBookingData] = useState<any>(null);
   const [error, setError] = useState('');
 
-  // Theme styles
-  const lightTheme = { mainBg: '#fffbeb', bgGradient: 'linear-gradient(to bottom right, #fffbeb, #fef3c7, #fde68a)', glassPanelBg: 'rgba(255, 255, 255, 0.92)', glassPanelBorder: '1px solid rgba(251, 191, 36, 0.3)', glassPanelShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 10px 20px -5px rgba(0, 0, 0, 0.1)', textPrimary: '#1f2937', textSecondary: '#4B5563' };
-  const darkTheme = { mainBg: '#0f172a', bgGradient: 'linear-gradient(to bottom right, #0f172a, #1e293b, #334155)', glassPanelBg: 'rgba(30, 41, 59, 0.8)', glassPanelBorder: '1px solid rgba(251, 191, 36, 0.3)', glassPanelShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35), 0 10px 20px -5px rgba(0, 0, 0, 0.2)', textPrimary: '#f9fafb', textSecondary: '#9ca3af' };
+  // --- Theme and Style Definitions (consistent with dashboard) ---
+  const lightTheme = { 
+    mainBg: '#fffbeb', 
+    bgGradient: 'linear-gradient(to bottom right, #fffbeb, #fef3c7, #fde68a)', 
+    glassPanelBg: 'rgba(255, 255, 255, 0.92)', 
+    glassPanelBorder: '1px solid rgba(251, 191, 36, 0.3)', 
+    glassPanelShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 10px 20px -5px rgba(0, 0, 0, 0.1)', 
+    textPrimary: '#1f2937', 
+    textSecondary: '#4B5563', 
+    textMuted: '#6B7280', 
+    quickActionBg: 'rgba(249, 250, 251, 0.8)', 
+    quickActionBorder: '1px solid rgba(209, 213, 219, 0.5)', 
+    alertBg: 'rgba(249, 250, 251, 0.6)' 
+  };
+  
+  const darkTheme = { 
+    mainBg: '#0f172a', 
+    bgGradient: 'linear-gradient(to bottom right, #0f172a, #1e293b, #334155)', 
+    glassPanelBg: 'rgba(30, 41, 59, 0.8)', 
+    glassPanelBorder: '1px solid rgba(251, 191, 36, 0.3)', 
+    glassPanelShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35), 0 10px 20px -5px rgba(0, 0, 0, 0.2)', 
+    textPrimary: '#f9fafb', 
+    textSecondary: '#9ca3af', 
+    textMuted: '#9ca3af', 
+    quickActionBg: 'rgba(51, 65, 85, 0.8)', 
+    quickActionBorder: '1px solid rgba(75, 85, 99, 0.5)', 
+    alertBg: 'rgba(51, 65, 85, 0.6)' 
+  };
+  
   const currentThemeStyles = theme === 'dark' ? darkTheme : lightTheme;
+  
+  // Animation styles (consistent with dashboard)
+  const animationStyles = `
+    @keyframes road-marking { 
+      0% { transform: translateX(-200%); } 
+      100% { transform: translateX(500%); } 
+    } 
+    .animate-road-marking { animation: road-marking 10s linear infinite; } 
+    
+    @keyframes car-right { 
+      0% { transform: translateX(-100%); } 
+      100% { transform: translateX(100vw); } 
+    } 
+    .animate-car-right { animation: car-right 15s linear infinite; } 
+    
+    @keyframes car-left { 
+      0% { transform: translateX(100vw) scaleX(-1); } 
+      100% { transform: translateX(-200px) scaleX(-1); } 
+    } 
+    .animate-car-left { animation: car-left 16s linear infinite; } 
+    
+    @keyframes light-blink { 
+      0%, 100% { opacity: 1; box-shadow: 0 0 15px #fcd34d; } 
+      50% { opacity: 0.6; box-shadow: 0 0 5px #fcd34d; } 
+    } 
+    .animate-light-blink { animation: light-blink 1s infinite; } 
+    
+    @keyframes fade-in-down { 
+      from { opacity: 0; transform: translateY(-20px); } 
+      to { opacity: 1; transform: translateY(0); } 
+    } 
+    .animate-fade-in-down { animation: fade-in-down 0.8s ease-out forwards; } 
+    
+    @keyframes fade-in-up { 
+      from { opacity: 0; transform: translateY(20px); } 
+      to { opacity: 1; transform: translateY(0); } 
+    } 
+    .animate-fade-in-up { animation: fade-in-up 0.8s ease-out forwards; } 
+    
+    @keyframes trainMove { 
+      from { left: 100%; } 
+      to { left: -300px; } 
+    } 
+    
+    @keyframes slight-bounce { 
+      0%, 100% { transform: translateY(0px); } 
+      50% { transform: translateY(-1px); } 
+    } 
+    .animate-slight-bounce { animation: slight-bounce 2s ease-in-out infinite; } 
+    
+    @keyframes steam { 
+      0% { opacity: 0.8; transform: translateY(0) scale(1); } 
+      100% { opacity: 0; transform: translateY(-20px) scale(2.5); } 
+    } 
+    .animate-steam { animation: steam 2s ease-out infinite; } 
+    
+    @keyframes wheels { 
+      0% { transform: rotate(0deg); } 
+      100% { transform: rotate(-360deg); } 
+    } 
+    .animate-wheels { animation: wheels 2s linear infinite; } 
+    
+    @keyframes spin { 
+      0% { transform: rotate(0deg); } 
+      100% { transform: rotate(360deg); } 
+    }
+    
+    .animation-delay-100 { animation-delay: 0.1s; } 
+    .animation-delay-200 { animation-delay: 0.2s; } 
+    .animation-delay-300 { animation-delay: 0.3s; } 
+    .animation-delay-400 { animation-delay: 0.4s; } 
+    .animation-delay-500 { animation-delay: 0.5s; } 
+    .animation-delay-600 { animation-delay: 0.6s; } 
+    .animation-delay-700 { animation-delay: 0.7s; } 
+    .animation-delay-800 { animation-delay: 0.8s; } 
+    .animation-delay-1000 { animation-delay: 1s; } 
+    .animation-delay-1200 { animation-delay: 1.2s; } 
+    .animation-delay-1500 { animation-delay: 1.5s; } 
+    .animation-delay-2000 { animation-delay: 2s; } 
+    .animation-delay-2500 { animation-delay: 2.5s; } 
+    .animation-delay-3000 { animation-delay: 3s; } 
+    
+    @media (max-width: 768px) { 
+      .animated-vehicle { display: none; } 
+      .nav-user-welcome { display: none; }
+    }
+  `;
 
   useEffect(() => {
     console.log('=== PAYMENT GATEWAY INITIALIZATION ===');
@@ -89,7 +203,7 @@ export default function PaymentGatewayPage() {
       // Create booking data in the format the backend expects
       const bookingPayload = {
         routeId: bookingData.routeId,
-        scheduleId: bookingData.scheduleId || '0', // Default to first schedule
+        scheduleId: bookingData.scheduleId || '0',
         travelDate: bookingData.travelDate,
         departureTime: bookingData.departureTime,
         passengerInfo: {
@@ -106,7 +220,6 @@ export default function PaymentGatewayPage() {
           preferences: bookingData.seatInfo.preferences || []
         },
         paymentMethod: bookingData.paymentMethod,
-        // Additional fields for confirmed booking
         status: 'confirmed',
         paymentInfo: {
           method: paymentResult.method || bookingData.paymentMethod,
@@ -121,10 +234,6 @@ export default function PaymentGatewayPage() {
       // STEP 1: Create booking via API with detailed error handling
       console.log('=== CREATING BOOKING VIA API ===');
       console.log('Making API request to:', `${baseURL}/api/bookings`);
-      console.log('Request headers:', {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token.substring(0, 10)}...`
-      });
       
       const bookingResponse = await fetch(`${baseURL}/api/bookings`, {
         method: 'POST',
@@ -136,8 +245,6 @@ export default function PaymentGatewayPage() {
       });
 
       console.log('Booking API response status:', bookingResponse.status);
-      console.log('Booking API response status text:', bookingResponse.statusText);
-      console.log('Booking API response headers:', Object.fromEntries(bookingResponse.headers));
 
       let bookingResult;
       const responseText = await bookingResponse.text();
@@ -147,7 +254,6 @@ export default function PaymentGatewayPage() {
         console.error('Booking API Error - Status:', bookingResponse.status);
         console.error('Booking API Error - Response:', responseText);
         
-        // Try to parse as JSON for better error details
         try {
           const errorJson = JSON.parse(responseText);
           console.error('Parsed Error Details:', errorJson);
@@ -172,46 +278,7 @@ export default function PaymentGatewayPage() {
         status: bookingResult.booking?.status
       });
 
-      // STEP 2: Confirm payment status (backup step)
-      if (bookingResult.booking) {
-        console.log('=== CONFIRMING PAYMENT STATUS ===');
-        
-        try {
-          const paymentConfirmPayload = {
-            bookingId: bookingResult.booking.bookingId || bookingResult.booking._id,
-            transactionId: paymentResult.transactionId,
-            paymentData: paymentResult
-          };
-          
-          console.log('Payment confirmation payload:', paymentConfirmPayload);
-          
-          const paymentConfirmResponse = await fetch(`${baseURL}/api/payments/confirm`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(paymentConfirmPayload)
-          });
-
-          console.log('Payment confirm response status:', paymentConfirmResponse.status);
-          
-          if (paymentConfirmResponse.ok) {
-            const confirmResult = await paymentConfirmResponse.json();
-            console.log('Payment confirmation successful:', confirmResult);
-          } else {
-            const confirmErrorText = await paymentConfirmResponse.text();
-            console.warn('Payment confirmation failed (non-critical):', {
-              status: paymentConfirmResponse.status,
-              response: confirmErrorText
-            });
-          }
-        } catch (confirmError) {
-          console.warn('Payment confirmation error (non-critical):', confirmError);
-        }
-      }
-
-      // STEP 3: Store locally as backup (after successful API call)
+      // STEP 2: Store locally as backup (after successful API call)
       console.log('=== STORING BACKUP LOCALLY ===');
       const bookingWithLocalData = {
         ...bookingResult.booking,
@@ -246,9 +313,7 @@ export default function PaymentGatewayPage() {
       console.error('=== CRITICAL ERROR IN PAYMENT PROCESSING ===');
       console.error('Error object:', error);
       console.error('Error message:', error instanceof Error ? error.message : 'Unknown error occurred');
-      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
       
-      // Enhanced error reporting
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       const debugInfo = {
         bookingDataExists: !!bookingData,
@@ -265,7 +330,6 @@ export default function PaymentGatewayPage() {
       
       console.error('Debug Information:', JSON.stringify(debugInfo, null, 2));
       
-      // Store error info for support
       localStorage.setItem('lastBookingError', JSON.stringify({
         error: errorMessage,
         debugInfo,
@@ -294,78 +358,128 @@ This error has been saved to your browser. Please contact support with your paym
 
   if (error) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: currentThemeStyles.mainBg, padding: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ textAlign: 'center', backgroundColor: currentThemeStyles.glassPanelBg, padding: '2rem', borderRadius: '1rem', border: currentThemeStyles.glassPanelBorder, boxShadow: currentThemeStyles.glassPanelShadow, backdropFilter: 'blur(12px)', maxWidth: '600px', width: '100%' }}>
-          <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>⚠️</div>
-          <h2 style={{ color: '#DC2626', marginBottom: '1rem' }}>Booking Error</h2>
-          <div style={{ 
-            backgroundColor: '#FEF2F2', 
-            border: '1px solid #FCA5A5', 
-            borderRadius: '0.5rem', 
-            padding: '1rem', 
-            marginBottom: '1.5rem',
-            textAlign: 'left',
-            maxHeight: '200px',
-            overflowY: 'auto'
-          }}>
-            <pre style={{ 
-              color: '#DC2626', 
-              fontSize: '0.8rem', 
-              whiteSpace: 'pre-wrap',
-              wordWrap: 'break-word',
-              margin: 0
-            }}>
-              {error}
-            </pre>
-          </div>
-          
-          <div style={{ backgroundColor: '#FEF3C7', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.5rem', border: '1px solid #F59E0B' }}>
-            <h4 style={{ color: '#92400E', margin: '0 0 0.5rem 0', fontSize: '0.9rem' }}>This might happen if:</h4>
-            <ul style={{ color: '#92400E', fontSize: '0.8rem', textAlign: 'left', margin: 0, paddingLeft: '1.2rem' }}>
-              <li>You navigated directly to this page</li>
-              <li>Your booking session expired</li>
-              <li>Browser data was cleared</li>
-              <li>Backend server is not running</li>
-              <li>Database connection issues</li>
-              <li>Authentication token expired</li>
-            </ul>
-          </div>
+      <div style={{ backgroundColor: currentThemeStyles.mainBg, minHeight: '100vh', position: 'relative', overflowX: 'hidden' }}>
+        <style jsx>{animationStyles}</style>
+        <AnimatedBackground currentThemeStyles={currentThemeStyles} />
+        
+        <div style={{ position: 'relative', zIndex: 10 }}>
+          {/* Navigation */}
+          <nav style={{ backgroundColor: 'rgba(30, 41, 59, 0.92)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(251, 191, 36, 0.3)', padding: '1rem 0' }}>
+            <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '1rem', textDecoration: 'none' }}>
+                <ShieldCheckIcon width={32} height={32} color="#dc2626" />
+                <div>
+                  <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ffffff', margin: 0, textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+                    <span style={{ color: '#F59E0B', fontSize: '2rem', marginRight: '0.5rem' }}>ශ්‍රී</span>Express
+                  </h1>
+                  <p style={{ fontSize: '0.875rem', color: '#94a3b8', margin: 0 }}>Payment Gateway</p>
+                </div>
+              </Link>
+              <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
+                <ThemeSwitcher />
+                <Link href="/book" style={{ color: '#d1d5db', textDecoration: 'none', fontWeight: '500' }}>
+                  Back to Booking
+                </Link>
+              </div>
+            </div>
+          </nav>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <Link href="/book" style={{ 
-              backgroundColor: '#F59E0B', 
-              color: 'white', 
-              padding: '0.75rem 1.5rem', 
-              borderRadius: '0.5rem', 
-              textDecoration: 'none', 
-              fontWeight: '600',
-              display: 'inline-block'
+          <main style={{ width: '100%', minHeight: 'calc(100vh - 90px)', display: 'flex', justifyContent: 'center', padding: '2rem 1.5rem' }}>
+            <div className="animate-fade-in-down" style={{ 
+              width: '100%', 
+              maxWidth: '800px',
+              backgroundColor: currentThemeStyles.glassPanelBg,
+              padding: '2rem',
+              borderRadius: '1rem',
+              boxShadow: currentThemeStyles.glassPanelShadow,
+              backdropFilter: 'blur(16px)',
+              border: currentThemeStyles.glassPanelBorder
             }}>
-              Start New Booking
-            </Link>
-            <Link href="/search" style={{ 
-              backgroundColor: '#6B7280', 
-              color: 'white', 
-              padding: '0.75rem 1.5rem', 
-              borderRadius: '0.5rem', 
-              textDecoration: 'none', 
-              fontWeight: '600',
-              display: 'inline-block'
-            }}>
-              Search Routes
-            </Link>
-            <Link href="/bookings" style={{ 
-              backgroundColor: '#8B5CF6', 
-              color: 'white', 
-              padding: '0.75rem 1.5rem', 
-              borderRadius: '0.5rem', 
-              textDecoration: 'none', 
-              fontWeight: '600',
-              display: 'inline-block'
-            }}>
-              View Existing Bookings
-            </Link>
-          </div>
+              <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>⚠️</div>
+                <h2 style={{ color: '#DC2626', marginBottom: '1rem', fontSize: '1.5rem', fontWeight: 'bold' }}>Payment Processing Error</h2>
+              </div>
+              
+              <div style={{ 
+                backgroundColor: currentThemeStyles.alertBg, 
+                border: currentThemeStyles.quickActionBorder, 
+                borderRadius: '0.75rem', 
+                padding: '1.5rem', 
+                marginBottom: '1.5rem',
+                textAlign: 'left',
+                maxHeight: '300px',
+                overflowY: 'auto'
+              }}>
+                <pre style={{ 
+                  color: '#DC2626', 
+                  fontSize: '0.8rem', 
+                  whiteSpace: 'pre-wrap',
+                  wordWrap: 'break-word',
+                  margin: 0,
+                  fontFamily: 'monospace'
+                }}>
+                  {error}
+                </pre>
+              </div>
+              
+              <div style={{ 
+                backgroundColor: 'rgba(254, 243, 199, 0.8)', 
+                padding: '1.5rem', 
+                borderRadius: '0.75rem', 
+                marginBottom: '1.5rem', 
+                border: '1px solid #F59E0B' 
+              }}>
+                <h4 style={{ color: '#92400E', margin: '0 0 0.75rem 0', fontSize: '1rem', fontWeight: '600' }}>Common Issues:</h4>
+                <ul style={{ color: '#92400E', fontSize: '0.9rem', textAlign: 'left', margin: 0, paddingLeft: '1.5rem', lineHeight: '1.6' }}>
+                  <li>You navigated directly to this page</li>
+                  <li>Your booking session expired</li>
+                  <li>Browser data was cleared</li>
+                  <li>Backend server is not running</li>
+                  <li>Database connection issues</li>
+                  <li>Authentication token expired</li>
+                </ul>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                <Link href="/book" style={{ 
+                  backgroundColor: '#F59E0B', 
+                  color: 'white', 
+                  padding: '0.75rem 1.5rem', 
+                  borderRadius: '0.5rem', 
+                  textDecoration: 'none', 
+                  fontWeight: '600',
+                  textAlign: 'center',
+                  transition: 'all 0.3s ease'
+                }}>
+                  Start New Booking
+                </Link>
+                <Link href="/search" style={{ 
+                  backgroundColor: '#6B7280', 
+                  color: 'white', 
+                  padding: '0.75rem 1.5rem', 
+                  borderRadius: '0.5rem', 
+                  textDecoration: 'none', 
+                  fontWeight: '600',
+                  textAlign: 'center',
+                  transition: 'all 0.3s ease'
+                }}>
+                  Search Routes
+                </Link>
+                <Link href="/bookings" style={{ 
+                  backgroundColor: '#8B5CF6', 
+                  color: 'white', 
+                  padding: '0.75rem 1.5rem', 
+                  borderRadius: '0.5rem', 
+                  textDecoration: 'none', 
+                  fontWeight: '600',
+                  textAlign: 'center',
+                  transition: 'all 0.3s ease'
+                }}>
+                  View Bookings
+                </Link>
+              </div>
+            </div>
+          </main>
         </div>
       </div>
     );
@@ -373,48 +487,162 @@ This error has been saved to your browser. Please contact support with your paym
 
   if (!bookingData) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', backgroundColor: currentThemeStyles.mainBg }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ width: '40px', height: '40px', border: '4px solid #fef3c7', borderTop: '4px solid #F59E0B', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }}></div>
-          <div style={{ color: currentThemeStyles.textPrimary, fontSize: '16px', fontWeight: 600 }}>Loading payment gateway...</div>
+      <div style={{ backgroundColor: currentThemeStyles.mainBg, minHeight: '100vh', position: 'relative', overflowX: 'hidden' }}>
+        <style jsx>{animationStyles}</style>
+        <AnimatedBackground currentThemeStyles={currentThemeStyles} />
+        
+        <div style={{ position: 'relative', zIndex: 10, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ 
+              width: '40px', 
+              height: '40px', 
+              border: '4px solid rgba(251, 191, 36, 0.3)', 
+              borderTop: '4px solid #F59E0B', 
+              borderRadius: '50%', 
+              animation: 'spin 1s linear infinite', 
+              margin: '0 auto 16px' 
+            }}></div>
+            <div style={{ color: currentThemeStyles.textPrimary, fontSize: '16px', fontWeight: '600' }}>
+              Loading payment gateway...
+            </div>
+          </div>
         </div>
-        <style jsx>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
 
   return (
-    <div style={{ backgroundColor: currentThemeStyles.mainBg, minHeight: '100vh', position: 'relative' }}>
+    <div style={{ backgroundColor: currentThemeStyles.mainBg, minHeight: '100vh', position: 'relative', overflowX: 'hidden' }}>
+      <style jsx>{animationStyles}</style>
       <style jsx global>{`
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .payment-gateway-container:hover { transform: translateY(-2px); }
+        @media (max-width: 768px) { 
+          .nav-links { display: none; } 
+          .payment-gateway-container { margin: 1rem; }
+        }
       `}</style>
       
-      {/* Navigation */}
-      <nav style={{ backgroundColor: 'rgba(30, 41, 59, 0.92)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(251, 191, 36, 0.3)', padding: '1rem 0' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
-            <ShieldCheckIcon width={32} height={32} color="#dc2626" />
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ffffff', margin: 0, textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
-              <span style={{ fontSize: '2rem', marginRight: '0.5rem' }}>ශ්‍රී</span>Express
-            </h1>
-          </Link>
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            <ThemeSwitcher />
-            <Link href="/book" style={{ color: '#d1d5db', textDecoration: 'none', fontWeight: '500' }}>
-              ← Back to Booking
-            </Link>
-          </div>
-        </div>
-      </nav>
+      {/* Animated Background */}
+      <AnimatedBackground currentThemeStyles={currentThemeStyles} />
 
-      {/* Payment Gateway */}
-      <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-        <PaymentGateway
-          bookingData={bookingData}
-          onPaymentSuccess={handlePaymentSuccess}
-          onPaymentCancel={handlePaymentCancel}
-          onPaymentError={handlePaymentError}
-        />
+      <div style={{ position: 'relative', zIndex: 10 }}>
+        {/* Navigation */}
+        <nav style={{ backgroundColor: 'rgba(30, 41, 59, 0.92)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(251, 191, 36, 0.3)', padding: '1rem 0' }}>
+          <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '1rem', textDecoration: 'none' }}>
+              <ShieldCheckIcon width={32} height={32} color="#dc2626" />
+              <div>
+                <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ffffff', margin: 0, textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+                  <span style={{ color: '#F59E0B', fontSize: '2rem', marginRight: '0.5rem' }}>ශ්‍රී</span>Express
+                </h1>
+                <p style={{ fontSize: '0.875rem', color: '#94a3b8', margin: 0 }}>Secure Payment Gateway</p>
+              </div>
+            </Link>
+            <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
+              <div className="nav-links" style={{ display: 'flex', gap: '1.5rem' }}>
+                <Link href="/dashboard" style={{ color: '#d1d5db', textDecoration: 'none', fontWeight: '500' }}>Dashboard</Link>
+                <Link href="/bookings" style={{ color: '#d1d5db', textDecoration: 'none', fontWeight: '500' }}>My Bookings</Link>
+              </div>
+              <ThemeSwitcher />
+              <Link href="/book" style={{ 
+                backgroundColor: '#374151', 
+                color: '#f9fafb', 
+                padding: '0.5rem 1rem', 
+                borderRadius: '0.5rem', 
+                textDecoration: 'none', 
+                fontWeight: '500',
+                transition: 'all 0.3s ease'
+              }}>
+                ← Back to Booking
+              </Link>
+            </div>
+          </div>
+        </nav>
+
+        {/* Main Content */}
+        <main style={{ width: '100%', minHeight: 'calc(100vh - 90px)', display: 'flex', justifyContent: 'center', padding: '2rem 1.5rem' }}>
+          <div className="animate-fade-in-down payment-gateway-container" style={{ 
+            width: '100%', 
+            maxWidth: '600px',
+            transition: 'all 0.3s ease'
+          }}>
+            {/* Page Header */}
+            <div style={{ 
+              backgroundColor: currentThemeStyles.glassPanelBg,
+              padding: '2rem',
+              borderRadius: '1rem',
+              boxShadow: currentThemeStyles.glassPanelShadow,
+              backdropFilter: 'blur(16px)',
+              border: currentThemeStyles.glassPanelBorder,
+              marginBottom: '2rem',
+              textAlign: 'center'
+            }}>
+              <h1 style={{ 
+                fontSize: '2rem', 
+                fontWeight: 'bold', 
+                margin: '0 0 0.5rem 0', 
+                color: currentThemeStyles.textPrimary,
+                textShadow: '0 2px 4px rgba(0,0,0,0.1)' 
+              }}>
+                Complete Your Payment
+              </h1>
+              <p style={{ 
+                color: currentThemeStyles.textSecondary, 
+                margin: 0, 
+                fontSize: '1.1rem' 
+              }}>
+                Secure payment processing for your travel booking.
+              </p>
+            </div>
+
+            {/* Payment Gateway Component */}
+            <div style={{ 
+              backgroundColor: currentThemeStyles.glassPanelBg,
+              borderRadius: '1rem',
+              boxShadow: currentThemeStyles.glassPanelShadow,
+              backdropFilter: 'blur(16px)',
+              border: currentThemeStyles.glassPanelBorder,
+              overflow: 'hidden'
+            }}>
+              <PaymentGateway
+                bookingData={bookingData}
+                onPaymentSuccess={handlePaymentSuccess}
+                onPaymentCancel={handlePaymentCancel}
+                onPaymentError={handlePaymentError}
+                currentThemeStyles={currentThemeStyles}
+              />
+            </div>
+
+            {/* Security Notice */}
+            <div style={{ 
+              backgroundColor: currentThemeStyles.alertBg,
+              padding: '1.5rem',
+              borderRadius: '1rem',
+              border: currentThemeStyles.quickActionBorder,
+              marginTop: '2rem',
+              textAlign: 'center'
+            }}>
+              <h3 style={{ 
+                color: currentThemeStyles.textPrimary, 
+                margin: '0 0 0.75rem 0', 
+                fontSize: '1rem', 
+                fontWeight: '600' 
+              }}>
+                🔒 Secure Payment Environment
+              </h3>
+              <p style={{ 
+                color: currentThemeStyles.textSecondary, 
+                margin: 0, 
+                fontSize: '0.9rem', 
+                lineHeight: '1.6' 
+              }}>
+                This is a simulation environment for demonstration purposes. 
+                No real money will be charged during this process. 
+                All transactions are simulated for testing and development.
+              </p>
+            </div>
+          </div>
+        </main>
       </div>
     </div>
   );
