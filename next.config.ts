@@ -3,6 +3,8 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   
+  // i18n configuration removed - using App Router internationalization instead
+  
   // Ensure proper static file handling
   async headers() {
     return [

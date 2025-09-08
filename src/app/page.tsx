@@ -1,5 +1,6 @@
 "use client";
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { 
   MapIcon, 
   ClockIcon, 
@@ -14,53 +15,68 @@ import {
   CheckCircleIcon,
   ArrowRightIcon
 } from '@heroicons/react/24/outline';
+import { useTranslation } from './hooks/useTranslation';
+
+// Lazy load language switcher as it's not critical for initial render
+const LanguageSwitcher = dynamic(() => import('./components/LanguageSwitcher'), {
+  ssr: false,
+  loading: () => <div style={{ width: '100px', height: '36px' }} />
+});
 
 export default function LandingPage() {
+  const { t, loading } = useTranslation();
+
+  if (loading) {
+    return <div className="min-h-screen bg-gradient-to-br from-blue-600 to-purple-700 flex items-center justify-center">
+      <div className="text-white text-xl">Loading...</div>
+    </div>;
+  }
+
   const features = [
     {
       icon: MapIcon,
-      title: "Real-time Tracking",
-      description: "Track your bus live on the map with accurate ETAs and route updates.",
+      title: t('features.items.0.title', 'Real-time Tracking'),
+      description: t('features.items.0.description', 'Track your bus live on the map with accurate ETAs and route updates.'),
       color: "#10B981"
     },
     {
       icon: CreditCardIcon,
-      title: "Easy Booking",
-      description: "Book tickets instantly with secure payment options and digital receipts.",
+      title: t('features.items.1.title', 'Easy Booking'),
+      description: t('features.items.1.description', 'Book tickets instantly with secure payment options and digital receipts.'),
       color: "#3B82F6"
     },
     {
       icon: ClockIcon,
-      title: "Smart Scheduling",
-      description: "AI-powered arrival predictions and optimized route planning.",
+      title: t('features.items.2.title', 'Smart Scheduling'),
+      description: t('features.items.2.description', 'AI-powered arrival predictions and optimized route planning.'),
       color: "#F59E0B"
     },
     {
       icon: ChatBubbleLeftIcon,
-      title: "24/7 Support",
-      description: "Get instant help with our AI chatbot and dedicated support team.",
+      title: t('features.items.3.title', '24/7 Support'),
+      description: t('features.items.3.description', 'Get instant help with our AI chatbot and dedicated support team.'),
       color: "#8B5CF6"
     }
   ];
 
   const testimonials = [
     {
-      name: "සුනිල් පෙරේරා",
-      role: "Daily Commuter",
+      name: t('testimonials.items.0.name', 'Sunil Perera'),
+      role: t('testimonials.items.0.role', 'Daily Commuter'),
       rating: 5,
-      comment: "ශ්‍රී එක්ස්ප්‍රෙස් මගේ දිනපතා ගමන් පහසු කර ගත්තා. සැමවිටම වේලාවට බස් එකේ තියෙන තැන දන්න පුළුවන්."
+      comment: t('testimonials.items.0.comment', 'Sri Express has made my daily commute so much easier.')
     },
     {
-      name: "Priya Wickramasinghe",
-      role: "University Student",
+      name: t('testimonials.items.1.name', 'Priya Wickramasinghe'),
+      role: t('testimonials.items.1.role', 'University Student'),
       rating: 5,
-      comment: "The app is amazing! I can plan my trips perfectly and never miss a bus. The real-time tracking is so accurate."
+      comment: t('testimonials.items.1.comment', 'The app is amazing! I can plan my trips perfectly and never miss a bus.')
     },
     {
-      name: "රාජ් ගුණවර්ධන",
-      role: "Business Executive",
+      name: t('testimonials.items.2.name', 'Raj Gunawardhana'),
+      role: t('testimonials.items.2.role', 'Business Executive'),
       rating: 4,
-      comment: "Great service for business travel. Professional, reliable, and always on time. Highly recommend!"
+      comment: t('testimonials.items.2.comment', 'Great service for business travel. Professional, reliable, and always on time.')
     }
   ];
 
@@ -184,8 +200,8 @@ export default function LandingPage() {
           <div className="railway-track-bottom"></div>
           
           <div className="railway-ties-container">
-            {Array(30).fill(0).map((_, i) => (
-              <div key={i} className="railway-tie" style={{ marginLeft: `${i * 30}px` }}></div>
+            {Array(15).fill(0).map((_, i) => (
+              <div key={i} className="railway-tie" style={{ marginLeft: `${i * 60}px` }}></div>
             ))}
           </div>
           
@@ -320,8 +336,8 @@ export default function LandingPage() {
             
             <div className="bus-windows">
               <div className="bus-windows-flex">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className={`bus-window ${i < 4 ? 'bus-window-border' : ''}`}>
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className={`bus-window ${i < 2 ? 'bus-window-border' : ''}`}>
                     {i % 2 === 0 && <div className="bus-passenger"></div>}
                   </div>
                 ))}
@@ -396,9 +412,9 @@ export default function LandingPage() {
             
             <div className="minibus-windows">
               <div className="minibus-windows-flex">
-                {[...Array(4)].map((_, i) => (
-                  <div key={i} className={`minibus-window ${i < 3 ? 'minibus-window-border' : ''}`}>
-                    {(i === 0 || i === 2) && <div className="minibus-passenger"></div>}
+                {[...Array(2)].map((_, i) => (
+                  <div key={i} className={`minibus-window ${i < 1 ? 'minibus-window-border' : ''}`}>
+                    {i === 0 && <div className="minibus-passenger"></div>}
                   </div>
                 ))}
               </div>
@@ -498,46 +514,46 @@ export default function LandingPage() {
       <nav className="navigation">
         <div className="nav-container">
           <div className="nav-logo">
-            <div className="nav-sinhala">ශ්‍රී</div>
-            <div className="nav-english">Express</div>
+            <div className="nav-sinhala">{t('nav.logo.sinhala', 'ශ්‍රී')}</div>
+            <div className="nav-english">{t('nav.logo.english', 'Express')}</div>
           </div>
           
           <div className="nav-links">
-            <a href="#home" className="nav-link">Home</a>
-            <a href="#features" className="nav-link-secondary">Features</a>
-            <a href="#services" className="nav-link-secondary">Services</a>
-            <a href="#contact" className="nav-link-secondary">Contact</a>
-            <Link href="/login" className="nav-button button-hover">Login</Link>
+            <a href="#home" className="nav-link">{t('nav.home', 'Home')}</a>
+            <a href="#features" className="nav-link-secondary">{t('nav.features', 'Features')}</a>
+            <a href="#services" className="nav-link-secondary">{t('nav.services', 'Services')}</a>
+            <a href="#contact" className="nav-link-secondary">{t('nav.contact', 'Contact')}</a>
+            <LanguageSwitcher />
+            <Link href="/login" className="nav-button button-hover">{t('nav.login', 'Login')}</Link>
           </div>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <section id="home" className="hero-section section">
+      <section id="home" className="hero-section section" aria-labelledby="hero-title">
         <div className="container">
           <div className="animate-fade-in-down">
-            <h1 className="hero-title">
-              <span className="hero-title-sinhala">ශ්‍රී</span> Express
+            <h1 id="hero-title" className="hero-title">
+              <span className="hero-title-sinhala">{t('hero.title.sinhala', 'ශ්‍රී')}</span> {t('hero.title.english', 'Express')}
               <br />
-              <span className="hero-subtitle-line">Transportation Management</span>
+              <span className="hero-subtitle-line">{t('hero.title.subtitle', 'Transportation Management')}</span>
             </h1>
           </div>
           
           <div className="animate-fade-in-up animation-delay-300">
             <p className="hero-subtitle">
-              Experience the future of public transportation in Sri Lanka. 
-              Real-time tracking, smart booking, and AI-powered journey planning.
+              {t('hero.description', 'Experience the future of public transportation in Sri Lanka. Real-time tracking, smart booking, and AI-powered journey planning.')}
             </p>
           </div>
           
           <div className="animate-fade-in-up animation-delay-500">
             <div className="hero-buttons">
-              <Link href="/register" className="hero-button-primary button-hover">
-                Get Started
-                <ArrowRightIcon width={20} height={20} />
+              <Link href="/register" className="hero-button-primary button-hover" rel="prefetch">
+                {t('hero.buttons.getStarted', 'Get Started')}
+                <ArrowRightIcon width={20} height={20} aria-hidden="true" />
               </Link>
-              <Link href="/login" className="hero-button-secondary">
-                Sign In
+              <Link href="/login" className="hero-button-secondary" rel="prefetch">
+                {t('hero.buttons.signIn', 'Sign In')}
               </Link>
             </div>
           </div>
@@ -545,12 +561,12 @@ export default function LandingPage() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="section-padding section-white">
+      <section id="features" className="section-padding section-white" aria-labelledby="features-title">
         <div className="container">
           <div className="section-header">
-            <h2 className="section-title">Why Choose Sri Express?</h2>
+            <h2 id="features-title" className="section-title">{t('features.title', 'Why Choose Sri Express?')}</h2>
             <p className="section-subtitle">
-              Advanced technology meets reliable transportation for a seamless travel experience.
+              {t('features.subtitle', 'Advanced technology meets reliable transportation for a seamless travel experience.')}
             </p>
           </div>
           
@@ -572,9 +588,9 @@ export default function LandingPage() {
       <section id="services" className="section-padding section">
         <div className="container">
           <div className="section-header">
-            <h2 className="section-title section-title-white">Our Services</h2>
+            <h2 className="section-title section-title-white">{t('services.title', 'Our Services')}</h2>
             <p className="section-subtitle section-subtitle-box">
-              Comprehensive transportation solutions for every need
+              {t('services.subtitle', 'Comprehensive transportation solutions for every need')}
             </p>
           </div>
           
@@ -582,13 +598,13 @@ export default function LandingPage() {
             <div className="service-card">
               <div className="service-header">
                 <TruckIcon width={32} height={32} color="#F59E0B" />
-                <h3 className="service-title">Public Transport</h3>
+                <h3 className="service-title">{t('services.publicTransport.title', 'Public Transport')}</h3>
               </div>
               <p className="service-description">
-                Reliable city-wide bus services with real-time tracking and digital ticketing.
+                {t('services.publicTransport.description', 'Reliable city-wide bus services with real-time tracking and digital ticketing.')}
               </p>
               <ul className="service-features">
-                {['Real-time GPS tracking', 'Digital payment options', 'Route optimization', 'Accessibility features'].map((item, i) => (
+                {t('services.publicTransport.features', ['Real-time GPS tracking', 'Digital payment options', 'Route optimization', 'Accessibility features']).map((item: string, i: number) => (
                   <li key={i} className="service-feature">
                     <CheckCircleIcon width={16} height={16} color="#10B981" className="service-feature-icon" />
                     {item}
@@ -600,13 +616,13 @@ export default function LandingPage() {
             <div className="service-card">
               <div className="service-header">
                 <UserGroupIcon width={32} height={32} color="#3B82F6" />
-                <h3 className="service-title">Private Fleet Management</h3>
+                <h3 className="service-title">{t('services.fleetManagement.title', 'Private Fleet Management')}</h3>
               </div>
               <p className="service-description">
-                Complete fleet management solutions for schools, offices, and private companies.
+                {t('services.fleetManagement.description', 'Complete fleet management solutions for schools, offices, and private companies.')}
               </p>
               <ul className="service-features">
-                {['Fleet monitoring', 'Driver management', 'Maintenance scheduling', 'Cost analytics'].map((item, i) => (
+                {t('services.fleetManagement.features', ['Fleet monitoring', 'Driver management', 'Maintenance scheduling', 'Cost analytics']).map((item: string, i: number) => (
                   <li key={i} className="service-feature">
                     <CheckCircleIcon width={16} height={16} color="#10B981" className="service-feature-icon" />
                     {item}
@@ -622,7 +638,7 @@ export default function LandingPage() {
       <section className="section-padding section-white">
         <div className="container">
           <div className="section-header">
-            <h2 className="section-title">What Our Users Say</h2>
+            <h2 className="section-title">{t('testimonials.title', 'What Our Users Say')}</h2>
           </div>
           
           <div className="testimonials-grid">
@@ -655,30 +671,30 @@ export default function LandingPage() {
       {/* Contact Section */}
       <section id="contact" className="section-padding section">
         <div className="container-small">
-          <h2 className="contact-section-title">Get in Touch</h2>
+          <h2 className="contact-section-title">{t('contact.title', 'Get in Touch')}</h2>
           
           <div className="contact-card">
             <div className="contact-grid">
               <div className="contact-item">
                 <PhoneIcon width={32} height={32} color="#F59E0B" className="contact-icon" />
-                <div className="contact-label">Phone</div>
-                <div className="contact-value">+94 11 234 5678</div>
+                <div className="contact-label">{t('contact.phone', 'Phone')}</div>
+                <div className="contact-value">{t('contact.values.phone', '+94 11 234 5678')}</div>
               </div>
               <div className="contact-item">
                 <EnvelopeIcon width={32} height={32} color="#F59E0B" className="contact-icon" />
-                <div className="contact-label">Email</div>
-                <div className="contact-value">info@sriexpress.lk</div>
+                <div className="contact-label">{t('contact.email', 'Email')}</div>
+                <div className="contact-value">{t('contact.values.email', 'info@sriexpress.lk')}</div>
               </div>
               <div className="contact-item">
                 <MapPinIcon width={32} height={32} color="#F59E0B" className="contact-icon" />
-                <div className="contact-label">Address</div>
-                <div className="contact-value">Colombo, Sri Lanka</div>
+                <div className="contact-label">{t('contact.address', 'Address')}</div>
+                <div className="contact-value">{t('contact.values.address', 'Colombo, Sri Lanka')}</div>
               </div>
             </div>
             
-            <Link href="/register" className="hero-button-primary button-hover">
-              Start Your Journey
-              <ArrowRightIcon width={20} height={20} />
+            <Link href="/register" className="hero-button-primary button-hover" rel="prefetch">
+              {t('contact.button', 'Start Your Journey')}
+              <ArrowRightIcon width={20} height={20} aria-hidden="true" />
             </Link>
           </div>
         </div>
@@ -688,40 +704,40 @@ export default function LandingPage() {
       <footer className="footer">
         <div className="footer-container">
           <div className="footer-logo">
-            <div className="footer-logo-sinhala">ශ්‍රී</div>
-            <div className="footer-logo-english">Express</div>
+            <div className="footer-logo-sinhala">{t('footer.logo.sinhala', 'ශ්‍රී')}</div>
+            <div className="footer-logo-english">{t('footer.logo.english', 'Express')}</div>
           </div>
           
           <div className="footer-grid">
             <div className="footer-section">
-              <h4>Services</h4>
+              <h4>{t('footer.services.title', 'Services')}</h4>
               <ul>
-                <li><Link href="/services" className="footer-link">Public Transport</Link></li>
-                <li><Link href="/services" className="footer-link">Fleet Management</Link></li>
-                <li><Link href="/services" className="footer-link">Route Planning</Link></li>
+                <li><Link href="/services" className="footer-link">{t('footer.services.items.0', 'Public Transport')}</Link></li>
+                <li><Link href="/services" className="footer-link">{t('footer.services.items.1', 'Fleet Management')}</Link></li>
+                <li><Link href="/services" className="footer-link">{t('footer.services.items.2', 'Route Planning')}</Link></li>
               </ul>
             </div>
             <div className="footer-section">
-              <h4>Support</h4>
+              <h4>{t('footer.support.title', 'Support')}</h4>
               <ul>
-                <li><Link href="/help" className="footer-link">Help Center</Link></li>
-                <li><Link href="/contact" className="footer-link">Contact Us</Link></li>
-                <li><Link href="/privacy" className="footer-link">Privacy Policy</Link></li>
-                <li><Link href="/terms" className="footer-link">Terms of Service</Link></li>
+                <li><Link href="/help" className="footer-link">{t('footer.support.items.0', 'Help Center')}</Link></li>
+                <li><Link href="/contact" className="footer-link">{t('footer.support.items.1', 'Contact Us')}</Link></li>
+                <li><Link href="/privacy" className="footer-link">{t('footer.support.items.2', 'Privacy Policy')}</Link></li>
+                <li><Link href="/terms" className="footer-link">{t('footer.support.items.3', 'Terms of Service')}</Link></li>
               </ul>
             </div>
             <div className="footer-section">
-              <h4>Company</h4>
+              <h4>{t('footer.company.title', 'Company')}</h4>
               <ul>
-                <li><Link href="/about" className="footer-link">About Us</Link></li>
-                <li><a href="#" className="footer-link">Careers</a></li>
-                <li><a href="#" className="footer-link">News</a></li>
+                <li><Link href="/about" className="footer-link">{t('footer.company.items.0', 'About Us')}</Link></li>
+                <li><a href="#" className="footer-link">{t('footer.company.items.1', 'Careers')}</a></li>
+                <li><a href="#" className="footer-link">{t('footer.company.items.2', 'News')}</a></li>
               </ul>
             </div>
           </div>
           
           <div className="footer-bottom">
-            <p>&copy; 2025 Sri Express. All rights reserved. | Transforming transportation in Sri Lanka</p>
+            <p>{t('footer.copyright', '© 2025 Sri Express. All rights reserved. | Transforming transportation in Sri Lanka')}</p>
           </div>
         </div>
       </footer>

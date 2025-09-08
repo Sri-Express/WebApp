@@ -1,0 +1,135 @@
+{
+  "nav": {
+    "logo": {
+      "sinhala": "ශ්‍රී",
+      "english": "Express"
+    },
+    "home": "Home",
+    "features": "Features",
+    "services": "Services",
+    "contact": "Contact",
+    "login": "Login"
+  },
+  "hero": {
+    "title": {
+      "sinhala": "ශ්‍රී",
+      "english": "Express",
+      "subtitle": "Transportation Management"
+    },
+    "description": "Experience the future of public transportation in Sri Lanka. Real-time tracking, smart booking, and AI-powered journey planning.",
+    "buttons": {
+      "getStarted": "Get Started",
+      "signIn": "Sign In"
+    }
+  },
+  "features": {
+    "title": "Why Choose Sri Express?",
+    "subtitle": "Advanced technology meets reliable transportation for a seamless travel experience.",
+    "items": [
+      {
+        "title": "Real-time Tracking",
+        "description": "Track your bus live on the map with accurate ETAs and route updates."
+      },
+      {
+        "title": "Easy Booking",
+        "description": "Book tickets instantly with secure payment options and digital receipts."
+      },
+      {
+        "title": "Smart Scheduling",
+        "description": "AI-powered arrival predictions and optimized route planning."
+      },
+      {
+        "title": "24/7 Support",
+        "description": "Get instant help with our AI chatbot and dedicated support team."
+      }
+    ]
+  },
+  "services": {
+    "title": "Our Services",
+    "subtitle": "Comprehensive transportation solutions for every need",
+    "publicTransport": {
+      "title": "Public Transport",
+      "description": "Reliable city-wide bus services with real-time tracking and digital ticketing.",
+      "features": [
+        "Real-time GPS tracking",
+        "Digital payment options",
+        "Route optimization",
+        "Accessibility features"
+      ]
+    },
+    "fleetManagement": {
+      "title": "Private Fleet Management",
+      "description": "Complete fleet management solutions for schools, offices, and private companies.",
+      "features": [
+        "Fleet monitoring",
+        "Driver management",
+        "Maintenance scheduling",
+        "Cost analytics"
+      ]
+    }
+  },
+  "testimonials": {
+    "title": "What Our Users Say",
+    "items": [
+      {
+        "name": "Sunil Perera",
+        "role": "Daily Commuter",
+        "comment": "Sri Express has made my daily commute so much easier. I always know exactly where my bus is and when it will arrive."
+      },
+      {
+        "name": "Priya Wickramasinghe",
+        "role": "University Student",
+        "comment": "The app is amazing! I can plan my trips perfectly and never miss a bus. The real-time tracking is so accurate."
+      },
+      {
+        "name": "Raj Gunawardhana",
+        "role": "Business Executive",
+        "comment": "Great service for business travel. Professional, reliable, and always on time. Highly recommend!"
+      }
+    ]
+  },
+  "contact": {
+    "title": "Get in Touch",
+    "phone": "Phone",
+    "email": "Email",
+    "address": "Address",
+    "values": {
+      "phone": "+94 11 234 5678",
+      "email": "info@sriexpress.lk",
+      "address": "Colombo, Sri Lanka"
+    },
+    "button": "Start Your Journey"
+  },
+  "footer": {
+    "logo": {
+      "sinhala": "ශ්‍රී",
+      "english": "Express"
+    },
+    "services": {
+      "title": "Services",
+      "items": [
+        "Public Transport",
+        "Fleet Management",
+        "Route Planning"
+      ]
+    },
+    "support": {
+      "title": "Support",
+      "items": [
+        "Help Center",
+        "Contact Us",
+        "Privacy Policy",
+        "Terms of Service"
+      ]
+    },
+    "company": {
+      "title": "Company",
+      "items": [
+        "About Us",
+        "Careers",
+        "News"
+      ]
+    },
+    "copyright": "© 2025 Sri Express. All rights reserved. | Transforming transportation in Sri Lanka"
+  }
+}
