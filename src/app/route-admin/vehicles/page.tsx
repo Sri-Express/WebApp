@@ -70,7 +70,7 @@ interface Assignment {
     email: string;
   };
   assignedAt: string;
-  status: 'active' | 'inactive';
+  status: 'pending' | 'approved' | 'rejected' | 'active' | 'inactive';
   schedules: Array<{
     startTime: string;
     endTime: string;
@@ -182,6 +182,64 @@ export default function RouteAdminVehicles() {
     }
   };
 
+  const handleApproveAssignment = async (assignmentId: string) => {
+    setActionLoading(`approve-${assignmentId}`);
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/route-admin/assignments/${assignmentId}/approve`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to approve assignment');
+      }
+
+      // Update assignment status in state
+      setAssignments(prev => 
+        prev.map(a => a._id === assignmentId ? { ...a, status: 'approved' } : a)
+      );
+    } catch (err) {
+      console.error('Approve assignment error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to approve assignment');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleRejectAssignment = async (assignmentId: string) => {
+    setActionLoading(`reject-${assignmentId}`);
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/route-admin/assignments/${assignmentId}/reject`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to reject assignment');
+      }
+
+      // Update assignment status in state
+      setAssignments(prev => 
+        prev.map(a => a._id === assignmentId ? { ...a, status: 'rejected' } : a)
+      );
+    } catch (err) {
+      console.error('Reject assignment error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to reject assignment');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const handleRemoveAssignment = async (assignmentId: string) => {
     setActionLoading(`remove-${assignmentId}`);
     
@@ -221,6 +279,26 @@ export default function RouteAdminVehicles() {
       case 'offline': return '#6b7280';
       case 'maintenance': return '#ef4444';
       default: return '#6b7280';
+    }
+  };
+
+  const getAssignmentStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return '#f59e0b';
+      case 'approved': return '#10b981';
+      case 'active': return '#3b82f6';
+      case 'rejected': return '#ef4444';
+      default: return '#6b7280';
+    }
+  };
+
+  const getAssignmentStatusText = (status: string) => {
+    switch (status) {
+      case 'pending': return 'Pending Approval';
+      case 'approved': return 'Approved';
+      case 'active': return 'Active';
+      case 'rejected': return 'Rejected';
+      default: return status;
     }
   };
 
@@ -403,10 +481,24 @@ export default function RouteAdminVehicles() {
             border: currentThemeStyles.cardBorder,
             backdropFilter: 'blur(8px)'
           }}>
-            <div style={{ color: '#10b981', fontSize: '1.5rem', fontWeight: 'bold' }}>
-              {assignments.filter(a => a.vehicleId.status === 'online').length}
+            <div style={{ color: '#f59e0b', fontSize: '1.5rem', fontWeight: 'bold' }}>
+              {assignments.filter(a => a.status === 'pending').length}
             </div>
-            <div style={{ color: currentThemeStyles.textSecondary, fontSize: '0.875rem' }}>Online</div>
+            <div style={{ color: currentThemeStyles.textSecondary, fontSize: '0.875rem' }}>Pending Approval</div>
+          </div>
+
+          <div style={{
+            backgroundColor: currentThemeStyles.cardBg,
+            padding: '1rem',
+            borderRadius: '0.5rem',
+            textAlign: 'center',
+            border: currentThemeStyles.cardBorder,
+            backdropFilter: 'blur(8px)'
+          }}>
+            <div style={{ color: '#10b981', fontSize: '1.5rem', fontWeight: 'bold' }}>
+              {assignments.filter(a => a.status === 'approved' || a.status === 'active').length}
+            </div>
+            <div style={{ color: currentThemeStyles.textSecondary, fontSize: '0.875rem' }}>Approved</div>
           </div>
 
           <div style={{
@@ -540,16 +632,28 @@ export default function RouteAdminVehicles() {
                     </p>
                   </div>
                   
-                  <div style={{
-                    backgroundColor: getStatusColor(assignment.vehicleId.status),
-                    color: 'white',
-                    padding: '0.25rem 0.75rem',
-                    borderRadius: '0.25rem',
-                    fontSize: '0.75rem',
-                    fontWeight: '600',
-                    textTransform: 'capitalize'
-                  }}>
-                    {assignment.vehicleId.status}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-end' }}>
+                    <div style={{
+                      backgroundColor: getStatusColor(assignment.vehicleId.status),
+                      color: 'white',
+                      padding: '0.25rem 0.75rem',
+                      borderRadius: '0.25rem',
+                      fontSize: '0.75rem',
+                      fontWeight: '600',
+                      textTransform: 'capitalize'
+                    }}>
+                      {assignment.vehicleId.status}
+                    </div>
+                    <div style={{
+                      backgroundColor: getAssignmentStatusColor(assignment.status),
+                      color: 'white',
+                      padding: '0.25rem 0.75rem',
+                      borderRadius: '0.25rem',
+                      fontSize: '0.75rem',
+                      fontWeight: '600'
+                    }}>
+                      {getAssignmentStatusText(assignment.status)}
+                    </div>
                   </div>
                 </div>
 
@@ -594,8 +698,57 @@ export default function RouteAdminVehicles() {
 
                 <div style={{
                   display: 'flex',
-                  gap: '0.5rem'
+                  gap: '0.5rem',
+                  flexWrap: 'wrap'
                 }}>
+                  {assignment.status === 'pending' && (
+                    <>
+                      <button
+                        onClick={() => handleApproveAssignment(assignment._id)}
+                        disabled={actionLoading === `approve-${assignment._id}`}
+                        style={{
+                          backgroundColor: '#10b981',
+                          color: 'white',
+                          padding: 'clamp(0.375rem, 1.5vw, 0.5rem) clamp(0.75rem, 2.5vw, 1rem)',
+                          borderRadius: '0.375rem',
+                          border: 'none',
+                          fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          flex: 1,
+                          opacity: actionLoading === `approve-${assignment._id}` ? 0.7 : 1
+                        }}
+                      >
+                        <CheckCircleIcon width={14} height={14} />
+                        {actionLoading === `approve-${assignment._id}` ? 'Approving...' : 'Approve'}
+                      </button>
+                      
+                      <button
+                        onClick={() => handleRejectAssignment(assignment._id)}
+                        disabled={actionLoading === `reject-${assignment._id}`}
+                        style={{
+                          backgroundColor: '#ef4444',
+                          color: 'white',
+                          padding: 'clamp(0.375rem, 1.5vw, 0.5rem) clamp(0.75rem, 2.5vw, 1rem)',
+                          borderRadius: '0.375rem',
+                          border: 'none',
+                          fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          flex: 1,
+                          opacity: actionLoading === `reject-${assignment._id}` ? 0.7 : 1
+                        }}
+                      >
+                        <MinusIcon width={14} height={14} />
+                        {actionLoading === `reject-${assignment._id}` ? 'Rejecting...' : 'Reject'}
+                      </button>
+                    </>
+                  )}
+                  
                   <button
                     onClick={() => setSelectedAssignment(assignment)}
                     style={{
@@ -609,34 +762,36 @@ export default function RouteAdminVehicles() {
                       display: 'flex',
                       alignItems: 'center',
                       gap: '0.5rem',
-                      flex: 1
+                      flex: assignment.status === 'pending' ? '0 0 100%' : 1
                     }}
                   >
                     <EyeIcon width={14} height={14} />
                     Details
                   </button>
                   
-                  <button
-                    onClick={() => handleRemoveAssignment(assignment._id)}
-                    disabled={actionLoading === `remove-${assignment._id}`}
-                    style={{
-                      backgroundColor: '#ef4444',
-                      color: 'white',
-                      padding: 'clamp(0.375rem, 1.5vw, 0.5rem) clamp(0.75rem, 2.5vw, 1rem)',
-                      borderRadius: '0.375rem',
-                      border: 'none',
-                      fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                      flex: 1,
-                      opacity: actionLoading === `remove-${assignment._id}` ? 0.7 : 1
-                    }}
-                  >
-                    <MinusIcon width={14} height={14} />
-                    {actionLoading === `remove-${assignment._id}` ? 'Removing...' : 'Remove'}
-                  </button>
+                  {(assignment.status === 'approved' || assignment.status === 'active') && (
+                    <button
+                      onClick={() => handleRemoveAssignment(assignment._id)}
+                      disabled={actionLoading === `remove-${assignment._id}`}
+                      style={{
+                        backgroundColor: '#ef4444',
+                        color: 'white',
+                        padding: 'clamp(0.375rem, 1.5vw, 0.5rem) clamp(0.75rem, 2.5vw, 1rem)',
+                        borderRadius: '0.375rem',
+                        border: 'none',
+                        fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        flex: 1,
+                        opacity: actionLoading === `remove-${assignment._id}` ? 0.7 : 1
+                      }}
+                    >
+                      <MinusIcon width={14} height={14} />
+                      {actionLoading === `remove-${assignment._id}` ? 'Removing...' : 'Remove'}
+                    </button>
+                  )}
                 </div>
               </div>
             ))}

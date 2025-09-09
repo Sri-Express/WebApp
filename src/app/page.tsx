@@ -522,7 +522,7 @@ export default function LandingPage() {
             <a href="#home" className="nav-link">{t('nav.home', 'Home')}</a>
             <a href="#features" className="nav-link-secondary">{t('nav.features', 'Features')}</a>
             <a href="#services" className="nav-link-secondary">{t('nav.services', 'Services')}</a>
-            <a href="#contact" className="nav-link-secondary">{t('nav.contact', 'Contact')}</a>
+            <Link href="/contact" className="nav-link-secondary">{t('nav.contact', 'Contact')}</Link>
             <LanguageSwitcher />
             <Link href="/login" className="nav-button button-hover">{t('nav.login', 'Login')}</Link>
           </div>
