@@ -200,8 +200,8 @@ export default function LandingPage() {
           <div className="railway-track-bottom"></div>
           
           <div className="railway-ties-container">
-            {Array(15).fill(0).map((_, i) => (
-              <div key={i} className="railway-tie" style={{ marginLeft: `${i * 60}px` }}></div>
+            {Array(30).fill(0).map((_, i) => (
+              <div key={i} className="railway-tie" style={{ marginLeft: `${i * 30}px` }}></div>
             ))}
           </div>
           
@@ -336,8 +336,8 @@ export default function LandingPage() {
             
             <div className="bus-windows">
               <div className="bus-windows-flex">
-                {[...Array(3)].map((_, i) => (
-                  <div key={i} className={`bus-window ${i < 2 ? 'bus-window-border' : ''}`}>
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className={`bus-window ${i < 4 ? 'bus-window-border' : ''}`}>
                     {i % 2 === 0 && <div className="bus-passenger"></div>}
                   </div>
                 ))}
@@ -412,9 +412,9 @@ export default function LandingPage() {
             
             <div className="minibus-windows">
               <div className="minibus-windows-flex">
-                {[...Array(2)].map((_, i) => (
-                  <div key={i} className={`minibus-window ${i < 1 ? 'minibus-window-border' : ''}`}>
-                    {i === 0 && <div className="minibus-passenger"></div>}
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className={`minibus-window ${i < 3 ? 'minibus-window-border' : ''}`}>
+                    {(i === 0 || i === 2) && <div className="minibus-passenger"></div>}
                   </div>
                 ))}
               </div>
