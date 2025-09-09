@@ -30,6 +30,12 @@ export default function AddVehiclePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [documents, setDocuments] = useState<{
+    vehicleRegistration?: File;
+    insurance?: File;
+    safetyInspection?: File;
+    revenueLicense?: File;
+  }>({});
   const router = useRouter();
 
   // Theme styles matching admin dashboard
@@ -62,6 +68,38 @@ export default function AddVehiclePage() {
     }));
   };
 
+  const handleFileChange = (documentType: string, file: File | null) => {
+    if (file) {
+      // Validate file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        setError(`${documentType} file size must be less than 5MB`);
+        return;
+      }
+
+      // Validate file type
+      const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 
+                           'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      if (!allowedTypes.includes(file.type)) {
+        setError(`${documentType} must be a PDF, image, or Word document`);
+        return;
+      }
+
+      setDocuments(prev => ({
+        ...prev,
+        [documentType]: file
+      }));
+      
+      // Clear any previous error
+      setError('');
+    } else {
+      setDocuments(prev => {
+        const updated = { ...prev };
+        delete (updated as any)[documentType];
+        return updated;
+      });
+    }
+  };
+
   const validateForm = () => {
     if (!formData.vehicleNumber.trim()) {
       setError('Vehicle number is required');
@@ -92,6 +130,48 @@ export default function AddVehiclePage() {
     return true;
   };
 
+  const uploadDocuments = async (vehicleId: string) => {
+    const token = localStorage.getItem('token');
+    
+    for (const [documentType, file] of Object.entries(documents)) {
+      if (file) {
+        try {
+          const formData = new FormData();
+          formData.append('documents', file);
+          formData.append('documentType', documentType);
+
+          console.log('Making upload request to:', `${process.env.NEXT_PUBLIC_API_URL}/api/fleet/vehicles/${vehicleId}/documents/upload`);
+          console.log('FormData contents:', Array.from(formData.entries()));
+          
+          const uploadResponse = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/api/fleet/vehicles/${vehicleId}/documents/upload`,
+            {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+              },
+              body: formData
+            }
+          );
+
+          if (!uploadResponse.ok) {
+            const errorData = await uploadResponse.json();
+            console.error(`Failed to upload ${documentType}:`, errorData);
+            setError(`Failed to upload ${documentType}: ${errorData.message || 'Unknown error'}`);
+            // Continue with other uploads even if one fails
+          } else {
+            const uploadResult = await uploadResponse.json();
+            console.log(`Successfully uploaded ${documentType}:`, uploadResult);
+          }
+        } catch (error) {
+          console.error(`Error uploading ${documentType}:`, error);
+          setError(`Error uploading ${documentType}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+          // Continue with other uploads even if one fails
+        }
+      }
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -120,7 +200,19 @@ export default function AddVehiclePage() {
         throw new Error(data.message || 'Failed to add vehicle');
       }
 
-      setSuccess('Vehicle added successfully!');
+      const vehicleId = data.vehicle._id;
+
+      // Upload documents if any were selected
+      console.log('Documents to upload:', documents);
+      if (Object.keys(documents).length > 0) {
+        console.log('Starting document upload for vehicle:', vehicleId);
+        await uploadDocuments(vehicleId);
+        console.log('Document upload completed');
+      } else {
+        console.log('No documents to upload');
+      }
+
+      setSuccess('Vehicle added successfully!' + (Object.keys(documents).length > 0 ? ' Documents uploaded.' : ''));
       
       // Reset form
       setFormData({
@@ -129,6 +221,7 @@ export default function AddVehiclePage() {
         firmwareVersion: '1.0.0',
         installDate: new Date().toISOString().split('T')[0]
       });
+      setDocuments({});
 
       // Redirect after 2 seconds
       setTimeout(() => {
@@ -428,6 +521,186 @@ export default function AddVehiclePage() {
                 }}>
                   Date when the GPS device was installed
                 </p>
+              </div>
+            </div>
+
+            {/* Optional Document Upload Section */}
+            <div style={{
+              backgroundColor: 'rgba(15, 23, 42, 0.8)',
+              border: currentThemeStyles.glassPanelBorder,
+              borderRadius: '0.5rem',
+              padding: '1.5rem',
+              marginBottom: '2rem',
+              backdropFilter: 'blur(8px)'
+            }}>
+              <h3 style={{
+                color: currentThemeStyles.textPrimary,
+                fontSize: '1.1rem',
+                fontWeight: '600',
+                marginBottom: '1rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}>
+                📄 Supporting Documents (Optional)
+              </h3>
+              <p style={{
+                color: currentThemeStyles.textSecondary,
+                fontSize: '0.875rem',
+                marginBottom: '1rem'
+              }}>
+                You can upload supporting documents now or add them later from the vehicle management page.
+              </p>
+
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '1rem',
+                marginBottom: '1rem'
+              }}>
+                {/* Vehicle Registration */}
+                <div>
+                  <label style={{
+                    display: 'block',
+                    color: currentThemeStyles.textPrimary,
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    marginBottom: '0.5rem'
+                  }}>
+                    Vehicle Registration Certificate
+                  </label>
+                  <input
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                    onChange={(e) => handleFileChange('vehicleRegistration', e.target.files?.[0] || null)}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      borderRadius: '0.5rem',
+                      border: '1px solid rgba(75, 85, 99, 0.5)',
+                      backgroundColor: 'rgba(51, 65, 85, 0.6)',
+                      color: currentThemeStyles.textPrimary,
+                      fontSize: '0.875rem',
+                      backdropFilter: 'blur(8px)'
+                    }}
+                  />
+                </div>
+
+                {/* Insurance Certificate */}
+                <div>
+                  <label style={{
+                    display: 'block',
+                    color: currentThemeStyles.textPrimary,
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    marginBottom: '0.5rem'
+                  }}>
+                    Insurance Certificate
+                  </label>
+                  <input
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                    onChange={(e) => handleFileChange('insurance', e.target.files?.[0] || null)}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      borderRadius: '0.5rem',
+                      border: '1px solid rgba(75, 85, 99, 0.5)',
+                      backgroundColor: 'rgba(51, 65, 85, 0.6)',
+                      color: currentThemeStyles.textPrimary,
+                      fontSize: '0.875rem',
+                      backdropFilter: 'blur(8px)'
+                    }}
+                  />
+                </div>
+
+                {/* Safety Inspection Certificate */}
+                <div>
+                  <label style={{
+                    display: 'block',
+                    color: currentThemeStyles.textPrimary,
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    marginBottom: '0.5rem'
+                  }}>
+                    Safety/Fitness Certificate
+                  </label>
+                  <input
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                    onChange={(e) => handleFileChange('safetyInspection', e.target.files?.[0] || null)}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      borderRadius: '0.5rem',
+                      border: '1px solid rgba(75, 85, 99, 0.5)',
+                      backgroundColor: 'rgba(51, 65, 85, 0.6)',
+                      color: currentThemeStyles.textPrimary,
+                      fontSize: '0.875rem',
+                      backdropFilter: 'blur(8px)'
+                    }}
+                  />
+                </div>
+
+                {/* Revenue License */}
+                <div>
+                  <label style={{
+                    display: 'block',
+                    color: currentThemeStyles.textPrimary,
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    marginBottom: '0.5rem'
+                  }}>
+                    Revenue License (if applicable)
+                  </label>
+                  <input
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                    onChange={(e) => handleFileChange('revenueLicense', e.target.files?.[0] || null)}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      borderRadius: '0.5rem',
+                      border: '1px solid rgba(75, 85, 99, 0.5)',
+                      backgroundColor: 'rgba(51, 65, 85, 0.6)',
+                      color: currentThemeStyles.textPrimary,
+                      fontSize: '0.875rem',
+                      backdropFilter: 'blur(8px)'
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div style={{
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                border: '1px solid rgba(59, 130, 246, 0.3)',
+                borderRadius: '0.5rem',
+                padding: '0.75rem',
+                marginTop: '1rem'
+              }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  marginBottom: '0.5rem'
+                }}>
+                  <ExclamationCircleIcon width={16} height={16} color="#3b82f6" />
+                  <span style={{ color: '#3b82f6', fontSize: '0.875rem', fontWeight: '600' }}>
+                    File Upload Guidelines
+                  </span>
+                </div>
+                <ul style={{
+                  color: currentThemeStyles.textSecondary,
+                  fontSize: '0.75rem',
+                  margin: 0,
+                  paddingLeft: '1rem',
+                  lineHeight: '1.4'
+                }}>
+                  <li>Accepted formats: PDF, JPG, PNG, DOC, DOCX</li>
+                  <li>Maximum file size: 5MB per file</li>
+                  <li>Documents are stored securely and only accessible to authorized personnel</li>
+                  <li>You can upload documents later from the vehicle management page</li>
+                </ul>
               </div>
             </div>
 
