@@ -57,6 +57,28 @@ interface Vehicle {
     count: number;
     messages: string[];
   };
+  documents?: {
+    vehicleRegistration?: {
+      uploaded: boolean;
+      fileName?: string;
+    };
+    insurance?: {
+      uploaded: boolean;
+      fileName?: string;
+    };
+    safetyInspection?: {
+      uploaded: boolean;
+      fileName?: string;
+    };
+    revenueLicense?: {
+      uploaded: boolean;
+      fileName?: string;
+    };
+    additionalFiles?: Array<{
+      fileName: string;
+      uploadDate?: string;
+    }>;
+  };
 }
 
 interface VehicleStats {
@@ -87,6 +109,8 @@ export default function AdminVehiclesPage() {
   const [selectedVehicles, setSelectedVehicles] = useState<string[]>([]);
   const [showBulkActions, setShowBulkActions] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [documentViewModal, setDocumentViewModal] = useState<{vehicleId: string; documents: any} | null>(null);
+  const [loadingDocuments, setLoadingDocuments] = useState(false);
 
   // --- Theme and Style Definitions (Same as dashboard) ---
   const lightTheme = {
@@ -413,6 +437,58 @@ export default function AdminVehiclesPage() {
       .filter(v => v.approvalStatus === 'pending')
       .map(v => v._id);
     setSelectedVehicles(pendingIds);
+  };
+
+  const handleViewDocuments = async (vehicleId: string) => {
+    setLoadingDocuments(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/fleet/vehicles/admin/${vehicleId}/documents`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch vehicle documents');
+      }
+
+      const data = await response.json();
+      console.log('Fetched vehicle documents:', data);
+      console.log('Documents object details:', JSON.stringify(data.documents, null, 2));
+      setDocumentViewModal({
+        vehicleId: vehicleId,
+        documents: data.documents || {}
+      });
+    } catch (error) {
+      console.error('Error fetching vehicle documents:', error);
+      setError('Failed to load vehicle documents');
+    } finally {
+      setLoadingDocuments(false);
+    }
+  };
+
+  const handleDownloadDocument = async (vehicleId: string, fileName: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/fleet/vehicles/admin/${vehicleId}/documents/${encodeURIComponent(fileName)}/download`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get download URL');
+      }
+
+      const data = await response.json();
+      // Open the signed URL in a new window/tab
+      window.open(data.downloadUrl, '_blank');
+    } catch (error) {
+      console.error('Error downloading document:', error);
+      setError('Failed to download document');
+    }
   };
 
   // Loading state with consistent styling
@@ -1005,6 +1081,214 @@ export default function AdminVehiclesPage() {
                   </div>
                 )}
 
+                {/* Documents Section */}
+                {vehicle.documents && (
+                  <div style={{
+                    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                    border: '1px solid rgba(59, 130, 246, 0.3)',
+                    borderRadius: '0.5rem',
+                    padding: '1rem',
+                    marginBottom: '1rem'
+                  }}>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      marginBottom: '0.75rem'
+                    }}>
+                      <span style={{ fontSize: '1rem' }}>📄</span>
+                      <span style={{ color: '#3b82f6', fontSize: '0.875rem', fontWeight: '600' }}>
+                        Supporting Documents
+                      </span>
+                    </div>
+                    
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
+                      gap: '0.5rem',
+                      fontSize: '0.75rem'
+                    }}>
+                      {/* Vehicle Registration */}
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '0.25rem 0'
+                      }}>
+                        <span style={{ color: currentThemeStyles.textSecondary }}>Vehicle Registration:</span>
+                        {vehicle.documents?.vehicleRegistration?.uploaded ? (
+                          <button
+                            onClick={() => handleDownloadDocument(vehicle._id, vehicle.documents?.vehicleRegistration?.fileName || '')}
+                            style={{ 
+                              color: '#10b981',
+                              fontWeight: '500',
+                              background: 'none',
+                              border: 'none',
+                              cursor: 'pointer',
+                              fontSize: '0.75rem',
+                              textDecoration: 'underline'
+                            }}
+                          >
+                            ✓ Download
+                          </button>
+                        ) : (
+                          <span style={{ 
+                            color: currentThemeStyles.textMuted,
+                            fontWeight: '500'
+                          }}>
+                            Not uploaded
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Insurance */}
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '0.25rem 0'
+                      }}>
+                        <span style={{ color: currentThemeStyles.textSecondary }}>Insurance Certificate:</span>
+                        {vehicle.documents?.insurance?.uploaded ? (
+                          <button
+                            onClick={() => handleDownloadDocument(vehicle._id, vehicle.documents?.insurance?.fileName || '')}
+                            style={{ 
+                              color: '#10b981',
+                              fontWeight: '500',
+                              background: 'none',
+                              border: 'none',
+                              cursor: 'pointer',
+                              fontSize: '0.75rem',
+                              textDecoration: 'underline'
+                            }}
+                          >
+                            ✓ Download
+                          </button>
+                        ) : (
+                          <span style={{ 
+                            color: currentThemeStyles.textMuted,
+                            fontWeight: '500'
+                          }}>
+                            Not uploaded
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Safety Inspection */}
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '0.25rem 0'
+                      }}>
+                        <span style={{ color: currentThemeStyles.textSecondary }}>Safety Certificate:</span>
+                        {vehicle.documents?.safetyInspection?.uploaded ? (
+                          <button
+                            onClick={() => handleDownloadDocument(vehicle._id, vehicle.documents?.safetyInspection?.fileName || '')}
+                            style={{ 
+                              color: '#10b981',
+                              fontWeight: '500',
+                              background: 'none',
+                              border: 'none',
+                              cursor: 'pointer',
+                              fontSize: '0.75rem',
+                              textDecoration: 'underline'
+                            }}
+                          >
+                            ✓ Download
+                          </button>
+                        ) : (
+                          <span style={{ 
+                            color: currentThemeStyles.textMuted,
+                            fontWeight: '500'
+                          }}>
+                            Not uploaded
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Revenue License */}
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '0.25rem 0'
+                      }}>
+                        <span style={{ color: currentThemeStyles.textSecondary }}>Revenue License:</span>
+                        {vehicle.documents?.revenueLicense?.uploaded ? (
+                          <button
+                            onClick={() => handleDownloadDocument(vehicle._id, vehicle.documents?.revenueLicense?.fileName || '')}
+                            style={{ 
+                              color: '#10b981',
+                              fontWeight: '500',
+                              background: 'none',
+                              border: 'none',
+                              cursor: 'pointer',
+                              fontSize: '0.75rem',
+                              textDecoration: 'underline'
+                            }}
+                          >
+                            ✓ Download
+                          </button>
+                        ) : (
+                          <span style={{ 
+                            color: currentThemeStyles.textMuted,
+                            fontWeight: '500'
+                          }}>
+                            Not uploaded
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Additional Files */}
+                    {vehicle.documents?.additionalFiles && vehicle.documents.additionalFiles.length > 0 && (
+                      <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(75, 85, 99, 0.3)' }}>
+                        <span style={{ color: currentThemeStyles.textSecondary, fontSize: '0.75rem', fontWeight: '600' }}>
+                          Additional Files ({vehicle.documents.additionalFiles.length}):
+                        </span>
+                        <div style={{ marginTop: '0.25rem' }}>
+                          {vehicle.documents.additionalFiles.slice(0, 2).map((file, index: number) => (
+                            <div key={index} style={{ 
+                              color: '#10b981', 
+                              fontSize: '0.75rem',
+                              margin: '0.25rem 0'
+                            }}>
+                              • {file.fileName}
+                            </div>
+                          ))}
+                          {vehicle.documents.additionalFiles.length > 2 && (
+                            <div style={{ color: currentThemeStyles.textMuted, fontSize: '0.75rem' }}>
+                              ... and {vehicle.documents.additionalFiles.length - 2} more
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* View Documents Button for Pending/Approved Vehicles */}
+                    {(vehicle.approvalStatus === 'pending' || vehicle.approvalStatus === 'approved') && (
+                      <div style={{ marginTop: '0.75rem' }}>
+                        <button
+                          onClick={() => handleViewDocuments(vehicle._id)}
+                          style={{
+                            backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                            color: 'white',
+                            padding: '0.5rem 1rem',
+                            borderRadius: '0.25rem',
+                            border: 'none',
+                            fontSize: '0.75rem',
+                            cursor: 'pointer',
+                            backdropFilter: 'blur(8px)'
+                          }}
+                        >
+                          📋 View All Documents
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Alerts */}
                 {vehicle.alerts.count > 0 && (
                   <div style={{
@@ -1505,6 +1789,296 @@ export default function AdminVehiclesPage() {
                 }}
               >
                 Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Document Viewer Modal */}
+      {documentViewModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1002,
+          backdropFilter: 'blur(4px)'
+        }}>
+          <div style={{
+            backgroundColor: currentThemeStyles.modalBg,
+            padding: '2rem',
+            borderRadius: '0.75rem',
+            border: currentThemeStyles.modalBorder,
+            maxWidth: '700px',
+            width: '90%',
+            maxHeight: '80vh',
+            overflow: 'auto',
+            backdropFilter: 'blur(12px)',
+            boxShadow: currentThemeStyles.glassPanelShadow
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '1.5rem'
+            }}>
+              <h3 style={{
+                color: currentThemeStyles.textPrimary,
+                fontSize: '1.25rem',
+                fontWeight: 'bold',
+                margin: 0,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}>
+                📄 Vehicle Documents
+              </h3>
+              <button
+                onClick={() => setDocumentViewModal(null)}
+                style={{
+                  backgroundColor: 'transparent',
+                  color: currentThemeStyles.textSecondary,
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '1.5rem'
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            {loadingDocuments ? (
+              <div style={{
+                textAlign: 'center',
+                padding: '2rem',
+                color: currentThemeStyles.textSecondary
+              }}>
+                <div style={{ 
+                  width: '30px', 
+                  height: '30px', 
+                  border: '3px solid rgba(59, 130, 246, 0.3)', 
+                  borderTop: '3px solid #3b82f6', 
+                  borderRadius: '50%', 
+                  animation: 'spin 1s linear infinite', 
+                  margin: '0 auto 1rem' 
+                }}></div>
+                Loading documents...
+              </div>
+            ) : (
+              <div style={{
+                display: 'grid',
+                gap: '1rem'
+              }}>
+                {/* Standard Documents */}
+                <div>
+                  <h4 style={{
+                    color: currentThemeStyles.textPrimary,
+                    fontSize: '1rem',
+                    fontWeight: '600',
+                    marginBottom: '1rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
+                  }}>
+                    📋 Required Documents
+                  </h4>
+                  
+                  <div style={{
+                    display: 'grid',
+                    gap: '0.75rem'
+                  }}>
+                    {[
+                      { key: 'vehicleRegistration', label: 'Vehicle Registration Certificate' },
+                      { key: 'insurance', label: 'Insurance Certificate' },
+                      { key: 'safetyInspection', label: 'Safety/Fitness Certificate' },
+                      { key: 'revenueLicense', label: 'Revenue License' }
+                    ].map(doc => {
+                      const docData = documentViewModal.documents[doc.key];
+                      const isUploaded = docData?.uploaded;
+                      
+                      return (
+                        <div key={doc.key} style={{
+                          backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                          padding: '1rem',
+                          borderRadius: '0.5rem',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center'
+                        }}>
+                          <div>
+                            <div style={{
+                              color: currentThemeStyles.textPrimary,
+                              fontSize: '0.875rem',
+                              fontWeight: '500',
+                              marginBottom: '0.25rem'
+                            }}>
+                              {doc.label}
+                            </div>
+                            <div style={{
+                              color: isUploaded ? '#10b981' : currentThemeStyles.textMuted,
+                              fontSize: '0.75rem',
+                              fontWeight: '500'
+                            }}>
+                              {isUploaded ? '✓ Uploaded' : '✗ Not uploaded'}
+                            </div>
+                            {isUploaded && docData.uploadDate && (
+                              <div style={{
+                                color: currentThemeStyles.textMuted,
+                                fontSize: '0.7rem',
+                                marginTop: '0.25rem'
+                              }}>
+                                Uploaded: {new Date(docData.uploadDate).toLocaleDateString()}
+                              </div>
+                            )}
+                            {docData?.expiryDate && (
+                              <div style={{
+                                color: new Date(docData.expiryDate) < new Date() ? '#ef4444' : '#f59e0b',
+                                fontSize: '0.7rem',
+                                marginTop: '0.25rem'
+                              }}>
+                                Expires: {new Date(docData.expiryDate).toLocaleDateString()}
+                              </div>
+                            )}
+                          </div>
+                          
+                          {isUploaded && docData.fileName && (
+                            <button
+                              onClick={() => handleDownloadDocument(documentViewModal.vehicleId, docData.fileName)}
+                              style={{
+                                backgroundColor: '#3b82f6',
+                                color: 'white',
+                                padding: '0.5rem 1rem',
+                                borderRadius: '0.25rem',
+                                border: 'none',
+                                fontSize: '0.75rem',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem'
+                              }}
+                            >
+                              📥 Download
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Additional Files */}
+                {documentViewModal.documents.additionalFiles && documentViewModal.documents.additionalFiles.length > 0 && (
+                  <div style={{ marginTop: '1rem' }}>
+                    <h4 style={{
+                      color: currentThemeStyles.textPrimary,
+                      fontSize: '1rem',
+                      fontWeight: '600',
+                      marginBottom: '1rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}>
+                      📎 Additional Files ({documentViewModal.documents.additionalFiles.length})
+                    </h4>
+                    
+                    <div style={{
+                      display: 'grid',
+                      gap: '0.5rem'
+                    }}>
+                      {documentViewModal.documents.additionalFiles.map((file: any, index: number) => (
+                        <div key={index} style={{
+                          backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                          padding: '0.75rem',
+                          borderRadius: '0.5rem',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center'
+                        }}>
+                          <div>
+                            <div style={{
+                              color: currentThemeStyles.textPrimary,
+                              fontSize: '0.875rem',
+                              fontWeight: '500'
+                            }}>
+                              {file.name}
+                            </div>
+                            <div style={{
+                              color: currentThemeStyles.textMuted,
+                              fontSize: '0.7rem',
+                              marginTop: '0.25rem'
+                            }}>
+                              Uploaded: {new Date(file.uploadDate).toLocaleDateString()}
+                            </div>
+                          </div>
+                          
+                          <button
+                            onClick={() => handleDownloadDocument(documentViewModal.vehicleId, file.fileName)}
+                            style={{
+                              backgroundColor: '#10b981',
+                              color: 'white',
+                              padding: '0.5rem 1rem',
+                              borderRadius: '0.25rem',
+                              border: 'none',
+                              fontSize: '0.75rem',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.5rem'
+                            }}
+                          >
+                            📥 Download
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* No Documents Available */}
+                {(!documentViewModal.documents.vehicleRegistration?.uploaded && 
+                  !documentViewModal.documents.insurance?.uploaded &&
+                  !documentViewModal.documents.safetyInspection?.uploaded &&
+                  !documentViewModal.documents.revenueLicense?.uploaded &&
+                  (!documentViewModal.documents.additionalFiles || documentViewModal.documents.additionalFiles.length === 0)) && (
+                  <div style={{
+                    textAlign: 'center',
+                    padding: '2rem',
+                    color: currentThemeStyles.textSecondary,
+                    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                    borderRadius: '0.5rem'
+                  }}>
+                    <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>📄</div>
+                    <p>No documents have been uploaded for this vehicle yet.</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div style={{
+              marginTop: '1.5rem',
+              display: 'flex',
+              justifyContent: 'flex-end',
+              gap: '1rem'
+            }}>
+              <button
+                onClick={() => setDocumentViewModal(null)}
+                style={{
+                  backgroundColor: 'rgba(75, 85, 99, 0.8)',
+                  color: currentThemeStyles.textPrimary,
+                  padding: '0.5rem 1rem',
+                  border: '1px solid rgba(75, 85, 99, 0.5)',
+                  borderRadius: '0.5rem',
+                  cursor: 'pointer',
+                  backdropFilter: 'blur(8px)'
+                }}
+              >
+                Close
               </button>
             </div>
           </div>

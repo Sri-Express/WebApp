@@ -10,8 +10,13 @@ import {
   PlusIcon,
   MinusIcon,
   CheckIcon,
-  ExclamationTriangleIcon
+  ExclamationTriangleIcon,
+  ShieldCheckIcon,
+  BellIcon
 } from '@heroicons/react/24/outline';
+import { useTheme } from '@/app/context/ThemeContext';
+import ThemeSwitcher from '@/app/components/ThemeSwitcher';
+import AnimatedBackground from '@/app/sysadmin/components/AnimatedBackground';
 
 interface LocationData {
   name: string;
@@ -46,6 +51,7 @@ interface RouteFormData {
 
 export default function CreateRoutePage() {
   const router = useRouter();
+  const { theme } = useTheme();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -77,6 +83,36 @@ export default function CreateRoutePage() {
   });
 
   const [newAmenity, setNewAmenity] = useState('');
+
+  // Theme and Style Definitions
+  const lightTheme = {
+    mainBg: '#fffbeb',
+    bgGradient: 'linear-gradient(to bottom right, #fffbeb, #fef3c7, #fde68a)',
+    glassPanelBg: 'rgba(255, 255, 255, 0.92)',
+    glassPanelBorder: '1px solid rgba(251, 191, 36, 0.3)',
+    glassPanelShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 10px 20px -5px rgba(0, 0, 0, 0.1)',
+    textPrimary: '#1f2937',
+    textSecondary: '#4B5563',
+    textMuted: '#6B7280',
+    inputBg: 'rgba(255, 255, 255, 0.8)',
+    inputBorder: '1px solid rgba(209, 213, 219, 0.6)'
+  };
+
+  const darkTheme = {
+    mainBg: '#0f172a',
+    bgGradient: 'linear-gradient(to bottom right, #0f172a, #1e293b, #334155)',
+    glassPanelBg: 'rgba(30, 41, 59, 0.8)',
+    glassPanelBorder: '1px solid rgba(251, 191, 36, 0.3)',
+    glassPanelShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35), 0 10px 20px -5px rgba(0, 0, 0, 0.2)',
+    textPrimary: '#f9fafb',
+    textSecondary: '#9ca3af',
+    textMuted: '#9ca3af',
+    inputBg: 'rgba(51, 65, 85, 0.8)',
+    inputBorder: '1px solid rgba(75, 85, 99, 0.5)'
+  };
+
+  const currentThemeStyles = theme === 'dark' ? darkTheme : lightTheme;
+
 
   const updateFormData = (path: string, value: any) => {
     setFormData(prev => {
@@ -261,71 +297,85 @@ export default function CreateRoutePage() {
 
   if (success) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{
-          backgroundColor: '#1e293b',
-          padding: '3rem',
-          borderRadius: '1rem',
-          border: '1px solid #334155',
-          textAlign: 'center',
-          maxWidth: '400px'
-        }}>
-          <CheckIcon width={48} height={48} color="#10b981" style={{ margin: '0 auto 1rem' }} />
-          <h2 style={{ color: '#f1f5f9', fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>
-            Route Created Successfully!
-          </h2>
-          <p style={{ color: '#94a3b8', marginBottom: '1rem' }}>
-            Your new route has been created and is now available in the system.
-          </p>
-          <p style={{ color: '#94a3b8', fontSize: '0.875rem' }}>
-            Redirecting to routes page...
-          </p>
+      <div style={{ backgroundColor: currentThemeStyles.mainBg, minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+        <AnimatedBackground currentThemeStyles={currentThemeStyles} />
+        <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 10 }}>
+          <div style={{
+            backgroundColor: currentThemeStyles.glassPanelBg,
+            padding: '3rem',
+            borderRadius: '1rem',
+            border: currentThemeStyles.glassPanelBorder,
+            boxShadow: currentThemeStyles.glassPanelShadow,
+            backdropFilter: 'blur(12px)',
+            textAlign: 'center',
+            maxWidth: '400px'
+          }}>
+            <CheckIcon width={48} height={48} color="#10b981" style={{ margin: '0 auto 1rem' }} />
+            <h2 style={{ color: currentThemeStyles.textPrimary, fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>
+              Route Created Successfully!
+            </h2>
+            <p style={{ color: currentThemeStyles.textSecondary, marginBottom: '1rem' }}>
+              Your new route has been created and is now available in the system.
+            </p>
+            <p style={{ color: currentThemeStyles.textMuted, fontSize: '0.875rem' }}>
+              Redirecting to routes page...
+            </p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#0f172a' }}>
+    <div style={{ backgroundColor: currentThemeStyles.mainBg, minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+      <AnimatedBackground currentThemeStyles={currentThemeStyles} />
+
       {/* Navigation */}
-      <nav style={{
-        backgroundColor: '#1e293b',
-        borderBottom: '1px solid #334155',
-        padding: '1rem 0'
-      }}>
+      <nav style={{ backgroundColor: 'rgba(30, 41, 59, 0.92)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(251, 191, 36, 0.3)', padding: '1rem 0', position: 'relative', zIndex: 10 }}>
         <div style={{
           maxWidth: '1400px',
           margin: '0 auto',
           padding: '0 1.5rem',
           display: 'flex',
+          justifyContent: 'space-between',
           alignItems: 'center',
           gap: '1rem'
         }}>
-          <Link href="/sysadmin/routes" style={{
-            color: '#94a3b8',
-            textDecoration: 'none',
-            fontSize: '0.875rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem'
-          }}>
-            <ArrowLeftIcon width={16} height={16} />
-            Back to Routes
-          </Link>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem'
-          }}>
-            <MapIcon width={24} height={24} color="#10b981" />
-            <h1 style={{
-              fontSize: '1.5rem',
-              fontWeight: 'bold',
-              color: '#f1f5f9',
-              margin: 0
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <Link href="/sysadmin/routes" style={{
+              color: '#94a3b8',
+              textDecoration: 'none',
+              fontSize: '0.875rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
             }}>
-              Create New Route
-            </h1>
+              <ArrowLeftIcon width={16} height={16} />
+              Back to Routes
+            </Link>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}>
+              <MapIcon width={24} height={24} color="#f59e0b" />
+              <h1 style={{
+                fontSize: 'clamp(1.25rem, 2vw, 1.5rem)',
+                fontWeight: 'bold',
+                color: '#f1f5f9',
+                margin: 0
+              }}>
+                Create New Route
+              </h1>
+            </div>
+          </div>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <ThemeSwitcher />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <ShieldCheckIcon width={20} height={20} color="#dc2626" />
+              <div style={{ backgroundColor: '#dc2626', color: 'white', padding: '0.25rem 0.5rem', borderRadius: '0.5rem', fontSize: '0.75rem' }}>ADMIN</div>
+            </div>
           </div>
         </div>
       </nav>
@@ -333,8 +383,11 @@ export default function CreateRoutePage() {
       <div style={{
         maxWidth: '1000px',
         margin: '0 auto',
-        padding: '2rem 1.5rem'
+        padding: '2rem 1.5rem',
+        position: 'relative',
+        zIndex: 10
       }}>
+        <div style={{ width: '100%' }}>
         <form onSubmit={handleSubmit}>
           {/* Basic Route Information */}
           <div style={{
@@ -429,10 +482,12 @@ export default function CreateRoutePage() {
 
           {/* Start Location */}
           <div style={{
-            backgroundColor: '#1e293b',
+            backgroundColor: currentThemeStyles.glassPanelBg,
             padding: '2rem',
             borderRadius: '0.75rem',
-            border: '1px solid #334155',
+            border: currentThemeStyles.glassPanelBorder,
+            boxShadow: currentThemeStyles.glassPanelShadow,
+            backdropFilter: 'blur(12px)',
             marginBottom: '2rem'
           }}>
             <h2 style={{
@@ -509,7 +564,7 @@ export default function CreateRoutePage() {
                   fontSize: '0.875rem'
                 }}
               />
-              <p style={{ color: '#94a3b8', fontSize: '0.75rem', marginTop: '0.5rem' }}>
+              <p style={{ color: currentThemeStyles.textMuted, fontSize: '0.75rem', marginTop: '0.5rem' }}>
                 Optional: Enter as "longitude, latitude" format
               </p>
             </div>
@@ -517,10 +572,12 @@ export default function CreateRoutePage() {
 
           {/* End Location */}
           <div style={{
-            backgroundColor: '#1e293b',
+            backgroundColor: currentThemeStyles.glassPanelBg,
             padding: '2rem',
             borderRadius: '0.75rem',
-            border: '1px solid #334155',
+            border: currentThemeStyles.glassPanelBorder,
+            boxShadow: currentThemeStyles.glassPanelShadow,
+            backdropFilter: 'blur(12px)',
             marginBottom: '2rem'
           }}>
             <h2 style={{
@@ -597,7 +654,7 @@ export default function CreateRoutePage() {
                   fontSize: '0.875rem'
                 }}
               />
-              <p style={{ color: '#94a3b8', fontSize: '0.75rem', marginTop: '0.5rem' }}>
+              <p style={{ color: currentThemeStyles.textMuted, fontSize: '0.75rem', marginTop: '0.5rem' }}>
                 Optional: Enter as "longitude, latitude" format
               </p>
             </div>
@@ -605,10 +662,12 @@ export default function CreateRoutePage() {
 
           {/* Waypoints (Optional) */}
           <div style={{
-            backgroundColor: '#1e293b',
+            backgroundColor: currentThemeStyles.glassPanelBg,
             padding: '2rem',
             borderRadius: '0.75rem',
-            border: '1px solid #334155',
+            border: currentThemeStyles.glassPanelBorder,
+            boxShadow: currentThemeStyles.glassPanelShadow,
+            backdropFilter: 'blur(12px)',
             marginBottom: '2rem'
           }}>
             <div style={{
@@ -647,17 +706,17 @@ export default function CreateRoutePage() {
             </div>
 
             {formData.waypoints.length === 0 ? (
-              <p style={{ color: '#94a3b8', textAlign: 'center', padding: '2rem' }}>
+              <p style={{ color: currentThemeStyles.textMuted, textAlign: 'center', padding: '2rem' }}>
                 No waypoints added. Click "Add Waypoint" to add intermediate stops.
               </p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                 {formData.waypoints.map((waypoint, index) => (
                   <div key={index} style={{
-                    backgroundColor: '#334155',
+                    backgroundColor: currentThemeStyles.inputBg,
                     padding: '1.5rem',
                     borderRadius: '0.5rem',
-                    border: '1px solid #475569'
+                    border: currentThemeStyles.inputBorder
                   }}>
                     <div style={{
                       display: 'flex',
@@ -665,7 +724,7 @@ export default function CreateRoutePage() {
                       alignItems: 'center',
                       marginBottom: '1rem'
                     }}>
-                      <h4 style={{ color: '#f1f5f9', margin: 0 }}>Waypoint {index + 1}</h4>
+                      <h4 style={{ color: currentThemeStyles.textPrimary, margin: 0 }}>Waypoint {index + 1}</h4>
                       <button
                         type="button"
                         onClick={() => removeWaypoint(index)}
@@ -695,12 +754,13 @@ export default function CreateRoutePage() {
                         onChange={(e) => updateWaypoint(index, 'name', e.target.value)}
                         placeholder="Waypoint name"
                         style={{
-                          backgroundColor: '#1e293b',
-                          border: '1px solid #475569',
+                          backgroundColor: currentThemeStyles.glassPanelBg,
+                          border: currentThemeStyles.glassPanelBorder,
                           borderRadius: '0.5rem',
                           padding: '0.75rem',
-                          color: '#f1f5f9',
-                          fontSize: '0.875rem'
+                          color: currentThemeStyles.textPrimary,
+                          fontSize: '0.875rem',
+                          outline: 'none'
                         }}
                       />
                       <input
@@ -709,12 +769,13 @@ export default function CreateRoutePage() {
                         onChange={(e) => updateWaypoint(index, 'estimatedTime', parseInt(e.target.value) || 0)}
                         placeholder="Time (min)"
                         style={{
-                          backgroundColor: '#1e293b',
-                          border: '1px solid #475569',
+                          backgroundColor: currentThemeStyles.glassPanelBg,
+                          border: currentThemeStyles.glassPanelBorder,
                           borderRadius: '0.5rem',
                           padding: '0.75rem',
-                          color: '#f1f5f9',
-                          fontSize: '0.875rem'
+                          color: currentThemeStyles.textPrimary,
+                          fontSize: '0.875rem',
+                          outline: 'none'
                         }}
                       />
                     </div>
@@ -728,12 +789,13 @@ export default function CreateRoutePage() {
                       }}
                       style={{
                         width: '100%',
-                        backgroundColor: '#1e293b',
-                        border: '1px solid #475569',
+                        backgroundColor: currentThemeStyles.glassPanelBg,
+                        border: currentThemeStyles.glassPanelBorder,
                         borderRadius: '0.5rem',
                         padding: '0.75rem',
-                        color: '#f1f5f9',
-                        fontSize: '0.875rem'
+                        color: currentThemeStyles.textPrimary,
+                        fontSize: '0.875rem',
+                        outline: 'none'
                       }}
                     />
                   </div>
@@ -744,10 +806,12 @@ export default function CreateRoutePage() {
 
           {/* Vehicle Information */}
           <div style={{
-            backgroundColor: '#1e293b',
+            backgroundColor: currentThemeStyles.glassPanelBg,
             padding: '2rem',
             borderRadius: '0.75rem',
-            border: '1px solid #334155',
+            border: currentThemeStyles.glassPanelBorder,
+            boxShadow: currentThemeStyles.glassPanelShadow,
+            backdropFilter: 'blur(12px)',
             marginBottom: '2rem'
           }}>
             <h2 style={{
@@ -827,12 +891,13 @@ export default function CreateRoutePage() {
                   placeholder="e.g., Air Conditioning"
                   style={{
                     flex: 1,
-                    backgroundColor: '#334155',
-                    border: '1px solid #475569',
+                    backgroundColor: currentThemeStyles.inputBg,
+                    border: currentThemeStyles.inputBorder,
                     borderRadius: '0.5rem',
                     padding: '0.75rem',
-                    color: '#f1f5f9',
-                    fontSize: '0.875rem'
+                    color: currentThemeStyles.textPrimary,
+                    fontSize: '0.875rem',
+                    outline: 'none'
                   }}
                 />
                 <button
@@ -860,14 +925,15 @@ export default function CreateRoutePage() {
                 }}>
                   {formData.vehicleInfo.amenities.map((amenity, index) => (
                     <div key={index} style={{
-                      backgroundColor: '#334155',
+                      backgroundColor: currentThemeStyles.inputBg,
                       padding: '0.5rem 0.75rem',
                       borderRadius: '0.5rem',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '0.5rem'
+                      gap: '0.5rem',
+                      border: currentThemeStyles.inputBorder
                     }}>
-                      <span style={{ color: '#f1f5f9', fontSize: '0.875rem' }}>{amenity}</span>
+                      <span style={{ color: currentThemeStyles.textPrimary, fontSize: '0.875rem' }}>{amenity}</span>
                       <button
                         type="button"
                         onClick={() => removeAmenity(amenity)}
@@ -890,10 +956,12 @@ export default function CreateRoutePage() {
 
           {/* Pricing Information */}
           <div style={{
-            backgroundColor: '#1e293b',
+            backgroundColor: currentThemeStyles.glassPanelBg,
             padding: '2rem',
             borderRadius: '0.75rem',
-            border: '1px solid #334155',
+            border: currentThemeStyles.glassPanelBorder,
+            boxShadow: currentThemeStyles.glassPanelShadow,
+            backdropFilter: 'blur(12px)',
             marginBottom: '2rem'
           }}>
             <h2 style={{
@@ -960,14 +1028,15 @@ export default function CreateRoutePage() {
           {/* Error Display */}
           {error && (
             <div style={{
-              backgroundColor: '#7f1d1d',
-              border: '1px solid #991b1b',
+              backgroundColor: 'rgba(127, 29, 29, 0.3)',
+              border: '1px solid rgba(153, 27, 27, 0.5)',
               borderRadius: '0.5rem',
               padding: '1rem',
               marginBottom: '2rem',
               display: 'flex',
               alignItems: 'center',
-              gap: '0.5rem'
+              gap: '0.5rem',
+              backdropFilter: 'blur(8px)'
             }}>
               <ExclamationTriangleIcon width={20} height={20} color="#fca5a5" />
               <span style={{ color: '#fecaca' }}>{error}</span>
@@ -984,10 +1053,10 @@ export default function CreateRoutePage() {
               <button
                 type="button"
                 style={{
-                  backgroundColor: '#374151',
-                  color: '#f9fafb',
+                  backgroundColor: currentThemeStyles.inputBg,
+                  color: currentThemeStyles.textPrimary,
                   padding: '0.75rem 1.5rem',
-                  border: 'none',
+                  border: currentThemeStyles.inputBorder,
                   borderRadius: '0.5rem',
                   cursor: 'pointer',
                   fontSize: '0.875rem'
@@ -1033,14 +1102,9 @@ export default function CreateRoutePage() {
             </button>
           </div>
         </form>
+        </div>
       </div>
 
-      <style jsx>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   );
 }
