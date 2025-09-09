@@ -1,35 +1,46 @@
-// src/app/route-admin/schedules/page.tsx - Fixed Route Admin Schedule Management
+// src/app/route-admin/schedules/page.tsx - Updated Slot-Based Schedule Management
 "use client";
 
 import { useState, useEffect } from 'react';
 import {
   ClockIcon,
   PlusIcon,
-  PencilIcon,
-  TrashIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon,
   CalendarDaysIcon,
   BellIcon,
   TruckIcon,
   MapIcon,
-  ShieldCheckIcon
+  ShieldCheckIcon,
+  MinusIcon
 } from '@heroicons/react/24/outline';
 import { useTheme } from '@/app/context/ThemeContext';
 import ThemeSwitcher from '@/app/components/ThemeSwitcher';
 import AnimatedBackground from '@/app/sysadmin/components/AnimatedBackground';
+import Link from 'next/link';
 
 interface Route {
   _id: string;
-  routeId: string;
   name: string;
+  routeId: string;
   startLocation: { name: string };
   endLocation: { name: string };
-  distance: number;
-  estimatedDuration: number;
 }
 
-interface Assignment {
+interface RouteSlot {
+  _id: string;
+  slotNumber: number;
+  departureTime: string;
+  arrivalTime: string;
+  bufferMinutes: number;
+  daysOfWeek: string[];
+  slotType: 'regular' | 'rush_hour' | 'peak' | 'night';
+  maxCapacity: number;
+  assignments: SlotAssignment[];
+  availableCapacity: number;
+}
+
+interface SlotAssignment {
   _id: string;
   vehicleId: {
     _id: string;
@@ -40,79 +51,16 @@ interface Assignment {
   fleetId: {
     _id: string;
     companyName: string;
+    phone: string;
   };
-  schedules: Schedule[];
-  status: string;
+  assignedBy: {
+    name: string;
+    email: string;
+  };
+  status: 'pending' | 'approved' | 'rejected' | 'active' | 'inactive';
+  assignedAt: string;
+  priority: number;
 }
-
-interface Schedule {
-  startTime: string;
-  endTime: string;
-  daysOfWeek: string[];
-  isActive: boolean;
-}
-
-interface ScheduleFormData {
-  startTime: string;
-  endTime: string;
-  daysOfWeek: string[];
-  isActive: boolean;
-}
-
-const DAYS_OF_WEEK = [
-  { value: 'monday', label: 'Monday' },
-  { value: 'tuesday', label: 'Tuesday' },
-  { value: 'wednesday', label: 'Wednesday' },
-  { value: 'thursday', label: 'Thursday' },
-  { value: 'friday', label: 'Friday' },
-  { value: 'saturday', label: 'Saturday' },
-  { value: 'sunday', label: 'Sunday' }
-];
-
-// Mock data for demonstration
-const mockRoute: Route = {
-  _id: '64b5f1c2a3d4e5f6g7h8i9j0',
-  routeId: 'RT-COL-KDY-001',
-  name: 'Colombo - Kandy Express',
-  startLocation: { name: 'Colombo Fort Railway Station' },
-  endLocation: { name: 'Kandy Railway Station' },
-  distance: 116,
-  estimatedDuration: 180
-};
-
-const mockAssignments: Assignment[] = [
-  {
-    _id: '1',
-    vehicleId: { _id: 'v1', vehicleNumber: 'NC-2847', vehicleType: 'luxury_bus', status: 'online' },
-    fleetId: { _id: 'f1', companyName: 'Ceylon Express Pvt Ltd' },
-    schedules: [{
-      startTime: '06:00',
-      endTime: '22:00',
-      daysOfWeek: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'],
-      isActive: true
-    }],
-    status: 'active'
-  },
-  {
-    _id: '2',
-    vehicleId: { _id: 'v2', vehicleNumber: 'WP-4523', vehicleType: 'semi_luxury', status: 'online' },
-    fleetId: { _id: 'f2', companyName: 'Golden Route Tours' },
-    schedules: [{
-      startTime: '05:30',
-      endTime: '23:00',
-      daysOfWeek: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'],
-      isActive: true
-    }],
-    status: 'active'
-  },
-  {
-    _id: '3',
-    vehicleId: { _id: 'v3', vehicleNumber: 'CP-7891', vehicleType: 'luxury_bus', status: 'maintenance' },
-    fleetId: { _id: 'f3', companyName: 'Mountain View Transport' },
-    schedules: [],
-    status: 'inactive'
-  }
-];
 
 export default function RouteAdminSchedules() {
   const { theme } = useTheme();
@@ -122,177 +70,9 @@ export default function RouteAdminSchedules() {
   const [success, setSuccess] = useState<string | null>(null);
   
   const [route, setRoute] = useState<Route | null>(null);
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
-  
-  const [showScheduleModal, setShowScheduleModal] = useState(false);
-  const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(null);
-  const [scheduleForm, setScheduleForm] = useState<ScheduleFormData>({
-    startTime: '06:00',
-    endTime: '22:00',
-    daysOfWeek: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'],
-    isActive: true
-  });
+  const [slots, setSlots] = useState<RouteSlot[]>([]);
+  const [pendingAssignments, setPendingAssignments] = useState<SlotAssignment[]>([]);
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const headers = {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      };
-
-      // Load route and assignments
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/route-admin/assignments`, {
-        headers
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setRoute(data.route);
-        setAssignments(data.assignments || []);
-      } else {
-        // Use mock data for demonstration
-        setRoute(mockRoute);
-        setAssignments(mockAssignments);
-      }
-    } catch (err) {
-      console.error('Load data error:', err);
-      setError('Using demo data - backend not available');
-      // Use mock data as fallback
-      setRoute(mockRoute);
-      setAssignments(mockAssignments);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleUpdateSchedule = async (assignmentId: string, schedules: Schedule[]) => {
-    setActionLoading(`update-${assignmentId}`);
-    
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/route-admin/assignments/${assignmentId}/schedules`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          schedules: schedules
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update schedule');
-      }
-
-      // Update assignment in state
-      setAssignments(prev => prev.map(assignment => 
-        assignment._id === assignmentId 
-          ? { ...assignment, schedules: schedules }
-          : assignment
-      ));
-      
-      setSuccess('Schedule updated successfully');
-      setShowScheduleModal(false);
-      setEditingAssignment(null);
-      
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccess(null), 3000);
-    } catch (err) {
-      console.error('Update schedule error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to update schedule');
-      
-      // For demo purposes, still update the UI
-      setAssignments(prev => prev.map(assignment => 
-        assignment._id === assignmentId 
-          ? { ...assignment, schedules: schedules }
-          : assignment
-      ));
-      setSuccess('Schedule updated successfully (demo mode)');
-      setShowScheduleModal(false);
-      setEditingAssignment(null);
-      setTimeout(() => setSuccess(null), 3000);
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  const openScheduleModal = (assignment: Assignment) => {
-    setEditingAssignment(assignment);
-    
-    // Load current schedule if exists
-    if (assignment.schedules && assignment.schedules.length > 0) {
-      const currentSchedule = assignment.schedules[0];
-      setScheduleForm({
-        startTime: currentSchedule.startTime,
-        endTime: currentSchedule.endTime,
-        daysOfWeek: currentSchedule.daysOfWeek,
-        isActive: currentSchedule.isActive
-      });
-    } else {
-      // Reset to default
-      setScheduleForm({
-        startTime: '06:00',
-        endTime: '22:00',
-        daysOfWeek: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'],
-        isActive: true
-      });
-    }
-    
-    setShowScheduleModal(true);
-  };
-
-  const handleFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!editingAssignment) return;
-    
-    if (scheduleForm.daysOfWeek.length === 0) {
-      setError('Please select at least one day of the week');
-      return;
-    }
-
-    const updatedSchedules = [scheduleForm];
-    handleUpdateSchedule(editingAssignment._id, updatedSchedules);
-  };
-
-  const toggleDay = (day: string) => {
-    setScheduleForm(prev => ({
-      ...prev,
-      daysOfWeek: prev.daysOfWeek.includes(day)
-        ? prev.daysOfWeek.filter(d => d !== day)
-        : [...prev.daysOfWeek, day]
-    }));
-  };
-
-  const formatTime = (time: string) => {
-    return new Date(`2000-01-01T${time}`).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    });
-  };
-
-  const formatDays = (days: string[]) => {
-    const dayAbbr: Record<string, string> = {
-      monday: 'Mon',
-      tuesday: 'Tue',
-      wednesday: 'Wed',
-      thursday: 'Thu',
-      friday: 'Fri',
-      saturday: 'Sat',
-      sunday: 'Sun'
-    };
-    
-    return days.map(day => dayAbbr[day]).join(', ');
-  };
-
-  // Theme definitions - consistent with other dashboard pages
   const lightTheme = {
     mainBg: '#fffbeb',
     bgGradient: 'linear-gradient(to bottom right, #fffbeb, #fef3c7, #fde68a)',
@@ -323,28 +103,174 @@ export default function RouteAdminSchedules() {
 
   const currentThemeStyles = theme === 'dark' ? darkTheme : lightTheme;
 
-  // Animation styles
-  const animationStyles = `
-    @keyframes fade-in-up { 
-      from { opacity: 0; transform: translateY(20px); } 
-      to { opacity: 1; transform: translateY(0); } 
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      };
+
+      // Load route admin dashboard to get route info
+      const dashboardResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/route-admin/dashboard`, {
+        headers
+      });
+
+      if (dashboardResponse.ok) {
+        const dashboardData = await dashboardResponse.json();
+        if (dashboardData.hasAssignedRoute) {
+          setRoute(dashboardData.assignedRoute);
+          
+          // Load slots for this route
+          await loadSlotsForRoute(dashboardData.assignedRoute._id, headers);
+          
+          // Load pending assignments
+          await loadPendingAssignments(headers);
+        } else {
+          setError('No route assigned to you. Contact system administrator.');
+        }
+      } else {
+        throw new Error('Failed to load route information');
+      }
+    } catch (err) {
+      console.error('Load data error:', err);
+      setError('Failed to load schedule data');
+    } finally {
+      setLoading(false);
     }
-    .animate-fade-in-up { animation: fade-in-up 0.8s ease-out forwards; }
-    @keyframes fade-in-down { 
-      from { opacity: 0; transform: translateY(-20px); } 
-      to { opacity: 1; transform: translateY(0); } 
+  };
+
+  const loadSlotsForRoute = async (routeId: string, headers: any) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/slots/routes/${routeId}/slots`, {
+        headers
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSlots(data.slots || []);
+      }
+    } catch (err) {
+      console.error('Load slots error:', err);
     }
-    .animate-fade-in-down { animation: fade-in-down 0.8s ease-out forwards; }
-    @keyframes pulse-glow { 
-      0%, 100% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); } 
-      50% { box-shadow: 0 0 25px rgba(59, 130, 246, 0.5); } 
+  };
+
+  const loadPendingAssignments = async (headers: any) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/slots/route-admin/assignments/pending`, {
+        headers
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setPendingAssignments(data.assignments || []);
+      }
+    } catch (err) {
+      console.error('Load pending assignments error:', err);
     }
-    .pulse-glow { animation: pulse-glow 2s infinite; }
-    @keyframes spin { 
-      0% { transform: rotate(0deg); } 
-      100% { transform: rotate(360deg); } 
+  };
+
+  const handleApproveAssignment = async (assignmentId: string) => {
+    setActionLoading(`approve-${assignmentId}`);
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/slots/route-admin/assignments/${assignmentId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ action: 'approve' })
+      });
+
+      if (response.ok) {
+        setSuccess('Assignment approved successfully');
+        await loadData(); // Reload data
+        setTimeout(() => setSuccess(null), 3000);
+      } else {
+        throw new Error('Failed to approve assignment');
+      }
+    } catch (error) {
+      console.error('Approve assignment error:', error);
+      setError('Failed to approve assignment');
+    } finally {
+      setActionLoading(null);
     }
-  `;
+  };
+
+  const handleRejectAssignment = async (assignmentId: string) => {
+    setActionLoading(`reject-${assignmentId}`);
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/slots/route-admin/assignments/${assignmentId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ action: 'reject', reason: 'Rejected by route admin' })
+      });
+
+      if (response.ok) {
+        setSuccess('Assignment rejected successfully');
+        await loadData(); // Reload data
+        setTimeout(() => setSuccess(null), 3000);
+      } else {
+        throw new Error('Failed to reject assignment');
+      }
+    } catch (error) {
+      console.error('Reject assignment error:', error);
+      setError('Failed to reject assignment');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const getSlotTypeColor = (type: string) => {
+    switch (type) {
+      case 'rush_hour': return '#f59e0b';
+      case 'peak': return '#ef4444';
+      case 'night': return '#8b5cf6';
+      default: return '#3b82f6';
+    }
+  };
+
+  const getSlotTypeLabel = (type: string) => {
+    switch (type) {
+      case 'rush_hour': return 'Rush Hour';
+      case 'peak': return 'Peak';
+      case 'night': return 'Night';
+      default: return 'Regular';
+    }
+  };
+
+  const formatTime = (time: string) => {
+    return new Date(`2000-01-01T${time}`).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
+  const formatDays = (days: string[]) => {
+    const dayAbbr: Record<string, string> = {
+      monday: 'Mon',
+      tuesday: 'Tue',
+      wednesday: 'Wed',
+      thursday: 'Thu',
+      friday: 'Fri',
+      saturday: 'Sat',
+      sunday: 'Sun'
+    };
+    
+    return days.map(day => dayAbbr[day]).join(', ');
+  };
 
   if (loading) {
     return (
@@ -357,12 +283,12 @@ export default function RouteAdminSchedules() {
         position: 'relative',
         overflow: 'hidden'
       }}>
-        <style jsx>{animationStyles}</style>
         <AnimatedBackground currentThemeStyles={currentThemeStyles} />
         <div style={{ textAlign: 'center', color: currentThemeStyles.textPrimary, position: 'relative', zIndex: 10 }}>
           <div style={{ width: '40px', height: '40px', border: '4px solid #f3f4f6', borderTop: '4px solid #3b82f6', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 1rem' }}></div>
           <p>Loading schedule management...</p>
         </div>
+        <style jsx>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
@@ -375,7 +301,6 @@ export default function RouteAdminSchedules() {
         position: 'relative',
         overflow: 'hidden'
       }}>
-        <style jsx>{animationStyles}</style>
         <AnimatedBackground currentThemeStyles={currentThemeStyles} />
         <div style={{ padding: '2rem', position: 'relative', zIndex: 10 }}>
           <div style={{
@@ -405,14 +330,13 @@ export default function RouteAdminSchedules() {
 
   return (
     <div style={{ backgroundColor: currentThemeStyles.mainBg, minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
-      <style jsx>{animationStyles}</style>
       <AnimatedBackground currentThemeStyles={currentThemeStyles} />
 
-      {/* Navigation Bar - Consistent with other pages */}
+      {/* Navigation Bar */}
       <nav style={{ backgroundColor: currentThemeStyles.navBg, backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(251, 191, 36, 0.3)', padding: '1rem 0', position: 'relative', zIndex: 10 }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: '200px' }}>
-            <ShieldCheckIcon width={32} height={32} color="#dc2626" className="sm:w-8 sm:h-8" />
+            <ShieldCheckIcon width={32} height={32} color="#dc2626" />
             <div>
               <h1 style={{ fontSize: 'clamp(1rem, 3vw, 1.5rem)', fontWeight: 'bold', color: '#ffffff', margin: 0, textShadow: '0 4px 8px rgba(0, 0, 0, 0.7)' }}>
                 <span style={{ fontSize: 'clamp(1.2rem, 4vw, 2rem)', marginRight: '0.5rem', textShadow: '0 4px 8px rgba(0, 0, 0, 0.7), 0 0 30px rgba(250, 204, 21, 0.4)' }}>ශ්‍රී</span> 
@@ -428,18 +352,37 @@ export default function RouteAdminSchedules() {
             <ThemeSwitcher />
             <div style={{ position: 'relative' }}>
               <BellIcon width={20} height={20} color="#F59E0B" />
+              {pendingAssignments.length > 0 && (
+                <div style={{
+                  position: 'absolute',
+                  top: '-8px',
+                  right: '-8px',
+                  backgroundColor: '#ef4444',
+                  color: 'white',
+                  borderRadius: '50%',
+                  width: '20px',
+                  height: '20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '0.75rem',
+                  fontWeight: 'bold'
+                }}>
+                  {pendingAssignments.length}
+                </div>
+              )}
             </div>
             <div style={{ backgroundColor: '#8b5cf6', color: 'white', padding: '0.25rem 0.5rem', borderRadius: '0.5rem', fontSize: 'clamp(0.7rem, 2vw, 0.875rem)' }}>ROUTE ADMIN</div>
           </div>
         </div>
       </nav>
 
-      <div style={{ width: '100%', minHeight: 'calc(100vh - 100px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'clamp(0.5rem, 3vw, 2rem)', position: 'relative', zIndex: 10 }}>
-        <div className="animate-fade-in-up" style={{ width: '100%', maxWidth: '1600px', margin: '0 auto' }}>
+      <div style={{ width: '100%', minHeight: 'calc(100vh - 100px)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: 'clamp(0.5rem, 3vw, 2rem)', position: 'relative', zIndex: 10 }}>
+        <div style={{ width: '100%', maxWidth: '1600px', margin: '0 auto' }}>
 
           {/* Success Message */}
           {success && (
-            <div className="animate-fade-in-down" style={{
+            <div style={{
               backgroundColor: '#10b981',
               border: '1px solid #059669',
               borderRadius: '0.5rem',
@@ -455,7 +398,139 @@ export default function RouteAdminSchedules() {
             </div>
           )}
 
-          {/* Vehicle Schedules */}
+          {/* Quick Actions */}
+          <div style={{
+            backgroundColor: currentThemeStyles.glassPanelBg,
+            padding: '1.5rem',
+            borderRadius: '1rem',
+            border: currentThemeStyles.glassPanelBorder,
+            backdropFilter: 'blur(12px)',
+            boxShadow: currentThemeStyles.glassPanelShadow,
+            marginBottom: '2rem'
+          }}>
+            <h2 style={{
+              color: currentThemeStyles.textPrimary,
+              fontSize: '1.25rem',
+              fontWeight: 'bold',
+              marginBottom: '1rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}>
+              <CalendarDaysIcon width={24} height={24} color="#8b5cf6" />
+              Quick Actions
+            </h2>
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+              <Link 
+                href="/route-admin/slots/create"
+                style={{
+                  backgroundColor: '#10b981',
+                  color: 'white',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '0.5rem',
+                  textDecoration: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  fontSize: '0.875rem',
+                  fontWeight: '500'
+                }}
+              >
+                <PlusIcon width={16} height={16} />
+                Create Time Slots
+              </Link>
+            </div>
+          </div>
+
+          {/* Pending Assignments */}
+          {pendingAssignments.length > 0 && (
+            <div style={{
+              backgroundColor: currentThemeStyles.glassPanelBg,
+              padding: '1.5rem',
+              borderRadius: '1rem',
+              border: currentThemeStyles.glassPanelBorder,
+              backdropFilter: 'blur(12px)',
+              boxShadow: currentThemeStyles.glassPanelShadow,
+              marginBottom: '2rem'
+            }}>
+              <h2 style={{
+                color: currentThemeStyles.textPrimary,
+                fontSize: '1.25rem',
+                fontWeight: 'bold',
+                marginBottom: '1rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}>
+                <BellIcon width={24} height={24} color="#f59e0b" />
+                Pending Approvals ({pendingAssignments.length})
+              </h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {pendingAssignments.map((assignment) => (
+                  <div key={assignment._id} style={{
+                    backgroundColor: currentThemeStyles.cardBg,
+                    padding: '1rem',
+                    borderRadius: '0.5rem',
+                    border: '1px solid #f59e0b',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}>
+                    <div>
+                      <p style={{ color: currentThemeStyles.textPrimary, margin: 0, fontWeight: '500' }}>
+                        Vehicle: {assignment.vehicleId.vehicleNumber}
+                      </p>
+                      <p style={{ color: currentThemeStyles.textSecondary, margin: 0, fontSize: '0.875rem' }}>
+                        Fleet: {assignment.fleetId.companyName}
+                      </p>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button
+                        onClick={() => handleApproveAssignment(assignment._id)}
+                        disabled={actionLoading === `approve-${assignment._id}`}
+                        style={{
+                          backgroundColor: '#10b981',
+                          color: 'white',
+                          padding: '0.5rem 1rem',
+                          borderRadius: '0.375rem',
+                          border: 'none',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.25rem',
+                          opacity: actionLoading === `approve-${assignment._id}` ? 0.7 : 1
+                        }}
+                      >
+                        <CheckCircleIcon width={16} height={16} />
+                        {actionLoading === `approve-${assignment._id}` ? 'Approving...' : 'Approve'}
+                      </button>
+                      <button
+                        onClick={() => handleRejectAssignment(assignment._id)}
+                        disabled={actionLoading === `reject-${assignment._id}`}
+                        style={{
+                          backgroundColor: '#ef4444',
+                          color: 'white',
+                          padding: '0.5rem 1rem',
+                          borderRadius: '0.375rem',
+                          border: 'none',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.25rem',
+                          opacity: actionLoading === `reject-${assignment._id}` ? 0.7 : 1
+                        }}
+                      >
+                        <MinusIcon width={16} height={16} />
+                        {actionLoading === `reject-${assignment._id}` ? 'Rejecting...' : 'Reject'}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Time Slots */}
           <div style={{
             backgroundColor: currentThemeStyles.glassPanelBg,
             padding: 'clamp(1rem, 3vw, 2rem)',
@@ -473,69 +548,65 @@ export default function RouteAdminSchedules() {
               alignItems: 'center',
               gap: '0.5rem'
             }}>
-              <CalendarDaysIcon width={24} height={24} color="#8b5cf6" />
-              Vehicle Schedules ({assignments.length})
+              <ClockIcon width={24} height={24} color="#8b5cf6" />
+              Time Slots ({slots.length})
             </h2>
 
-            {assignments.length > 0 ? (
+            {slots.length > 0 ? (
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(min(380px, 100%), 1fr))',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(min(400px, 100%), 1fr))',
                 gap: 'clamp(1rem, 3vw, 1.5rem)'
               }}>
-                {assignments.map((assignment, index) => (
-                  <div key={assignment._id} className="animate-fade-in-up" style={{
+                {slots.map((slot, index) => (
+                  <div key={slot._id} style={{
                     backgroundColor: currentThemeStyles.cardBg,
                     padding: 'clamp(1rem, 3vw, 1.5rem)',
                     borderRadius: '0.75rem',
                     border: currentThemeStyles.cardBorder,
                     backdropFilter: 'blur(8px)',
                     boxShadow: '0 8px 32px -8px rgba(0, 0, 0, 0.1)',
-                    animationDelay: `${index * 0.1}s`,
                     transition: 'all 0.3s ease'
                   }}>
+                    {/* Slot Header */}
                     <div style={{
                       display: 'flex',
                       justifyContent: 'space-between',
-                      alignItems: 'flex-start',
+                      alignItems: 'center',
                       marginBottom: '1rem'
                     }}>
-                      <div style={{ flex: 1 }}>
+                      <div>
                         <h3 style={{
                           color: currentThemeStyles.textPrimary,
                           fontSize: 'clamp(1rem, 2.5vw, 1.1rem)',
                           fontWeight: 'bold',
-                          marginBottom: '0.5rem',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.5rem'
+                          marginBottom: '0.25rem'
                         }}>
-                          <TruckIcon width={20} height={20} color="#F59E0B" />
-                          {assignment.vehicleId.vehicleNumber}
+                          Slot {slot.slotNumber}
                         </h3>
-                        <p style={{
-                          color: currentThemeStyles.textSecondary,
-                          fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
-                          margin: 0
+                        <div style={{
+                          backgroundColor: getSlotTypeColor(slot.slotType),
+                          color: 'white',
+                          padding: '0.25rem 0.5rem',
+                          borderRadius: '0.25rem',
+                          fontSize: '0.75rem',
+                          fontWeight: '600',
+                          display: 'inline-block'
                         }}>
-                          Fleet: {assignment.fleetId.companyName}
-                        </p>
+                          {getSlotTypeLabel(slot.slotType)}
+                        </div>
                       </div>
-                      
                       <div style={{
-                        backgroundColor: assignment.vehicleId.status === 'online' ? '#10b981' : assignment.vehicleId.status === 'maintenance' ? '#f59e0b' : '#6b7280',
-                        color: 'white',
-                        padding: '0.25rem 0.75rem',
-                        borderRadius: '0.25rem',
-                        fontSize: 'clamp(0.65rem, 1.8vw, 0.75rem)',
-                        fontWeight: '600',
-                        textTransform: 'capitalize'
+                        textAlign: 'right',
+                        color: currentThemeStyles.textSecondary,
+                        fontSize: '0.875rem'
                       }}>
-                        {assignment.vehicleId.status}
+                        <div>Capacity: {slot.assignments.length}/{slot.maxCapacity}</div>
+                        <div>Available: {slot.availableCapacity}</div>
                       </div>
                     </div>
 
-                    {/* Current Schedule */}
+                    {/* Time Info */}
                     <div style={{
                       backgroundColor: theme === 'dark' ? 'rgba(15, 23, 42, 0.5)' : 'rgba(255, 255, 255, 0.7)',
                       padding: '1rem',
@@ -543,82 +614,84 @@ export default function RouteAdminSchedules() {
                       marginBottom: '1rem',
                       border: currentThemeStyles.cardBorder
                     }}>
-                      {assignment.schedules && assignment.schedules.length > 0 ? (
-                        <div>
-                          <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            marginBottom: '0.75rem',
-                            flexWrap: 'wrap'
-                          }}>
-                            <ClockIcon width={16} height={16} color="#8b5cf6" />
-                            <span style={{ color: currentThemeStyles.textSecondary, fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>Current Schedule</span>
-                            <div style={{
-                              backgroundColor: assignment.schedules[0].isActive ? '#10b981' : '#6b7280',
-                              color: 'white',
-                              padding: '0.125rem 0.5rem',
-                              borderRadius: '0.25rem',
-                              fontSize: 'clamp(0.625rem, 1.8vw, 0.65rem)',
-                              fontWeight: '600',
-                              textTransform: 'uppercase'
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                        <span style={{ color: currentThemeStyles.textPrimary, fontWeight: '600' }}>
+                          {formatTime(slot.departureTime)} → {formatTime(slot.arrivalTime)}
+                        </span>
+                        <span style={{ color: currentThemeStyles.textMuted, fontSize: '0.75rem' }}>
+                          +{slot.bufferMinutes}min buffer
+                        </span>
+                      </div>
+                      <div style={{ color: currentThemeStyles.textSecondary, fontSize: '0.875rem' }}>
+                        {formatDays(slot.daysOfWeek)}
+                      </div>
+                    </div>
+
+                    {/* Assigned Vehicles */}
+                    <div>
+                      <h4 style={{
+                        color: currentThemeStyles.textPrimary,
+                        fontSize: '0.875rem',
+                        fontWeight: '600',
+                        marginBottom: '0.5rem'
+                      }}>
+                        Assigned Vehicles ({slot.assignments.length})
+                      </h4>
+                      
+                      {slot.assignments.length > 0 ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                          {slot.assignments.map((assignment) => (
+                            <div key={assignment._id} style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              backgroundColor: 'rgba(51, 65, 85, 0.8)',
+                              padding: '0.75rem',
+                              borderRadius: '0.5rem',
+                              backdropFilter: 'blur(8px)'
                             }}>
-                              {assignment.schedules[0].isActive ? 'Active' : 'Inactive'}
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                <div style={{
+                                  width: '8px',
+                                  height: '8px',
+                                  borderRadius: '50%',
+                                  backgroundColor: assignment.vehicleId.status === 'online' ? '#10b981' : '#6b7280'
+                                }} />
+                                <div>
+                                  <div style={{ color: currentThemeStyles.textPrimary, fontSize: '0.875rem', fontWeight: '500' }}>
+                                    {assignment.vehicleId.vehicleNumber}
+                                  </div>
+                                  <div style={{ color: currentThemeStyles.textSecondary, fontSize: '0.75rem' }}>
+                                    Fleet: {assignment.fleetId.companyName}
+                                  </div>
+                                </div>
+                              </div>
+                              <div style={{
+                                backgroundColor: assignment.status === 'approved' ? '#10b981' : assignment.status === 'pending' ? '#f59e0b' : '#6b7280',
+                                color: 'white',
+                                padding: '0.25rem 0.5rem',
+                                borderRadius: '0.25rem',
+                                fontSize: '0.75rem',
+                                fontWeight: '600',
+                                textTransform: 'capitalize'
+                              }}>
+                                {assignment.status}
+                              </div>
                             </div>
-                          </div>
-                          
-                          <div style={{ marginBottom: '0.5rem' }}>
-                            <span style={{ color: currentThemeStyles.textPrimary, fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', fontWeight: '500' }}>
-                              {formatTime(assignment.schedules[0].startTime)} - {formatTime(assignment.schedules[0].endTime)}
-                            </span>
-                          </div>
-                          
-                          <div style={{
-                            color: currentThemeStyles.textMuted,
-                            fontSize: 'clamp(0.75rem, 2vw, 0.875rem)'
-                          }}>
-                            {formatDays(assignment.schedules[0].daysOfWeek)}
-                          </div>
+                          ))}
                         </div>
                       ) : (
                         <div style={{
                           textAlign: 'center',
                           color: currentThemeStyles.textMuted,
-                          fontSize: 'clamp(0.75rem, 2vw, 0.875rem)'
+                          fontSize: '0.875rem',
+                          padding: '1rem',
+                          backgroundColor: theme === 'dark' ? 'rgba(15, 23, 42, 0.3)' : 'rgba(243, 244, 246, 0.5)',
+                          borderRadius: '0.5rem'
                         }}>
-                          No schedule configured
+                          No vehicles assigned to this slot
                         </div>
                       )}
-                    </div>
-
-                    {/* Actions */}
-                    <div style={{
-                      display: 'flex',
-                      gap: '0.5rem'
-                    }}>
-                      <button
-                        onClick={() => openScheduleModal(assignment)}
-                        disabled={assignment.status !== 'active'}
-                        style={{
-                          backgroundColor: assignment.status !== 'active' ? '#6b7280' : '#3b82f6',
-                          color: 'white',
-                          padding: '0.5rem 1rem',
-                          borderRadius: '0.375rem',
-                          border: 'none',
-                          fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
-                          cursor: assignment.status !== 'active' ? 'not-allowed' : 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.5rem',
-                          flex: 1,
-                          justifyContent: 'center',
-                          transition: 'all 0.2s ease',
-                          opacity: assignment.status !== 'active' ? 0.6 : 1
-                        }}
-                      >
-                        <PencilIcon width={14} height={14} />
-                        {assignment.schedules && assignment.schedules.length > 0 ? 'Edit Schedule' : 'Set Schedule'}
-                      </button>
                     </div>
                   </div>
                 ))}
@@ -630,233 +703,26 @@ export default function RouteAdminSchedules() {
                 color: currentThemeStyles.textSecondary
               }}>
                 <CalendarDaysIcon width={48} height={48} color={currentThemeStyles.textMuted} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
-                <p>No vehicles assigned to schedule yet.</p>
+                <p style={{ marginBottom: '1rem' }}>No time slots created yet.</p>
+                <Link 
+                  href="/route-admin/slots/create"
+                  style={{
+                    backgroundColor: '#8b5cf6',
+                    color: 'white',
+                    padding: '0.75rem 1.5rem',
+                    borderRadius: '0.5rem',
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
+                  }}
+                >
+                  <PlusIcon width={16} height={16} />
+                  Create Your First Time Slot
+                </Link>
               </div>
             )}
           </div>
-
-          {/* Schedule Modal */}
-          {showScheduleModal && editingAssignment && (
-            <div style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: 'rgba(0, 0, 0, 0.5)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 1000
-            }}>
-              <div style={{
-                backgroundColor: currentThemeStyles.glassPanelBg,
-                padding: '2rem',
-                borderRadius: '0.75rem',
-                border: currentThemeStyles.glassPanelBorder,
-                maxWidth: '500px',
-                width: '90%',
-                backdropFilter: 'blur(12px)',
-                boxShadow: currentThemeStyles.glassPanelShadow,
-                maxHeight: '90vh',
-                overflowY: 'auto'
-              }}>
-                <h3 style={{
-                  color: currentThemeStyles.textPrimary,
-                  fontSize: '1.25rem',
-                  fontWeight: 'bold',
-                  marginBottom: '1rem'
-                }}>
-                  Configure Schedule - {editingAssignment.vehicleId.vehicleNumber}
-                </h3>
-
-                <form onSubmit={handleFormSubmit}>
-                  {/* Time Range */}
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 1fr',
-                    gap: '1rem',
-                    marginBottom: '1.5rem'
-                  }}>
-                    <div>
-                      <label style={{
-                        color: currentThemeStyles.textPrimary,
-                        fontSize: '0.875rem',
-                        fontWeight: '500',
-                        marginBottom: '0.5rem',
-                        display: 'block'
-                      }}>
-                        Start Time
-                      </label>
-                      <input
-                        type="time"
-                        value={scheduleForm.startTime}
-                        onChange={(e) => setScheduleForm(prev => ({
-                          ...prev,
-                          startTime: e.target.value
-                        }))}
-                        style={{
-                          width: '100%',
-                          backgroundColor: currentThemeStyles.cardBg,
-                          border: currentThemeStyles.cardBorder,
-                          borderRadius: '0.5rem',
-                          padding: '0.75rem',
-                          color: currentThemeStyles.textPrimary,
-                          fontSize: '0.875rem'
-                        }}
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label style={{
-                        color: currentThemeStyles.textPrimary,
-                        fontSize: '0.875rem',
-                        fontWeight: '500',
-                        marginBottom: '0.5rem',
-                        display: 'block'
-                      }}>
-                        End Time
-                      </label>
-                      <input
-                        type="time"
-                        value={scheduleForm.endTime}
-                        onChange={(e) => setScheduleForm(prev => ({
-                          ...prev,
-                          endTime: e.target.value
-                        }))}
-                        style={{
-                          width: '100%',
-                          backgroundColor: currentThemeStyles.cardBg,
-                          border: currentThemeStyles.cardBorder,
-                          borderRadius: '0.5rem',
-                          padding: '0.75rem',
-                          color: currentThemeStyles.textPrimary,
-                          fontSize: '0.875rem'
-                        }}
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  {/* Days of Week */}
-                  <div style={{ marginBottom: '1.5rem' }}>
-                    <label style={{
-                      color: currentThemeStyles.textPrimary,
-                      fontSize: '0.875rem',
-                      fontWeight: '500',
-                      marginBottom: '0.5rem',
-                      display: 'block'
-                    }}>
-                      Days of Week
-                    </label>
-                    
-                    <div style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
-                      gap: '0.5rem'
-                    }}>
-                      {DAYS_OF_WEEK.map((day) => (
-                        <label key={day.value} style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.5rem',
-                          backgroundColor: currentThemeStyles.cardBg,
-                          padding: '0.75rem',
-                          borderRadius: '0.5rem',
-                          cursor: 'pointer',
-                          border: scheduleForm.daysOfWeek.includes(day.value) ? '2px solid #8b5cf6' : currentThemeStyles.cardBorder,
-                          transition: 'all 0.2s ease'
-                        }}>
-                          <input
-                            type="checkbox"
-                            checked={scheduleForm.daysOfWeek.includes(day.value)}
-                            onChange={() => toggleDay(day.value)}
-                            style={{ accentColor: '#8b5cf6' }}
-                          />
-                          <span style={{
-                            color: currentThemeStyles.textPrimary,
-                            fontSize: '0.875rem'
-                          }}>
-                            {day.label}
-                          </span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Active Status */}
-                  <div style={{ marginBottom: '2rem' }}>
-                    <label style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                      cursor: 'pointer'
-                    }}>
-                      <input
-                        type="checkbox"
-                        checked={scheduleForm.isActive}
-                        onChange={(e) => setScheduleForm(prev => ({
-                          ...prev,
-                          isActive: e.target.checked
-                        }))}
-                        style={{ accentColor: '#8b5cf6' }}
-                      />
-                      <span style={{
-                        color: currentThemeStyles.textPrimary,
-                        fontSize: '0.875rem',
-                        fontWeight: '500'
-                      }}>
-                        Schedule is active
-                      </span>
-                    </label>
-                  </div>
-
-                  {/* Form Actions */}
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'flex-end',
-                    gap: '1rem'
-                  }}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowScheduleModal(false);
-                        setEditingAssignment(null);
-                      }}
-                      style={{
-                        backgroundColor: '#374151',
-                        color: '#f9fafb',
-                        padding: '0.5rem 1rem',
-                        border: 'none',
-                        borderRadius: '0.5rem',
-                        cursor: 'pointer',
-                        fontSize: '0.875rem'
-                      }}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={actionLoading === `update-${editingAssignment._id}` || scheduleForm.daysOfWeek.length === 0}
-                      style={{
-                        backgroundColor: (actionLoading === `update-${editingAssignment._id}` || scheduleForm.daysOfWeek.length === 0) ? '#6b7280' : '#8b5cf6',
-                        color: 'white',
-                        padding: '0.5rem 1rem',
-                        border: 'none',
-                        borderRadius: '0.5rem',
-                        cursor: (actionLoading === `update-${editingAssignment._id}` || scheduleForm.daysOfWeek.length === 0) ? 'not-allowed' : 'pointer',
-                        opacity: actionLoading === `update-${editingAssignment._id}` ? 0.7 : 1,
-                        fontSize: '0.875rem'
-                      }}
-                    >
-                      {actionLoading === `update-${editingAssignment._id}` ? 'Updating...' : 'Update Schedule'}
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>

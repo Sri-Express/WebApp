@@ -12,7 +12,8 @@ import {
   UserIcon,
   ArrowRightOnRectangleIcon,
   Bars3Icon,
-  XMarkIcon
+  XMarkIcon,
+  CalendarDaysIcon
 } from '@heroicons/react/24/outline';
 
 interface User {
@@ -90,6 +91,7 @@ export default function RouteAdminLayout({
   const navigation = [
     { name: 'Dashboard', href: '/route-admin/dashboard', icon: ChartBarIcon },
     { name: 'Vehicle Assignment', href: '/route-admin/vehicles', icon: TruckIcon },
+    { name: 'Create Time Slots', href: '/route-admin/slots/create', icon: CalendarDaysIcon },
     { name: 'Analytics', href: '/route-admin/analytics', icon: ChartBarIcon },
     { name: 'Schedules', href: '/route-admin/schedules', icon: ClockIcon },
     { name: 'Profile', href: '/route-admin/profile', icon: UserIcon },
