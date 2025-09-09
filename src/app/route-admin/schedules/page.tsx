@@ -72,6 +72,10 @@ export default function RouteAdminSchedules() {
   const [route, setRoute] = useState<Route | null>(null);
   const [slots, setSlots] = useState<RouteSlot[]>([]);
   const [pendingAssignments, setPendingAssignments] = useState<SlotAssignment[]>([]);
+  const [selectedSlot, setSelectedSlot] = useState<RouteSlot | null>(null);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [availableVehicles, setAvailableVehicles] = useState<any[]>([]);
+  const [selectedVehicleIds, setSelectedVehicleIds] = useState<string[]>([]);
 
   const lightTheme = {
     mainBg: '#fffbeb',
@@ -227,6 +231,133 @@ export default function RouteAdminSchedules() {
     } catch (error) {
       console.error('Reject assignment error:', error);
       setError('Failed to reject assignment');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const loadAvailableVehicles = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/route-admin/available-vehicles`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Flatten vehicles from all fleets and include fleet info
+        const allVehicles = data.availableFleets?.flatMap((fleet: any) => 
+          fleet.vehicles.map((vehicle: any) => ({
+            ...vehicle,
+            fleetName: fleet.fleet.companyName,
+            fleetId: fleet.fleet
+          }))
+        ) || [];
+        setAvailableVehicles(allVehicles);
+      }
+    } catch (error) {
+      console.error('Load available vehicles error:', error);
+    }
+  };
+
+  const handleAssignVehiclesToSlot = async () => {
+    if (!selectedSlot || selectedVehicleIds.length === 0) return;
+    
+    setActionLoading('assign-to-slot');
+    
+    try {
+      const token = localStorage.getItem('token');
+      let successCount = 0;
+      let errors: string[] = [];
+      
+      // Assign vehicles one by one using the existing fleet/assignments/slots endpoint
+      for (const vehicleId of selectedVehicleIds) {
+        try {
+          // Find the vehicle to get its fleet info
+          const vehicle = availableVehicles.find(v => v._id === vehicleId);
+          if (!vehicle) {
+            errors.push(`Vehicle not found: ${vehicleId}`);
+            continue;
+          }
+
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/slots/fleet/assignments/slots`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              slotId: selectedSlot._id,
+              vehicleId: vehicleId,
+              fleetId: vehicle.fleetId._id,
+              priority: 1
+            })
+          });
+
+          if (response.ok) {
+            successCount++;
+          } else {
+            const errorData = await response.json();
+            errors.push(`${vehicle.vehicleNumber}: ${errorData.message || 'Assignment failed'}`);
+          }
+        } catch (vehicleError) {
+          const vehicle = availableVehicles.find(v => v._id === vehicleId);
+          errors.push(`${vehicle?.vehicleNumber || vehicleId}: ${vehicleError instanceof Error ? vehicleError.message : 'Assignment failed'}`);
+        }
+      }
+
+      if (successCount > 0) {
+        setSuccess(`${successCount} vehicle(s) assigned to slot successfully`);
+        await loadData(); // Reload data
+      }
+
+      if (errors.length > 0) {
+        setError(`Some assignments failed: ${errors.join(', ')}`);
+      }
+
+      setShowAssignModal(false);
+      setSelectedSlot(null);
+      setSelectedVehicleIds([]);
+      
+      setTimeout(() => {
+        setSuccess(null);
+        setError(null);
+      }, 5000);
+
+    } catch (error) {
+      console.error('Assign vehicles to slot error:', error);
+      setError(error instanceof Error ? error.message : 'Failed to assign vehicles to slot');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleRemoveVehicleFromSlot = async (slotId: string, assignmentId: string) => {
+    setActionLoading(`remove-${assignmentId}`);
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/slots/route-admin/assignments/${assignmentId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        setSuccess('Vehicle removed from slot successfully');
+        await loadData(); // Reload data
+        setTimeout(() => setSuccess(null), 3000);
+      } else {
+        throw new Error('Failed to remove vehicle from slot');
+      }
+    } catch (error) {
+      console.error('Remove vehicle from slot error:', error);
+      setError('Failed to remove vehicle from slot');
     } finally {
       setActionLoading(null);
     }
@@ -629,14 +760,43 @@ export default function RouteAdminSchedules() {
 
                     {/* Assigned Vehicles */}
                     <div>
-                      <h4 style={{
-                        color: currentThemeStyles.textPrimary,
-                        fontSize: '0.875rem',
-                        fontWeight: '600',
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
                         marginBottom: '0.5rem'
                       }}>
-                        Assigned Vehicles ({slot.assignments.length})
-                      </h4>
+                        <h4 style={{
+                          color: currentThemeStyles.textPrimary,
+                          fontSize: '0.875rem',
+                          fontWeight: '600',
+                          margin: 0
+                        }}>
+                          Assigned Vehicles ({slot.assignments.length})
+                        </h4>
+                        <button
+                          onClick={async () => {
+                            setSelectedSlot(slot);
+                            await loadAvailableVehicles();
+                            setShowAssignModal(true);
+                          }}
+                          style={{
+                            backgroundColor: '#8b5cf6',
+                            color: 'white',
+                            padding: '0.25rem 0.5rem',
+                            borderRadius: '0.25rem',
+                            border: 'none',
+                            fontSize: '0.75rem',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.25rem'
+                          }}
+                        >
+                          <PlusIcon width={12} height={12} />
+                          Assign
+                        </button>
+                      </div>
                       
                       {slot.assignments.length > 0 ? (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -666,16 +826,36 @@ export default function RouteAdminSchedules() {
                                   </div>
                                 </div>
                               </div>
-                              <div style={{
-                                backgroundColor: assignment.status === 'approved' ? '#10b981' : assignment.status === 'pending' ? '#f59e0b' : '#6b7280',
-                                color: 'white',
-                                padding: '0.25rem 0.5rem',
-                                borderRadius: '0.25rem',
-                                fontSize: '0.75rem',
-                                fontWeight: '600',
-                                textTransform: 'capitalize'
-                              }}>
-                                {assignment.status}
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <div style={{
+                                  backgroundColor: assignment.status === 'approved' ? '#10b981' : assignment.status === 'pending' ? '#f59e0b' : '#6b7280',
+                                  color: 'white',
+                                  padding: '0.25rem 0.5rem',
+                                  borderRadius: '0.25rem',
+                                  fontSize: '0.75rem',
+                                  fontWeight: '600',
+                                  textTransform: 'capitalize'
+                                }}>
+                                  {assignment.status}
+                                </div>
+                                {assignment.status === 'approved' && (
+                                  <button
+                                    onClick={() => handleRemoveVehicleFromSlot(slot._id, assignment._id)}
+                                    disabled={actionLoading === `remove-${assignment._id}`}
+                                    style={{
+                                      backgroundColor: '#ef4444',
+                                      color: 'white',
+                                      padding: '0.25rem',
+                                      borderRadius: '0.25rem',
+                                      border: 'none',
+                                      cursor: 'pointer',
+                                      fontSize: '0.75rem',
+                                      opacity: actionLoading === `remove-${assignment._id}` ? 0.7 : 1
+                                    }}
+                                  >
+                                    <MinusIcon width={12} height={12} />
+                                  </button>
+                                )}
                               </div>
                             </div>
                           ))}
@@ -690,6 +870,31 @@ export default function RouteAdminSchedules() {
                           borderRadius: '0.5rem'
                         }}>
                           No vehicles assigned to this slot
+                          <br />
+                          <button
+                            onClick={async () => {
+                              setSelectedSlot(slot);
+                              await loadAvailableVehicles();
+                              setShowAssignModal(true);
+                            }}
+                            style={{
+                              backgroundColor: '#8b5cf6',
+                              color: 'white',
+                              padding: '0.5rem 1rem',
+                              borderRadius: '0.25rem',
+                              border: 'none',
+                              fontSize: '0.75rem',
+                              cursor: 'pointer',
+                              marginTop: '0.5rem',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.25rem',
+                              margin: '0.5rem auto 0 auto'
+                            }}
+                          >
+                            <PlusIcon width={14} height={14} />
+                            Assign Vehicle
+                          </button>
                         </div>
                       )}
                     </div>
@@ -725,6 +930,198 @@ export default function RouteAdminSchedules() {
           </div>
         </div>
       </div>
+
+      {/* Vehicle Assignment Modal */}
+      {showAssignModal && selectedSlot && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '1rem'
+        }}>
+          <div style={{
+            backgroundColor: currentThemeStyles.glassPanelBg,
+            padding: 'clamp(1rem, 3vw, 2rem)',
+            borderRadius: '0.75rem',
+            border: currentThemeStyles.glassPanelBorder,
+            backdropFilter: 'blur(12px)',
+            boxShadow: currentThemeStyles.glassPanelShadow,
+            maxWidth: '600px',
+            width: '100%',
+            maxHeight: '80vh',
+            overflow: 'auto'
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '1rem'
+            }}>
+              <h3 style={{
+                color: currentThemeStyles.textPrimary,
+                fontSize: 'clamp(1.125rem, 3vw, 1.25rem)',
+                fontWeight: 'bold',
+                margin: 0
+              }}>
+                Assign Vehicles to Slot {selectedSlot.slotNumber}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowAssignModal(false);
+                  setSelectedSlot(null);
+                  setSelectedVehicleIds([]);
+                }}
+                style={{
+                  backgroundColor: 'transparent',
+                  color: currentThemeStyles.textSecondary,
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '1.5rem'
+                }}
+              >
+                ×
+              </button>
+            </div>
+            
+            <div style={{
+              backgroundColor: currentThemeStyles.cardBg,
+              padding: '1rem',
+              borderRadius: '0.5rem',
+              marginBottom: '1.5rem',
+              border: currentThemeStyles.cardBorder
+            }}>
+              <div style={{ color: currentThemeStyles.textPrimary, fontWeight: '600', marginBottom: '0.5rem' }}>
+                {formatTime(selectedSlot.departureTime)} → {formatTime(selectedSlot.arrivalTime)}
+              </div>
+              <div style={{ color: currentThemeStyles.textSecondary, fontSize: '0.875rem' }}>
+                {formatDays(selectedSlot.daysOfWeek)} • Capacity: {selectedSlot.availableCapacity} available
+              </div>
+            </div>
+
+            <p style={{
+              color: currentThemeStyles.textSecondary,
+              marginBottom: '1.5rem',
+              fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
+            }}>
+              Select vehicles to assign to this time slot:
+            </p>
+
+            {availableVehicles.length > 0 ? (
+              <div style={{
+                maxHeight: '300px',
+                overflowY: 'auto',
+                marginBottom: '1.5rem'
+              }}>
+                {availableVehicles.map((vehicle) => (
+                  <label key={vehicle._id} style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.75rem',
+                    padding: 'clamp(0.5rem, 2vw, 0.75rem)',
+                    backgroundColor: currentThemeStyles.cardBg,
+                    borderRadius: '0.5rem',
+                    marginBottom: '0.5rem',
+                    cursor: 'pointer',
+                    border: currentThemeStyles.cardBorder
+                  }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedVehicleIds.includes(vehicle._id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedVehicleIds(prev => [...prev, vehicle._id]);
+                        } else {
+                          setSelectedVehicleIds(prev => prev.filter(id => id !== vehicle._id));
+                        }
+                      }}
+                      style={{ accentColor: '#8b5cf6' }}
+                    />
+                    <div style={{
+                      width: '8px',
+                      height: '8px',
+                      borderRadius: '50%',
+                      backgroundColor: vehicle.status === 'online' ? '#10b981' : '#6b7280'
+                    }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{
+                        color: currentThemeStyles.textPrimary,
+                        fontWeight: '500'
+                      }}>
+                        {vehicle.vehicleNumber}
+                      </div>
+                      <div style={{
+                        color: currentThemeStyles.textSecondary,
+                        fontSize: 'clamp(0.75rem, 2vw, 0.875rem)'
+                      }}>
+                        Fleet: {vehicle.fleetName} • {vehicle.vehicleType} • {vehicle.status}
+                      </div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            ) : (
+              <div style={{
+                textAlign: 'center',
+                color: currentThemeStyles.textSecondary,
+                padding: '2rem',
+                backgroundColor: currentThemeStyles.cardBg,
+                borderRadius: '0.5rem',
+                marginBottom: '1.5rem'
+              }}>
+                <TruckIcon width={48} height={48} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
+                <p>No available vehicles to assign</p>
+                <p style={{ fontSize: '0.875rem' }}>All compatible vehicles may already be assigned to other slots.</p>
+              </div>
+            )}
+
+            <div style={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              gap: '1rem'
+            }}>
+              <button
+                onClick={() => {
+                  setShowAssignModal(false);
+                  setSelectedSlot(null);
+                  setSelectedVehicleIds([]);
+                }}
+                style={{
+                  backgroundColor: '#374151',
+                  color: '#f9fafb',
+                  padding: '0.5rem 1rem',
+                  border: 'none',
+                  borderRadius: '0.5rem',
+                  cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAssignVehiclesToSlot}
+                disabled={selectedVehicleIds.length === 0 || actionLoading === 'assign-to-slot'}
+                style={{
+                  backgroundColor: selectedVehicleIds.length === 0 ? '#6b7280' : '#10b981',
+                  color: 'white',
+                  padding: '0.5rem 1rem',
+                  border: 'none',
+                  borderRadius: '0.5rem',
+                  cursor: selectedVehicleIds.length === 0 ? 'not-allowed' : 'pointer',
+                  opacity: actionLoading === 'assign-to-slot' ? 0.7 : 1
+                }}
+              >
+                {actionLoading === 'assign-to-slot' ? 'Assigning...' : `Assign ${selectedVehicleIds.length} Vehicle${selectedVehicleIds.length !== 1 ? 's' : ''}`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
