@@ -1,7 +1,7 @@
 // src/app/route-admin/schedules/page.tsx - Updated Slot-Based Schedule Management
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   ClockIcon,
   PlusIcon,
@@ -109,9 +109,9 @@ export default function RouteAdminSchedules() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       const headers = {
@@ -146,7 +146,7 @@ export default function RouteAdminSchedules() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const loadSlotsForRoute = async (routeId: string, headers: any) => {
     try {
@@ -271,7 +271,7 @@ export default function RouteAdminSchedules() {
     try {
       const token = localStorage.getItem('token');
       let successCount = 0;
-      let errors: string[] = [];
+      const errors: string[] = [];
       
       // Assign vehicles one by one using the existing fleet/assignments/slots endpoint
       for (const vehicleId of selectedVehicleIds) {
