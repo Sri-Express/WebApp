@@ -107,10 +107,6 @@ export default function RouteAdminSchedules() {
 
   const currentThemeStyles = theme === 'dark' ? darkTheme : lightTheme;
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
-
   const loadData = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
@@ -147,6 +143,10 @@ export default function RouteAdminSchedules() {
       setLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const loadSlotsForRoute = async (routeId: string, headers: any) => {
     try {
