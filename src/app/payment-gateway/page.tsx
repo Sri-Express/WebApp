@@ -636,9 +636,9 @@ This error has been saved to your browser. Please contact support with your paym
                 fontSize: '0.9rem', 
                 lineHeight: '1.6' 
               }}>
-                This is a simulation environment for demonstration purposes. 
-                No real money will be charged during this process. 
-                All transactions are simulated for testing and development.
+                Your payment information is protected with bank-level security. 
+                All transactions are processed through secure SSL encryption. 
+                We never store your card details on our servers.
               </p>
             </div>
           </div>

@@ -715,7 +715,13 @@ export default function AdvancedDeviceMonitorPage() {
             animationDelay: '0.4s'
           }}>
             <AdvancedMap 
-              vehicles={vehicles} 
+              vehicles={vehicles.map(vehicle => ({
+                latitude: vehicle.location.latitude,
+                longitude: vehicle.location.longitude,
+                speed: vehicle.location.speed,
+                heading: vehicle.location.heading,
+                accuracy: vehicle.location.accuracy
+              }))} 
               selectedVehicle={selectedVehicle} 
               onVehicleSelect={setSelectedVehicle} 
               height="70vh" 
@@ -733,7 +739,13 @@ export default function AdvancedDeviceMonitorPage() {
               overflow: 'hidden'
             }}>
               <AdvancedMap 
-                vehicles={vehicles} 
+                vehicles={vehicles.map(vehicle => ({
+                  latitude: vehicle.location.latitude,
+                  longitude: vehicle.location.longitude,
+                  speed: vehicle.location.speed,
+                  heading: vehicle.location.heading,
+                  accuracy: vehicle.location.accuracy
+                }))} 
                 selectedVehicle={selectedVehicle} 
                 onVehicleSelect={setSelectedVehicle} 
                 height="70vh" 

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import payHereService from '../services/payhere';
 
 interface PaymentGatewayProps {
   bookingData?: any;
@@ -35,7 +36,7 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({
 }) => {
   const [booking, setBooking] = useState<BookingData | null>(null);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
-  const [selectedMethod, setSelectedMethod] = useState<string>('card');
+  const [selectedMethod, setSelectedMethod] = useState<string>('payhere');
   const [processing, setProcessing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -72,12 +73,11 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({
             paymentStatus: 'pending'
           });
           
-          // Set default payment methods
+          // Set PayHere payment methods
           setPaymentMethods([
-            { id: 'card', name: 'Credit/Debit Card', fee: 0, available: true },
-            { id: 'bank', name: 'Bank Transfer', fee: 0, available: true },
-            { id: 'digital_wallet', name: 'Digital Wallet', fee: 25, available: true },
-            { id: 'cash', name: 'Cash on Booking', fee: 0, available: true }
+            { id: 'payhere', name: 'PayHere (Cards, Banking)', fee: 0, available: true },
+            { id: 'payhere_wallet', name: 'PayHere Digital Wallets', fee: 0, available: true },
+            { id: 'cash', name: 'Cash on Boarding', fee: 0, available: true }
           ]);
           
           setLoading(false);
@@ -109,10 +109,9 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({
           const data = await response.json();
           setBooking(data.booking);
           setPaymentMethods(data.paymentMethods || [
-            { id: 'card', name: 'Credit/Debit Card', fee: 0, available: true },
-            { id: 'bank', name: 'Bank Transfer', fee: 0, available: true },
-            { id: 'digital_wallet', name: 'Digital Wallet', fee: 25, available: true },
-            { id: 'cash', name: 'Cash on Booking', fee: 0, available: true }
+            { id: 'payhere', name: 'PayHere (Cards, Banking)', fee: 0, available: true },
+            { id: 'payhere_wallet', name: 'PayHere Digital Wallets', fee: 0, available: true },
+            { id: 'cash', name: 'Cash on Boarding', fee: 0, available: true }
           ]);
         } else {
           setError('Failed to load payment information');
@@ -135,52 +134,84 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({
     setError('');
 
     try {
-      console.log('🚀 Starting payment processing...');
+      console.log('🚀 Starting PayHere payment processing...');
       console.log('💳 Payment method:', selectedMethod);
       console.log('💰 Amount:', booking.amount);
-      
-      // Step 1: Validate payment method
-      await new Promise(resolve => setTimeout(resolve, 800));
-      console.log('✅ Payment method validated...');
 
-      // Step 2: Process payment (SIMULATION - no real money charged)
-      await new Promise(resolve => setTimeout(resolve, 1200));
-      console.log('✅ Payment processed (SIMULATED)...');
+      // Handle Cash payments (no PayHere needed)
+      if (selectedMethod === 'cash') {
+        console.log('💵 Processing cash payment...');
+        
+        const paymentResult = {
+          paymentId: `CASH_${Date.now()}`,
+          transactionId: `CASH_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+          method: 'cash',
+          status: 'pending', // Cash payments are pending until boarding
+          amount: booking.amount,
+          currency: booking.currency,
+          paidAt: new Date().toISOString(),
+          gateway: 'cash',
+          authCode: 'CASH_ON_BOARDING',
+          reference: `CASH_REF_${Date.now()}`
+        };
 
-      // Step 3: Create realistic payment result
-      const paymentResult = {
-        paymentId: `PAY_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        transactionId: `TXN_${Date.now()}_mpwln${Math.floor(Math.random() * 1000)}`,
-        method: selectedMethod,
-        status: 'completed',
-        amount: booking.amount,
-        currency: booking.currency,
-        paidAt: new Date().toISOString(),
-        gateway: 'sri-express-gateway',
-        authCode: `AUTH_${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
-        reference: `REF_${Date.now()}`
-      };
+        alert(`✅ Cash Payment Selected!
 
-      console.log('💎 Payment result generated:', paymentResult);
+💵 Payment Method: Cash on Boarding
+💰 Amount: Rs. ${paymentResult.amount.toLocaleString()}
+📋 Reference: ${paymentResult.reference}
 
-      // Step 4: Show success notification
-      alert(`✅ Payment Successful!
+💡 You can pay in cash when you board the bus. Your booking is confirmed!`);
+
+        console.log('🎉 Cash payment processed, calling success callback...');
+        onPaymentSuccess(paymentResult);
+        return;
+      }
+
+      // Handle PayHere payments
+      if (selectedMethod === 'payhere' || selectedMethod === 'payhere_wallet') {
+        console.log('🏦 Processing PayHere payment...');
+
+        await payHereService.startPayment(
+          bookingData,
+          // Success callback
+          (paymentResult) => {
+            console.log('✅ PayHere payment successful:', paymentResult);
+            
+            alert(`✅ Payment Successful!
 
 💳 Payment Method: ${getPaymentMethodName(selectedMethod)}
 🆔 Transaction ID: ${paymentResult.transactionId}
 💰 Amount: Rs. ${paymentResult.amount.toLocaleString()}
 📋 Reference: ${paymentResult.reference}
 
-✨ This was a simulated payment - no real money was charged.`);
-      
-      console.log('🎉 Calling payment success callback...');
-      
-      // Step 5: Call success callback to trigger booking creation/update
-      onPaymentSuccess(paymentResult);
-      
+🎉 Your booking has been confirmed!`);
+
+            onPaymentSuccess(paymentResult);
+          },
+          // Error callback
+          (error) => {
+            console.error('❌ PayHere payment error:', error);
+            setError(`PayHere payment failed: ${error}`);
+            setProcessing(false);
+          },
+          // Cancel callback
+          () => {
+            console.log('⚠️ PayHere payment cancelled');
+            setProcessing(false);
+            if (onPaymentCancel) {
+              onPaymentCancel();
+            }
+          }
+        );
+
+        // Don't set processing to false here - let callbacks handle it
+        return;
+      }
+
     } catch (error) {
       console.error('💥 Payment processing error:', error);
-      const errorMsg = 'Payment processing failed. Please try again.';
+      const errorMsg = `Payment processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`;
       setError(errorMsg);
       if (onPaymentError) {
         onPaymentError(errorMsg);
@@ -270,10 +301,10 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({
       {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
         <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: themeStyles.textPrimary, margin: 0 }}>
-          🏦 Sri Express Payment Gateway
+          🏦 PayHere Payment Gateway
         </h2>
         <p style={{ color: themeStyles.textSecondary, marginTop: '0.5rem' }}>
-          Secure Payment Processing (Simulation)
+          Secure Payment Processing by PayHere {process.env.NEXT_PUBLIC_PAYHERE_SANDBOX === 'true' ? '(Sandbox)' : ''}
         </p>
       </div>
 
@@ -347,9 +378,8 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({
                 )}
               </div>
               <div style={{ fontSize: '1.5rem' }}>
-                {method.id === 'card' && '💳'}
-                {method.id === 'bank' && '🏦'}
-                {method.id === 'digital_wallet' && '📱'}
+                {method.id === 'payhere' && '💳'}
+                {method.id === 'payhere_wallet' && '📱'}
                 {method.id === 'cash' && '💵'}
               </div>
             </label>
@@ -420,7 +450,7 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({
         fontSize: '0.8rem', 
         color: themeStyles.textMuted 
       }}>
-        🔒 This is a simulation environment. No real money will be charged.
+        🔒 Secure Payment Processing
       </div>
 
       <style jsx>{`

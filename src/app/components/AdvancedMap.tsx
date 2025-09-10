@@ -200,27 +200,35 @@ const RoutePointPopup = ({ route, pointType, location }: {
   </div>
 );
 
-// MAP AUTO-CENTER AND BOUNDS UPDATER FOR ROUTES  
-const MapUpdater = ({ routes, selectedRoute }: { routes?: RouteData[], selectedRoute?: string | null }) => {
+// MAP AUTO-CENTER AND BOUNDS UPDATER FOR VEHICLES AND ROUTES  
+const MapUpdater = ({ routes, selectedRoute, vehicles }: { routes?: RouteData[], selectedRoute?: string | null, vehicles?: Vehicle[] }) => {
   const map = useMap();
   useEffect(() => {
-    console.log('🗺️ Map Update - Routes:', routes?.length || 0, 'Selected Route:', selectedRoute);
+    console.log('🗺️ Map Update - Routes:', routes?.length || 0, 'Vehicles:', vehicles?.length || 0, 'Selected Route:', selectedRoute);
     
-    // Get the routes to display (either selected route or all routes)
+    // Collect all points to fit bounds (prioritize vehicles, then routes)
+    const allPoints: [number, number][] = [];
+    
+    // 1. PRIORITY: Add active vehicle locations
+    if (vehicles && vehicles.length > 0) {
+      vehicles.forEach(vehicle => {
+        if (vehicle.location?.latitude && vehicle.location?.longitude) {
+          allPoints.push([vehicle.location.latitude, vehicle.location.longitude]);
+          console.log(`🚌 Vehicle ${vehicle.vehicleId} at [${vehicle.location.latitude}, ${vehicle.location.longitude}]`);
+        }
+      });
+    }
+    
+    // 2. SECONDARY: Add route points if no vehicles or showing route details
     const routesToShow = selectedRoute && selectedRoute !== 'all' 
       ? routes?.filter(route => route._id === selectedRoute) || []
       : routes || [];
-    
-    console.log('📍 Routes to show:', routesToShow.length);
-    
-    // Collect all route points to fit bounds
-    const allPoints: [number, number][] = [];
     
     if (routesToShow.length > 0) {
       routesToShow.forEach(route => {
         // Add start point
         if (route.startLocation?.coordinates) {
-          allPoints.push([route.startLocation.coordinates[1], route.startLocation.coordinates[0]]); // Convert [lng, lat] to [lat, lng]
+          allPoints.push([route.startLocation.coordinates[1], route.startLocation.coordinates[0]]);
         }
         // Add end point
         if (route.endLocation?.coordinates) {
@@ -238,13 +246,28 @@ const MapUpdater = ({ routes, selectedRoute }: { routes?: RouteData[], selectedR
     }
     
     if (allPoints.length > 0) {
-      console.log('📍 Fitting bounds for route points:', allPoints.length);
-      map.fitBounds(allPoints, { padding: [50, 50], maxZoom: 15 });
+      if (vehicles && vehicles.length > 0) {
+        // If we have vehicles, center on them with appropriate zoom
+        if (vehicles.length === 1) {
+          // Single vehicle: center directly on it with street-level zoom
+          const vehicle = vehicles[0];
+          console.log(`🎯 Centering on single vehicle at [${vehicle.location.latitude}, ${vehicle.location.longitude}]`);
+          map.setView([vehicle.location.latitude, vehicle.location.longitude], 16);
+        } else {
+          // Multiple vehicles: fit bounds to show all
+          console.log('📍 Fitting bounds for', vehicles.length, 'vehicles and route points');
+          map.fitBounds(allPoints, { padding: [50, 50], maxZoom: 15 });
+        }
+      } else {
+        // No vehicles, show route overview
+        console.log('📍 Fitting bounds for route points only');
+        map.fitBounds(allPoints, { padding: [50, 50], maxZoom: 15 });
+      }
     } else {
-      console.log('🗺️ No route data, showing Sri Lanka overview');
+      console.log('🗺️ No data, showing Sri Lanka overview');
       map.setView([7.8731, 80.7718], 8);
     }
-  }, [routes, selectedRoute, map]);
+  }, [routes, selectedRoute, vehicles, map]);
   return null;
 };
 
@@ -301,6 +324,9 @@ const VehiclePopup = ({ vehicle }: { vehicle: Vehicle }) => (
 interface AdvancedMapProps {
   routes?: RouteData[];
   selectedRoute?: string | null;
+  vehicles?: VehicleLocation[];
+  selectedVehicle?: string | null;
+  onVehicleSelect?: (vehicleId: string | null) => void;
   height?: string;
   showControls?: boolean;
   showRouteDetails?: boolean;
@@ -309,12 +335,29 @@ interface AdvancedMapProps {
 const AdvancedMap: React.FC<AdvancedMapProps> = ({
   routes = [],
   selectedRoute = null,
+  vehicles = [],
+  selectedVehicle = null,
+  onVehicleSelect,
   height = '600px',
   showControls = true,
   showRouteDetails = false
 }) => {
   const [mapReady, setMapReady] = useState(false);
+  const [liveVehicles, setLiveVehicles] = useState<Vehicle[]>([]);
+  const [vehiclesLoading, setLiveVehiclesLoading] = useState(false);
   const mapRef = useRef<L.Map | null>(null);
+  
+  // Convert VehicleLocation[] to Vehicle[] if needed and merge
+  const convertToVehicles = (vehicleLocations: VehicleLocation[]): Vehicle[] => {
+    return vehicleLocations.map((loc, index) => ({
+      vehicleId: `vehicle-${index}`,
+      location: loc
+    }));
+  };
+  
+  const displayVehicles: Vehicle[] = vehicles?.length 
+    ? (vehicles as unknown as Vehicle[])
+    : liveVehicles;
 
   // Get the routes to display based on selection
   const routesToDisplay = selectedRoute && selectedRoute !== 'all' 
@@ -327,10 +370,54 @@ const AdvancedMap: React.FC<AdvancedMapProps> = ({
   const sriLankaCenter: [number, number] = [7.8731, 80.7718];
   const sriLankaBounds: [[number, number], [number, number]] = [[5.5, 79.0], [10.0, 82.0]];
 
+  // Fetch vehicle data
+  const fetchVehicles = useCallback(async () => {
+    if (vehiclesLoading) return;
+    
+    setLiveVehiclesLoading(true);
+    try {
+      console.log('🚌 Fetching vehicles from backend...');
+      const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const routeFilter = selectedRoute && selectedRoute !== 'all' ? `?routeId=${selectedRoute}` : '';
+      const response = await fetch(`${baseURL}/api/tracking/live${routeFilter}`);
+      const data = await response.json();
+      
+      console.log('🚌 Vehicle data received:', data);
+      
+      if (data.vehicles && Array.isArray(data.vehicles)) {
+        setLiveVehicles(data.vehicles);
+        console.log(`✅ Loaded ${data.vehicles.length} vehicles on map`);
+      } else {
+        console.log('❌ No vehicles found in response');
+        setLiveVehicles([]);
+      }
+    } catch (error) {
+      console.error('❌ Error fetching vehicles:', error);
+      setLiveVehicles([]);
+    } finally {
+      setLiveVehiclesLoading(false);
+    }
+  }, [vehiclesLoading, selectedRoute]);
+
   useEffect(() => {
     setMapReady(true);
     console.log('🗺️ Map initialized with', routes.length, 'routes');
-  }, [routes.length]);
+    
+    // Initial vehicle fetch
+    fetchVehicles();
+    
+    // Set up interval to refresh vehicle data every 10 seconds
+    const interval = setInterval(fetchVehicles, 10000);
+    
+    return () => clearInterval(interval);
+  }, [routes.length, fetchVehicles]);
+
+  // Refetch vehicles when selected route changes
+  useEffect(() => {
+    if (mapReady) {
+      fetchVehicles();
+    }
+  }, [selectedRoute, mapReady, fetchVehicles]);
 
   if (!mapReady) {
     return (
@@ -348,17 +435,40 @@ const AdvancedMap: React.FC<AdvancedMapProps> = ({
     <div style={{ position: 'relative', height, borderRadius: '0.75rem', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)', border: '1px solid #e5e7eb' }}>
       <div style={{ position: 'absolute', top: '1rem', right: '1rem', zIndex: 1000, backgroundColor: 'rgba(255, 255, 255, 0.95)', padding: '0.75rem 1rem', borderRadius: '0.75rem', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', backdropFilter: 'blur(10px)' }}>
         <div style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1f2937', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <div style={{ width: '8px', height: '8px', backgroundColor: '#3B82F6', borderRadius: '50%' }}></div>
-          Route Map
+          <div style={{ width: '8px', height: '8px', backgroundColor: displayVehicles.length > 0 ? '#10B981' : '#6B7280', borderRadius: '50%' }}></div>
+          Live Tracking
         </div>
         <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>
-          {selectedRoute && selectedRoute !== 'all' ? '1 route selected' : `${routesToDisplay.length} routes displayed`}
+          🚌 {displayVehicles.length} vehicles active
+        </div>
+        <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>
+          📍 {selectedRoute && selectedRoute !== 'all' ? '1 route selected' : `${routesToDisplay.length} routes displayed`}
         </div>
       </div>
       <MapContainer ref={mapRef} center={sriLankaCenter} zoom={8} style={{ height: '100%', width: '100%', zIndex: 1 }} maxBounds={sriLankaBounds} maxBoundsViscosity={0.7}>
         <TileLayer attribution='© OpenStreetMap contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" maxZoom={18} />
-        <MapUpdater routes={routes} selectedRoute={selectedRoute} />
+        <MapUpdater routes={routes} selectedRoute={selectedRoute} vehicles={displayVehicles} />
         
+        {/* RENDER VEHICLES - CRITICAL FOR BUS TRACKING */}
+        {displayVehicles.map((vehicle, vehicleIndex) => (
+          vehicle.location?.latitude && vehicle.location?.longitude && (
+            <Marker
+              key={`vehicle-${vehicle.vehicleId}-${vehicleIndex}`}
+              position={[vehicle.location.latitude, vehicle.location.longitude]}
+              icon={createVehicleIcon(
+                'bus', 
+                vehicle.operationalInfo?.status || 'on_route',
+                vehicle.location?.heading || 0,
+                vehicle.passengerLoad?.loadPercentage || 0
+              )}
+            >
+              <Popup maxWidth={350} closeButton={true}>
+                <VehiclePopup vehicle={vehicle} />
+              </Popup>
+            </Marker>
+          )
+        ))}
+
         {/* RENDER ROUTE POINTS ONLY (NO LINES) */}
         {routesToDisplay.map((route, routeIndex) => (
           <div key={route._id}>

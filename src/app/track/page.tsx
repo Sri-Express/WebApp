@@ -14,7 +14,7 @@ import RouteDetails from './components/RouteDetails';
 import { filterRoutes } from '../utils/locationUtils';
 
 // --- DYNAMICALLY IMPORTED COMPONENT ---
-const AdvancedMap = dynamic(() => import('../components/AdvancedMap'), { ssr: false });
+const GoogleMapsTracker = dynamic(() => import('../components/GoogleMapsTracker'), { ssr: false });
 
 // --- TYPE DEFINITIONS ---
 interface Route { 
@@ -282,14 +282,30 @@ export default function AdvancedTrackingPage() {
             {/* View Mode Display */}
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
               <div style={{ 
-                backgroundColor: '#3B82F6', 
+                backgroundColor: '#10B981', 
                 color: 'white', 
                 padding: '0.5rem 1rem', 
                 borderRadius: '0.5rem', 
                 fontSize: '0.875rem', 
-                fontWeight: '500' 
+                fontWeight: '500',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
               }}>
-                Map View
+                🗺️ Google Maps Pro
+              </div>
+              <div style={{ 
+                backgroundColor: '#F59E0B', 
+                color: 'white', 
+                padding: '0.5rem 1rem', 
+                borderRadius: '0.5rem', 
+                fontSize: '0.875rem', 
+                fontWeight: '500',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}>
+                🚦 Live Traffic
               </div>
             </div>
           </div>
@@ -339,13 +355,13 @@ export default function AdvancedTrackingPage() {
           </div>
         )}
 
-        {/* Main Map Section */}
+        {/* Main Map Section - Google Maps Professional Tracking */}
         <div style={{ backgroundColor: currentThemeStyles.glassPanelBg, borderRadius: '1rem', boxShadow: currentThemeStyles.glassPanelShadow, backdropFilter: 'blur(12px)', border: currentThemeStyles.glassPanelBorder, overflow: 'hidden', marginBottom: '2rem' }}>
-          <AdvancedMap 
-            routes={filteredRoutes}
+          <GoogleMapsTracker 
+            routes={routes}
             selectedRoute={selectedRoute}
             height="70vh"
-            showRouteDetails={showRouteDetails}
+            theme={theme}
           />
         </div>
       </main>
