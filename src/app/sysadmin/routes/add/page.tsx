@@ -1,7 +1,8 @@
 // src/app/sysadmin/routes/add/page.tsx - Admin Route Creation Form
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
@@ -17,6 +18,9 @@ import {
 import { useTheme } from '@/app/context/ThemeContext';
 import ThemeSwitcher from '@/app/components/ThemeSwitcher';
 import AnimatedBackground from '@/app/sysadmin/components/AnimatedBackground';
+import MapLocationSelector from './components/MapLocationSelector';
+import SimpleLocationSelector from './components/SimpleLocationSelector';
+import HybridLocationSelector from './components/HybridLocationSelector';
 
 interface LocationData {
   name: string;
@@ -83,6 +87,7 @@ export default function CreateRoutePage() {
   });
 
   const [newAmenity, setNewAmenity] = useState('');
+  const [isCalculatingDistance, setIsCalculatingDistance] = useState(false);
 
   // Theme and Style Definitions
   const lightTheme = {
@@ -189,6 +194,94 @@ export default function CreateRoutePage() {
     const coords = coordString.split(',').map(c => parseFloat(c.trim()));
     return coords.length === 2 && !coords.some(isNaN) ? [coords[0], coords[1]] : [0, 0];
   };
+
+  // Haversine formula to calculate distance between two points
+  const calculateHaversineDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371; // Radius of the Earth in kilometers
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const distance = R * c;
+    return Math.round(distance * 100) / 100; // Round to 2 decimal places
+  };
+
+  // Calculate distance using Google Maps Distance Matrix API
+  const calculateGoogleDistance = (startCoords: [number, number], endCoords: [number, number]): Promise<number> => {
+    return new Promise((resolve, reject) => {
+      if (typeof window !== 'undefined' && window.google) {
+        const service = new window.google.maps.DistanceMatrixService();
+        
+        service.getDistanceMatrix({
+          origins: [{ lat: startCoords[1], lng: startCoords[0] }],
+          destinations: [{ lat: endCoords[1], lng: endCoords[0] }],
+          travelMode: window.google.maps.TravelMode.DRIVING,
+          unitSystem: window.google.maps.UnitSystem.METRIC,
+          avoidHighways: false,
+          avoidTolls: false
+        }, (response: any, status: any) => {
+          if (status === 'OK' && response.rows[0].elements[0].status === 'OK') {
+            const distanceText = response.rows[0].elements[0].distance.text;
+            const distanceValue = response.rows[0].elements[0].distance.value / 1000; // Convert to km
+            resolve(Math.round(distanceValue * 100) / 100);
+          } else {
+            reject('Google Distance Matrix failed');
+          }
+        });
+      } else {
+        reject('Google Maps not available');
+      }
+    });
+  };
+
+  // Auto-calculate distance when both locations are selected
+  const autoCalculateDistance = async () => {
+    const { startLocation, endLocation } = formData;
+    
+    if (!startLocation.coordinates || !endLocation.coordinates || 
+        startLocation.coordinates[0] === 0 || endLocation.coordinates[0] === 0 ||
+        startLocation.coordinates[1] === 0 || endLocation.coordinates[1] === 0) {
+      return;
+    }
+
+    setIsCalculatingDistance(true);
+
+    try {
+      // Try Google Distance Matrix first
+      const googleDistance = await calculateGoogleDistance(startLocation.coordinates, endLocation.coordinates);
+      updateFormData('distance', googleDistance.toString());
+      
+      // Estimate duration based on distance (assuming average speed of 40 km/h for Sri Lankan roads)
+      const estimatedDuration = Math.round((googleDistance / 40) * 60); // Convert to minutes
+      updateFormData('estimatedDuration', estimatedDuration.toString());
+      
+    } catch (error) {
+      // Fallback to Haversine formula
+      console.log('Using Haversine fallback for distance calculation');
+      const haversineDistance = calculateHaversineDistance(
+        startLocation.coordinates[1], 
+        startLocation.coordinates[0],
+        endLocation.coordinates[1], 
+        endLocation.coordinates[0]
+      );
+      updateFormData('distance', haversineDistance.toString());
+      
+      // Estimate duration based on straight-line distance (add 25% for road curves)
+      const roadDistance = haversineDistance * 1.25;
+      const estimatedDuration = Math.round((roadDistance / 40) * 60);
+      updateFormData('estimatedDuration', estimatedDuration.toString());
+    }
+
+    setIsCalculatingDistance(false);
+  };
+
+  // Watch for changes in start and end locations
+  useEffect(() => {
+    autoCalculateDistance();
+  }, [formData.startLocation.coordinates, formData.endLocation.coordinates]);
 
   const validateForm = (): boolean => {
     if (!formData.name.trim()) {
@@ -436,44 +529,64 @@ export default function CreateRoutePage() {
             }}>
               <div>
                 <label style={{ color: '#f1f5f9', fontWeight: '500', marginBottom: '0.5rem', display: 'block' }}>
-                  Distance (km) *
+                  Distance (km) * {isCalculatingDistance && <span style={{ color: '#3b82f6', fontSize: '0.75rem' }}>(Calculating...)</span>}
                 </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={formData.distance}
-                  onChange={(e) => updateFormData('distance', e.target.value)}
-                  placeholder="e.g., 45.5"
-                  style={{
-                    width: '100%',
-                    backgroundColor: '#334155',
-                    border: '1px solid #475569',
-                    borderRadius: '0.5rem',
-                    padding: '0.75rem',
-                    color: '#f1f5f9',
-                    fontSize: '0.875rem'
-                  }}
-                  required
-                />
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={formData.distance}
+                    onChange={(e) => updateFormData('distance', e.target.value)}
+                    placeholder={isCalculatingDistance ? "Calculating distance..." : "e.g., 45.5"}
+                    style={{
+                      width: '100%',
+                      backgroundColor: isCalculatingDistance ? '#475569' : '#334155',
+                      border: '1px solid #475569',
+                      borderRadius: '0.5rem',
+                      padding: '0.75rem',
+                      color: '#f1f5f9',
+                      fontSize: '0.875rem',
+                      cursor: isCalculatingDistance ? 'not-allowed' : 'text'
+                    }}
+                    disabled={isCalculatingDistance}
+                    required
+                  />
+                  {isCalculatingDistance && (
+                    <div style={{
+                      position: 'absolute',
+                      right: '0.75rem',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      width: '16px',
+                      height: '16px',
+                      border: '2px solid #3b82f6',
+                      borderTop: '2px solid transparent',
+                      borderRadius: '50%',
+                      animation: 'spin 1s linear infinite'
+                    }}></div>
+                  )}
+                </div>
               </div>
               <div>
                 <label style={{ color: '#f1f5f9', fontWeight: '500', marginBottom: '0.5rem', display: 'block' }}>
-                  Estimated Duration (minutes) *
+                  Estimated Duration (minutes) * {isCalculatingDistance && <span style={{ color: '#3b82f6', fontSize: '0.75rem' }}>(Auto-calculating...)</span>}
                 </label>
                 <input
                   type="number"
                   value={formData.estimatedDuration}
                   onChange={(e) => updateFormData('estimatedDuration', e.target.value)}
-                  placeholder="e.g., 120"
+                  placeholder={isCalculatingDistance ? "Auto-calculating..." : "e.g., 120"}
                   style={{
                     width: '100%',
-                    backgroundColor: '#334155',
+                    backgroundColor: isCalculatingDistance ? '#475569' : '#334155',
                     border: '1px solid #475569',
                     borderRadius: '0.5rem',
                     padding: '0.75rem',
                     color: '#f1f5f9',
-                    fontSize: '0.875rem'
+                    fontSize: '0.875rem',
+                    cursor: isCalculatingDistance ? 'not-allowed' : 'text'
                   }}
+                  disabled={isCalculatingDistance}
                   required
                 />
               </div>
@@ -481,184 +594,20 @@ export default function CreateRoutePage() {
           </div>
 
           {/* Start Location */}
-          <div style={{
-            backgroundColor: currentThemeStyles.glassPanelBg,
-            padding: '2rem',
-            borderRadius: '0.75rem',
-            border: currentThemeStyles.glassPanelBorder,
-            boxShadow: currentThemeStyles.glassPanelShadow,
-            backdropFilter: 'blur(12px)',
-            marginBottom: '2rem'
-          }}>
-            <h2 style={{
-              color: '#f1f5f9',
-              fontSize: '1.25rem',
-              fontWeight: 'bold',
-              marginBottom: '1.5rem'
-            }}>
-              Start Location
-            </h2>
-
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label style={{ color: '#f1f5f9', fontWeight: '500', marginBottom: '0.5rem', display: 'block' }}>
-                Location Name *
-              </label>
-              <input
-                type="text"
-                value={formData.startLocation.name}
-                onChange={(e) => updateFormData('startLocation.name', e.target.value)}
-                placeholder="e.g., Padukka Bus Station"
-                style={{
-                  width: '100%',
-                  backgroundColor: '#334155',
-                  border: '1px solid #475569',
-                  borderRadius: '0.5rem',
-                  padding: '0.75rem',
-                  color: '#f1f5f9',
-                  fontSize: '0.875rem'
-                }}
-                required
-              />
-            </div>
-
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label style={{ color: '#f1f5f9', fontWeight: '500', marginBottom: '0.5rem', display: 'block' }}>
-                Address *
-              </label>
-              <input
-                type="text"
-                value={formData.startLocation.address}
-                onChange={(e) => updateFormData('startLocation.address', e.target.value)}
-                placeholder="e.g., Main Street, Padukka, Western Province, Sri Lanka"
-                style={{
-                  width: '100%',
-                  backgroundColor: '#334155',
-                  border: '1px solid #475569',
-                  borderRadius: '0.5rem',
-                  padding: '0.75rem',
-                  color: '#f1f5f9',
-                  fontSize: '0.875rem'
-                }}
-                required
-              />
-            </div>
-
-            <div>
-              <label style={{ color: '#f1f5f9', fontWeight: '500', marginBottom: '0.5rem', display: 'block' }}>
-                Coordinates (longitude, latitude)
-              </label>
-              <input
-                type="text"
-                placeholder="e.g., 80.1234, 6.5678"
-                onChange={(e) => {
-                  const coords = parseCoordinates(e.target.value);
-                  updateFormData('startLocation.coordinates', coords);
-                }}
-                style={{
-                  width: '100%',
-                  backgroundColor: '#334155',
-                  border: '1px solid #475569',
-                  borderRadius: '0.5rem',
-                  padding: '0.75rem',
-                  color: '#f1f5f9',
-                  fontSize: '0.875rem'
-                }}
-              />
-              <p style={{ color: currentThemeStyles.textMuted, fontSize: '0.75rem', marginTop: '0.5rem' }}>
-                Optional: Enter as "longitude, latitude" format
-              </p>
-            </div>
-          </div>
+          <HybridLocationSelector
+            title="Start Location"
+            onLocationSelect={(location) => updateFormData('startLocation', location)}
+            selectedLocation={formData.startLocation}
+            theme={theme}
+          />
 
           {/* End Location */}
-          <div style={{
-            backgroundColor: currentThemeStyles.glassPanelBg,
-            padding: '2rem',
-            borderRadius: '0.75rem',
-            border: currentThemeStyles.glassPanelBorder,
-            boxShadow: currentThemeStyles.glassPanelShadow,
-            backdropFilter: 'blur(12px)',
-            marginBottom: '2rem'
-          }}>
-            <h2 style={{
-              color: '#f1f5f9',
-              fontSize: '1.25rem',
-              fontWeight: 'bold',
-              marginBottom: '1.5rem'
-            }}>
-              End Location
-            </h2>
-
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label style={{ color: '#f1f5f9', fontWeight: '500', marginBottom: '0.5rem', display: 'block' }}>
-                Location Name *
-              </label>
-              <input
-                type="text"
-                value={formData.endLocation.name}
-                onChange={(e) => updateFormData('endLocation.name', e.target.value)}
-                placeholder="e.g., Colombo Fort Railway Station"
-                style={{
-                  width: '100%',
-                  backgroundColor: '#334155',
-                  border: '1px solid #475569',
-                  borderRadius: '0.5rem',
-                  padding: '0.75rem',
-                  color: '#f1f5f9',
-                  fontSize: '0.875rem'
-                }}
-                required
-              />
-            </div>
-
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label style={{ color: '#f1f5f9', fontWeight: '500', marginBottom: '0.5rem', display: 'block' }}>
-                Address *
-              </label>
-              <input
-                type="text"
-                value={formData.endLocation.address}
-                onChange={(e) => updateFormData('endLocation.address', e.target.value)}
-                placeholder="e.g., Fort Railway Station, Colombo 01, Western Province, Sri Lanka"
-                style={{
-                  width: '100%',
-                  backgroundColor: '#334155',
-                  border: '1px solid #475569',
-                  borderRadius: '0.5rem',
-                  padding: '0.75rem',
-                  color: '#f1f5f9',
-                  fontSize: '0.875rem'
-                }}
-                required
-              />
-            </div>
-
-            <div>
-              <label style={{ color: '#f1f5f9', fontWeight: '500', marginBottom: '0.5rem', display: 'block' }}>
-                Coordinates (longitude, latitude)
-              </label>
-              <input
-                type="text"
-                placeholder="e.g., 79.8612, 6.9271"
-                onChange={(e) => {
-                  const coords = parseCoordinates(e.target.value);
-                  updateFormData('endLocation.coordinates', coords);
-                }}
-                style={{
-                  width: '100%',
-                  backgroundColor: '#334155',
-                  border: '1px solid #475569',
-                  borderRadius: '0.5rem',
-                  padding: '0.75rem',
-                  color: '#f1f5f9',
-                  fontSize: '0.875rem'
-                }}
-              />
-              <p style={{ color: currentThemeStyles.textMuted, fontSize: '0.75rem', marginTop: '0.5rem' }}>
-                Optional: Enter as "longitude, latitude" format
-              </p>
-            </div>
-          </div>
+          <HybridLocationSelector
+            title="End Location"
+            onLocationSelect={(location) => updateFormData('endLocation', location)}
+            selectedLocation={formData.endLocation}
+            theme={theme}
+          />
 
           {/* Waypoints (Optional) */}
           <div style={{
