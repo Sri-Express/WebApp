@@ -9,37 +9,52 @@ import { TruckIcon, MapPinIcon, ClockIcon, UsersIcon, ExclamationTriangleIcon } 
 import { useTheme } from '@/app/context/ThemeContext';
 import ThemeSwitcher from '@/app/components/ThemeSwitcher';
 import AnimatedBackground from '@/app/components/AnimatedBackground';
+import LocationFilter from './components/LocationFilter';
+import RouteDetails from './components/RouteDetails';
+import { filterRoutes } from '../utils/locationUtils';
 
 // --- DYNAMICALLY IMPORTED COMPONENT ---
 const AdvancedMap = dynamic(() => import('../components/AdvancedMap'), { ssr: false });
 
 // --- TYPE DEFINITIONS ---
-interface VehicleLocation {
-  _id: string; deviceId: string; routeId: string; vehicleId?: string; vehicleNumber: string;
-  location: { latitude: number; longitude: number; accuracy: number; heading: number; speed: number; altitude: number; };
-  routeProgress: { currentWaypoint: number; distanceCovered: number; estimatedTimeToDestination: number; nextStopETA: string; progressPercentage: number; };
-  passengerLoad: { currentCapacity: number; maxCapacity: number; loadPercentage: number; };
-  operationalInfo: { driverInfo: { driverName: string; contactNumber: string; }; tripInfo: { tripId: string; departureTime: string; estimatedArrival: string; }; status: 'on_route' | 'at_stop' | 'delayed' | 'breakdown' | 'off_duty'; delays: { currentDelay: number; reason: string; }; };
-  environmentalData: { weather: string; temperature: number; trafficCondition: string; }; timestamp: string;
+interface Route { 
+  _id: string; 
+  name: string; 
+  routeId: string;
+  startLocation: { 
+    name: string; 
+    coordinates: [number, number];
+    address: string; 
+  }; 
+  endLocation: { 
+    name: string; 
+    coordinates: [number, number];
+    address: string; 
+  }; 
+  waypoints?: Array<{ 
+    name: string; 
+    coordinates: [number, number]; 
+    order: number; 
+  }>;
+  distance?: number;
+  estimatedDuration?: number;
+  approvalStatus: string;
+  status: string;
 }
-interface Route { _id: string; name: string; startLocation: { name: string; address: string; }; endLocation: { name: string; address: string; }; waypoints: Array<{ name: string; coordinates: [number, number]; order: number; }>; }
-interface SimulationStatus { isRunning: boolean; speedMultiplier: number; }
-type ViewMode = 'map' | 'list' | 'both';
+type ViewMode = 'map';
 
 // --- MAIN COMPONENT ---
 export default function AdvancedTrackingPage() {
   const router = useRouter();
   const { theme } = useTheme();
-  const [vehicles, setVehicles] = useState<VehicleLocation[]>([]);
   const [routes, setRoutes] = useState<Route[]>([]);
+  const [selectedProvince, setSelectedProvince] = useState<string>('all');
+  const [selectedDistrict, setSelectedDistrict] = useState<string>('all');
   const [selectedRoute, setSelectedRoute] = useState<string>('all');
-  const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>('both');
+  const [showRouteDetails, setShowRouteDetails] = useState<boolean>(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('map');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
-  const [autoRefresh, setAutoRefresh] = useState(true);
-  const [simulationStatus, setSimulationStatus] = useState<SimulationStatus | null>(null);
   
   // --- CONSISTENT THEME STYLING ---
   const lightTheme = {
@@ -109,69 +124,29 @@ export default function AdvancedTrackingPage() {
     }
   }, [router]);
 
-  const loadVehicleLocations = useCallback(async () => {
-    const endpoint = selectedRoute === 'all' ? '/tracking/live' : `/tracking/route/${selectedRoute}`;
-    const response = await apiCall(endpoint);
-    if (response?.vehicles) { setVehicles(response.vehicles); setLastUpdate(new Date()); setError(''); }
-  }, [selectedRoute, apiCall]);
-
   const loadRoutes = useCallback(async () => {
     const response = await apiCall('/routes?status=active');
     if (response?.routes || Array.isArray(response)) setRoutes(response.routes || response);
   }, [apiCall]);
 
-  const loadSimulationStatus = useCallback(async () => {
-    if (isAdmin()) { const response = await apiCall('/admin/simulation/status'); if (response?.simulation) setSimulationStatus(response.simulation); }
-  }, [apiCall]);
-
-  const controlSimulation = useCallback(async (action: 'start' | 'stop' | 'speed', value?: number) => {
-    if (!isAdmin()) return;
-    const endpoint = action === 'speed' ? `/admin/simulation/speed` : `/admin/simulation/${action}`;
-    const options = action === 'speed' ? { method: 'POST', body: JSON.stringify({ speed: value }) } : { method: 'POST' };
-    const response = await apiCall(endpoint, options);
-    if (response?.simulation) { setSimulationStatus(response.simulation); if (action === 'start') setAutoRefresh(true); }
-  }, [apiCall]);
-
   useEffect(() => {
-    const loadData = async () => { setLoading(true); await Promise.all([loadVehicleLocations(), loadRoutes(), loadSimulationStatus()]); setLoading(false); };
+    const loadData = async () => { setLoading(true); await loadRoutes(); setLoading(false); };
     loadData();
-  }, [loadVehicleLocations, loadRoutes, loadSimulationStatus]);
+  }, [loadRoutes]);
 
-  useEffect(() => {
-    if (!autoRefresh) return;
-    const interval = setInterval(() => { loadVehicleLocations(); if (isAdmin()) loadSimulationStatus(); }, 3000);
-    return () => clearInterval(interval);
-  }, [autoRefresh, loadVehicleLocations, loadSimulationStatus]);
-
-  const filteredVehicles = useMemo(() => vehicles.filter(vehicle => selectedRoute === 'all' || vehicle.routeId === selectedRoute), [vehicles, selectedRoute]);
-  const getStatusColor = (status: string) => ({ on_route: '#10B981', at_stop: '#3B82F6', delayed: '#F59E0B', breakdown: '#EF4444', off_duty: '#6B7280' }[status] || '#6B7280');
-  const formatSpeed = (speed: number) => `${speed.toFixed(1)} km/h`;
-
-  // Helper function to safely get vehicle ID
-  const getVehicleId = (vehicle: VehicleLocation) => vehicle.vehicleId || vehicle._id || 'unknown';
-  
-  // Convert VehicleLocation to Vehicle type for the map
-  const convertToVehicleType = (vehicleLocation: VehicleLocation) => ({
-    vehicleId: getVehicleId(vehicleLocation),
-    vehicleNumber: vehicleLocation.vehicleNumber,
-    location: vehicleLocation.location,
-    operationalInfo: vehicleLocation.operationalInfo,
-    passengerLoad: vehicleLocation.passengerLoad,
-    routeProgress: vehicleLocation.routeProgress,
-    timestamp: vehicleLocation.timestamp
-  });
-  
-  const isTrainVehicle = (vehicle: VehicleLocation) => {
-    const vehicleId = getVehicleId(vehicle);
-    return vehicleId.toLowerCase().includes('train') || vehicle.vehicleNumber?.toLowerCase().includes('train');
-  };
+  // Get filtered routes based on province/district selection
+  const filteredRoutes = useMemo(() => 
+    filterRoutes(routes, 
+      selectedProvince === 'all' ? undefined : selectedProvince,
+      selectedDistrict === 'all' ? undefined : selectedDistrict
+    ), [routes, selectedProvince, selectedDistrict]);
 
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', backgroundColor: currentThemeStyles.mainBg }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{ width: '48px', height: '48px', border: '4px solid rgba(59, 130, 246, 0.3)', borderTop: '4px solid #3B82F6', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }}></div>
-          <div style={{ color: currentThemeStyles.textSecondary, fontSize: '18px', fontWeight: '500' }}>Loading GPS Tracking...</div>
+          <div style={{ color: currentThemeStyles.textSecondary, fontSize: '18px', fontWeight: '500' }}>Loading Route Data...</div>
         </div>
         <style jsx>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
       </div>
@@ -245,12 +220,17 @@ export default function AdvancedTrackingPage() {
 
       <main style={{ maxWidth: '1800px', margin: '0 auto', padding: '2rem 1.5rem', position: 'relative', zIndex: 5 }}>
         <div className="animate-fade-in-down" style={{ marginBottom: '2rem' }}>
-          <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', color: currentThemeStyles.textPrimary, margin: 0, textShadow: '0 2px 10px rgba(0,0,0,0.2)' }}>Advanced GPS Tracking</h1>
-          <p style={{ color: currentThemeStyles.textSecondary, margin: '0.5rem 0 0 0', fontSize: '1.1rem' }}>Real-time vehicle monitoring across Sri Lanka</p>
+          <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', color: currentThemeStyles.textPrimary, margin: 0, textShadow: '0 2px 10px rgba(0,0,0,0.2)' }}>Route Management System</h1>
+          <p style={{ color: currentThemeStyles.textSecondary, margin: '0.5rem 0 0 0', fontSize: '1.1rem' }}>View and manage transportation routes across Sri Lanka</p>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem', marginBottom: '2rem' }}>
-          {[ { label: 'Active Vehicles', value: filteredVehicles.length, icon: TruckIcon, color: '#3B82F6' }, { label: 'On Route', value: filteredVehicles.filter(v => v.operationalInfo.status === 'on_route').length, icon: MapPinIcon, color: '#10B981' }, { label: 'Delayed', value: filteredVehicles.filter(v => v.operationalInfo.delays.currentDelay > 0).length, icon: ClockIcon, color: '#F59E0B' }, { label: 'Avg Load', value: `${Math.round(filteredVehicles.reduce((acc, v) => acc + (v.passengerLoad?.loadPercentage || 0), 0) / (filteredVehicles.length || 1))}%`, icon: UsersIcon, color: '#8B5CF6' } ].map((stat, index) => (
+          {[ 
+            { label: 'Total Routes', value: routes.length, icon: TruckIcon, color: '#3B82F6' }, 
+            { label: 'Active Routes', value: routes.filter(r => r.status === 'active').length, icon: MapPinIcon, color: '#10B981' }, 
+            { label: 'Approved Routes', value: routes.filter(r => r.approvalStatus === 'approved').length, icon: ClockIcon, color: '#059669' }, 
+            { label: 'Filtered Routes', value: filteredRoutes.length, icon: UsersIcon, color: '#8B5CF6' } 
+          ].map((stat, index) => (
             <div key={stat.label} style={{ backgroundColor: currentThemeStyles.glassPanelBg, padding: '2rem', borderRadius: '1rem', boxShadow: currentThemeStyles.glassPanelShadow, backdropFilter: 'blur(12px)', border: currentThemeStyles.glassPanelBorder, animation: `fade-in-up 0.8s ease-out ${index * 0.1}s both` }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <div style={{ width: '48px', height: '48px', backgroundColor: stat.color, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', filter: 'brightness(1.1)' }}><stat.icon width={24} height={24} color="white" /></div>
@@ -261,87 +241,112 @@ export default function AdvancedTrackingPage() {
         </div>
 
         <div style={{ backgroundColor: currentThemeStyles.glassPanelBg, padding: '2rem', borderRadius: '1rem', boxShadow: currentThemeStyles.glassPanelShadow, backdropFilter: 'blur(12px)', border: currentThemeStyles.glassPanelBorder, marginBottom: '2rem' }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
-              <select value={selectedRoute} onChange={(e) => setSelectedRoute(e.target.value)} style={{ padding: '0.75rem 1rem', border: `1px solid ${currentThemeStyles.selectBorder}`, borderRadius: '0.5rem', backgroundColor: currentThemeStyles.selectBg, color: currentThemeStyles.selectText, fontSize: '1rem', minWidth: '200px' }}>
-                <option value="all">All Routes ({vehicles.length} vehicles)</option>
-                {routes.map((route) => (<option key={route._id} value={route._id}>{route.name}</option>))}
-              </select>
+          {/* Location Filter Component */}
+          <LocationFilter
+            routes={routes}
+            selectedProvince={selectedProvince}
+            selectedDistrict={selectedDistrict}
+            selectedRoute={selectedRoute}
+            onProvinceChange={setSelectedProvince}
+            onDistrictChange={setSelectedDistrict}
+            onRouteChange={setSelectedRoute}
+            currentThemeStyles={currentThemeStyles}
+          />
 
-              {simulationStatus && isAdmin() && (
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <button onClick={() => controlSimulation(simulationStatus.isRunning ? 'stop' : 'start')} style={{ backgroundColor: simulationStatus.isRunning ? '#EF4444' : '#10B981', color: 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: '0.375rem', cursor: 'pointer', fontSize: '0.875rem', fontWeight: '500' }}>{simulationStatus.isRunning ? '⏹️ Stop' : '▶️ Start'}</button>
-                  <select onChange={(e) => controlSimulation('speed', parseFloat(e.target.value))} value={simulationStatus.speedMultiplier} style={{ padding: '0.5rem', border: `1px solid ${currentThemeStyles.selectBorder}`, borderRadius: '0.375rem', backgroundColor: currentThemeStyles.selectBg, color: currentThemeStyles.selectText, fontSize: '0.875rem' }}>
-                    <option value="0.5">0.5x</option><option value="1">1x</option><option value="2">2x</option><option value="5">5x</option>
-                  </select>
-                </div>
-              )}
+          {/* Controls Row */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center', justifyContent: 'space-between', marginTop: '1.5rem' }}>
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+              {/* Route Details Toggle */}
+              <button 
+                onClick={() => setShowRouteDetails(!showRouteDetails)}
+                style={{ 
+                  backgroundColor: showRouteDetails ? '#3B82F6' : currentThemeStyles.buttonBg, 
+                  color: showRouteDetails ? 'white' : currentThemeStyles.buttonText,
+                  padding: '0.75rem 1rem', 
+                  border: 'none', 
+                  borderRadius: '0.5rem', 
+                  cursor: 'pointer', 
+                  fontSize: '0.875rem', 
+                  fontWeight: '500',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}
+              >
+                <MapPinIcon width={16} height={16} />
+                {showRouteDetails ? 'Hide Route Details' : 'Show Route Details'}
+              </button>
+
             </div>
-            <div style={{ display: 'flex', gap: '0.5rem', backgroundColor: currentThemeStyles.buttonBg, padding: '0.25rem', borderRadius: '0.6rem' }}>
-              {['map', 'list', 'both'].map((mode) => (
-                <button key={mode} onClick={() => setViewMode(mode as ViewMode)} style={{ backgroundColor: viewMode === mode ? '#3B82F6' : 'transparent', color: viewMode === mode ? 'white' : currentThemeStyles.textSecondary, padding: '0.5rem 1rem', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', fontSize: '0.875rem', fontWeight: '500', textTransform: 'capitalize' }}>{mode}</button>
-              ))}
+            
+            {/* View Mode Display */}
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <div style={{ 
+                backgroundColor: '#3B82F6', 
+                color: 'white', 
+                padding: '0.5rem 1rem', 
+                borderRadius: '0.5rem', 
+                fontSize: '0.875rem', 
+                fontWeight: '500' 
+              }}>
+                Map View
+              </div>
             </div>
           </div>
-          <div style={{ marginTop: '1rem', color: currentThemeStyles.textMuted, fontSize: '0.875rem' }}>Last update: {lastUpdate.toLocaleTimeString()}</div>
+
+          {/* Route Summary Info */}
+          <div style={{ marginTop: '1rem', color: currentThemeStyles.textMuted, fontSize: '0.875rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>Routes loaded: {new Date().toLocaleTimeString()}</span>
+            <span>{filteredRoutes.length} route{filteredRoutes.length !== 1 ? 's' : ''} matching current filters</span>
+          </div>
         </div>
 
         {error && <div style={{ backgroundColor: theme === 'dark' ? '#7F1D1D' : '#FEF2F2', color: theme === 'dark' ? '#FCA5A5' : '#DC2626', padding: '1rem', borderRadius: '0.5rem', border: `1px solid ${theme === 'dark' ? '#B91C1C' : '#FCA5A5'}`, marginBottom: '2rem' }}>{error}</div>}
 
-        <div style={{ display: 'grid', gridTemplateColumns: viewMode === 'both' ? '1fr 450px' : '1fr', gap: '2rem', height: viewMode === 'map' ? '70vh' : 'auto' }}>
-          {(viewMode === 'map' || viewMode === 'both') && (
-            <div style={{ backgroundColor: currentThemeStyles.glassPanelBg, borderRadius: '1rem', boxShadow: currentThemeStyles.glassPanelShadow, backdropFilter: 'blur(12px)', border: currentThemeStyles.glassPanelBorder, overflow: 'hidden' }}>
-              <AdvancedMap 
-                vehicles={(filteredVehicles.length > 0 ? filteredVehicles : vehicles).map(convertToVehicleType)} 
-                selectedVehicle={selectedVehicle} 
-                onVehicleSelect={setSelectedVehicle} 
-                height={viewMode === 'both' ? '650px' : '70vh'} 
-              />
+        {/* Route Details Section */}
+        {showRouteDetails && filteredRoutes.length > 0 && (
+          <div style={{ marginBottom: '2rem' }}>
+            <h2 style={{ 
+              fontSize: '1.5rem', 
+              fontWeight: '600', 
+              color: currentThemeStyles.textPrimary, 
+              marginBottom: '1rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}>
+              <MapPinIcon width={20} height={20} color={currentThemeStyles.textPrimary} />
+              Route Details ({filteredRoutes.length})
+            </h2>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fill, minmax(500px, 1fr))', 
+              gap: '1.5rem',
+              maxHeight: '60vh',
+              overflowY: 'auto',
+              padding: '0.5rem'
+            }}>
+              {filteredRoutes.map((route) => (
+                <RouteDetails
+                  key={route._id}
+                  route={route}
+                  currentThemeStyles={currentThemeStyles}
+                  isSelected={selectedRoute === route._id}
+                  onClick={() => setSelectedRoute(selectedRoute === route._id ? 'all' : route._id)}
+                />
+              ))}
             </div>
-          )}
+          </div>
+        )}
 
-          {(viewMode === 'list' || viewMode === 'both') && (
-            <div style={{ maxHeight: viewMode === 'both' ? '650px' : 'none', overflowY: viewMode === 'both' ? 'auto' : 'visible' }}>
-              {filteredVehicles.length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {filteredVehicles.map((vehicle, index) => {
-                    const vehicleId = getVehicleId(vehicle);
-                    return (
-                      <div key={vehicle._id} onClick={() => setSelectedVehicle(selectedVehicle === vehicleId ? null : vehicleId)} style={{ backgroundColor: selectedVehicle === vehicleId ? 'rgba(59, 130, 246, 0.2)' : currentThemeStyles.cardBg, padding: '1.5rem', borderRadius: '0.75rem', border: `2px solid ${selectedVehicle === vehicleId ? '#3B82F6' : currentThemeStyles.cardBorder}`, cursor: 'pointer', transition: 'all 0.2s', animation: `fade-in-up 0.6s ease-out ${index * 0.1}s both` }}>
-                        <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: currentThemeStyles.textPrimary, margin: '0 0 0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <TruckIcon width={20} height={20} color={currentThemeStyles.textPrimary} />
-                          {vehicle.vehicleNumber} 
-                          {selectedVehicle === vehicleId && <span style={{ fontSize: '0.875rem', color: '#3B82F6', display: 'flex', alignItems: 'center', gap: '0.25rem' }}><MapPinIcon width={16} height={16} color="#3B82F6" /> Selected</span>}
-                        </h3>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                          <span style={{ padding: '0.25rem 0.75rem', borderRadius: '99px', fontSize: '0.75rem', fontWeight: '600', backgroundColor: getStatusColor(vehicle.operationalInfo.status), color: 'white' }}>{vehicle.operationalInfo.status.replace('_', ' ').toUpperCase()}</span>
-                          {vehicle.operationalInfo.delays.currentDelay > 0 && (<span style={{ padding: '0.25rem 0.75rem', borderRadius: '99px', fontSize: '0.75rem', fontWeight: '600', backgroundColor: '#F59E0B', color: 'white' }}>+{vehicle.operationalInfo.delays.currentDelay} min</span>)}
-                        </div>
-                        <div style={{ fontSize: '0.875rem', color: currentThemeStyles.textSecondary, lineHeight: '1.5' }}>
-                          <div>Driver: {vehicle.operationalInfo.driverInfo.driverName}</div>
-                          <div>Speed: {formatSpeed(vehicle.location.speed)} • Load: {vehicle.passengerLoad.loadPercentage.toFixed(0)}% • Progress: {vehicle.routeProgress.progressPercentage.toFixed(1)}%</div>
-                        </div>
-                        {vehicle.operationalInfo.delays.reason && (
-                          <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: theme === 'dark' ? '#7C2D12' : '#FEF2F2', borderRadius: '0.5rem', border: `1px solid ${theme === 'dark' ? '#DC2626' : '#FCA5A5'}` }}>
-                            <div style={{ fontSize: '0.875rem', color: theme === 'dark' ? '#FCA5A5' : '#991B1B', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                              <ExclamationTriangleIcon width={16} height={16} color={theme === 'dark' ? '#FCA5A5' : '#991B1B'} /> 
-                              Delay: {vehicle.operationalInfo.delays.reason}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div style={{ textAlign: 'center', padding: '4rem', color: currentThemeStyles.textSecondary, backgroundColor: currentThemeStyles.glassPanelBg, borderRadius: '1rem', boxShadow: currentThemeStyles.glassPanelShadow, backdropFilter: 'blur(12px)', border: currentThemeStyles.glassPanelBorder }}>
-                  <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🗺️</div>
-                  <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: currentThemeStyles.textPrimary }}>No vehicles tracked</h3>
-                  <p style={{ margin: 0 }}>Start the simulation or select a different route.</p>
-                </div>
-              )}
-            </div>
-          )}
+        {/* Main Map Section */}
+        <div style={{ backgroundColor: currentThemeStyles.glassPanelBg, borderRadius: '1rem', boxShadow: currentThemeStyles.glassPanelShadow, backdropFilter: 'blur(12px)', border: currentThemeStyles.glassPanelBorder, overflow: 'hidden', marginBottom: '2rem' }}>
+          <AdvancedMap 
+            routes={filteredRoutes}
+            selectedRoute={selectedRoute}
+            height="70vh"
+            showRouteDetails={showRouteDetails}
+          />
         </div>
       </main>
     </div>

@@ -2,7 +2,7 @@
 "use client";
 import { useEffect, useState, useRef, useCallback } from 'react';
 import dynamic from 'next/dynamic';
-import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Circle, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -43,6 +43,33 @@ interface Vehicle {
   timestamp?: string | number | Date;
 }
 
+// --- ROUTE DATA TYPES ---
+interface RouteLocation {
+  name: string;
+  coordinates: [number, number]; // [longitude, latitude]
+  address: string;
+}
+
+interface RouteWaypoint {
+  name: string;
+  coordinates: [number, number];
+  order: number;
+  address?: string;
+}
+
+interface RouteData {
+  _id: string;
+  name: string;
+  routeId: string;
+  startLocation: RouteLocation;
+  endLocation: RouteLocation;
+  waypoints?: RouteWaypoint[];
+  distance?: number;
+  estimatedDuration?: number;
+  status: string;
+  approvalStatus: string;
+}
+
 
 // ENHANCED VEHICLE ICONS WITH STATUS INDICATORS
 const createVehicleIcon = (type: string, status: string, heading: number = 0, loadPercentage: number = 0) => {
@@ -57,35 +84,167 @@ const createVehicleIcon = (type: string, status: string, heading: number = 0, lo
   return L.divIcon({ html: iconSvg, className: 'custom-vehicle-icon', iconSize: [40, 40], iconAnchor: [20, 20] });
 };
 
-// MAP AUTO-CENTER AND BOUNDS UPDATER
-const MapUpdater = ({ vehicles, selectedVehicle }: { vehicles: Vehicle[], selectedVehicle: string | null }) => {
+// PROFESSIONAL START POINT MARKER (Green Circle with A)
+const createStartPointIcon = (routeName: string) => {
+  const iconSvg = `
+    <div style="position: relative; display: flex; flex-direction: column; align-items: center;">
+      <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #10B981, #059669); border: 3px solid white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; color: white; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); cursor: pointer;">A</div>
+      <div style="position: absolute; top: 44px; left: 50%; transform: translateX(-50%); background: rgba(16, 185, 129, 0.95); color: white; padding: 2px 6px; border-radius: 6px; font-size: 10px; font-weight: 600; white-space: nowrap; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">START</div>
+    </div>`;
+  return L.divIcon({ html: iconSvg, className: 'route-start-icon', iconSize: [40, 58], iconAnchor: [20, 40] });
+};
+
+// PROFESSIONAL END POINT MARKER (Red Circle with B)
+const createEndPointIcon = (routeName: string) => {
+  const iconSvg = `
+    <div style="position: relative; display: flex; flex-direction: column; align-items: center;">
+      <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #EF4444, #DC2626); border: 3px solid white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; color: white; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3); cursor: pointer;">B</div>
+      <div style="position: absolute; top: 44px; left: 50%; transform: translateX(-50%); background: rgba(239, 68, 68, 0.95); color: white; padding: 2px 6px; border-radius: 6px; font-size: 10px; font-weight: 600; white-space: nowrap; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">END</div>
+    </div>`;
+  return L.divIcon({ html: iconSvg, className: 'route-end-icon', iconSize: [40, 58], iconAnchor: [20, 40] });
+};
+
+// PROFESSIONAL WAYPOINT MARKER (Blue Circle with Number)
+const createWaypointIcon = (order: number) => {
+  const iconSvg = `
+    <div style="position: relative; display: flex; flex-direction: column; align-items: center;">
+      <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #3B82F6, #2563EB); border: 3px solid white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; color: white; box-shadow: 0 3px 10px rgba(59, 130, 246, 0.3); cursor: pointer;">${order}</div>
+      <div style="position: absolute; top: 36px; left: 50%; transform: translateX(-50%); background: rgba(59, 130, 246, 0.95); color: white; padding: 1px 4px; border-radius: 4px; font-size: 9px; font-weight: 600; white-space: nowrap;">STOP</div>
+    </div>`;
+  return L.divIcon({ html: iconSvg, className: 'route-waypoint-icon', iconSize: [32, 48], iconAnchor: [16, 32] });
+};
+
+// ROUTE POINT POPUP COMPONENT
+const RoutePointPopup = ({ route, pointType, location }: { 
+  route: RouteData, 
+  pointType: 'start' | 'end' | 'waypoint', 
+  location: RouteLocation | RouteWaypoint 
+}) => (
+  <div style={{ minWidth: '280px', fontFamily: 'system-ui', lineHeight: '1.5' }}>
+    <div style={{ borderBottom: '2px solid #e5e7eb', paddingBottom: '0.75rem', marginBottom: '1rem' }}>
+      <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 'bold', color: '#1f2937', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <div style={{ 
+          width: '24px', 
+          height: '24px', 
+          borderRadius: '50%', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          fontSize: '14px', 
+          fontWeight: 'bold', 
+          color: 'white',
+          background: pointType === 'start' ? '#10B981' : pointType === 'end' ? '#EF4444' : '#3B82F6'
+        }}>
+          {pointType === 'start' ? 'A' : pointType === 'end' ? 'B' : (location as RouteWaypoint).order}
+        </div>
+        {location.name}
+        <span style={{ 
+          fontSize: '0.75rem', 
+          padding: '0.25rem 0.75rem', 
+          borderRadius: '1rem', 
+          backgroundColor: pointType === 'start' ? '#10B981' : pointType === 'end' ? '#EF4444' : '#3B82F6', 
+          color: 'white', 
+          fontWeight: '500' 
+        }}>
+          {pointType.toUpperCase()}
+        </span>
+      </h3>
+      <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem', color: '#6b7280' }}>📍 {location.address || 'Address not available'}</p>
+      <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.8rem', color: '#9ca3af', fontFamily: 'monospace' }}>
+        📊 {location.coordinates[1].toFixed(4)}, {location.coordinates[0].toFixed(4)}
+      </p>
+    </div>
+    
+    <div style={{ marginBottom: '1rem' }}>
+      <h4 style={{ fontSize: '1rem', fontWeight: '600', color: '#1f2937', margin: '0 0 0.5rem 0' }}>Route Information</h4>
+      <div style={{ backgroundColor: '#f9fafb', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #e5e7eb' }}>
+        <div style={{ fontSize: '0.9rem', color: '#374151', marginBottom: '0.25rem' }}><strong>Route:</strong> {route.name}</div>
+        <div style={{ fontSize: '0.8rem', color: '#6b7280', fontFamily: 'monospace', marginBottom: '0.25rem' }}>ID: {route.routeId}</div>
+        <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
+          <div>
+            <span style={{ fontSize: '0.75rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Distance</span>
+            <div style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1f2937' }}>{route.distance ? `${route.distance} km` : 'N/A'}</div>
+          </div>
+          <div>
+            <span style={{ fontSize: '0.75rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Duration</span>
+            <div style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1f2937' }}>{route.estimatedDuration ? `${route.estimatedDuration} min` : 'N/A'}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
+      <span style={{ 
+        padding: '0.25rem 0.75rem', 
+        borderRadius: '99px', 
+        fontSize: '0.75rem', 
+        fontWeight: '600', 
+        backgroundColor: route.status === 'active' ? '#10B981' : '#6B7280', 
+        color: 'white' 
+      }}>
+        {route.status.toUpperCase()}
+      </span>
+      {route.approvalStatus === 'approved' && (
+        <span style={{ 
+          padding: '0.25rem 0.75rem', 
+          borderRadius: '99px', 
+          fontSize: '0.75rem', 
+          fontWeight: '600', 
+          backgroundColor: '#059669', 
+          color: 'white' 
+        }}>
+          APPROVED
+        </span>
+      )}
+    </div>
+  </div>
+);
+
+// MAP AUTO-CENTER AND BOUNDS UPDATER FOR ROUTES  
+const MapUpdater = ({ routes, selectedRoute }: { routes?: RouteData[], selectedRoute?: string | null }) => {
   const map = useMap();
   useEffect(() => {
-    console.log('🗺️ Map Update - Vehicles:', vehicles.length, 'Selected:', selectedVehicle);
-    if (vehicles.length > 0) {
-      const validVehicles = vehicles.filter(v => v.location && v.location.latitude && v.location.longitude && v.location.latitude !== 0 && v.location.longitude !== 0);
-      console.log('✅ Valid vehicles for mapping:', validVehicles.length, validVehicles.map(v => ({ id: v.vehicleId, lat: v.location.latitude, lng: v.location.longitude })));
-      if (validVehicles.length > 0) {
-        if (selectedVehicle) {
-          const vehicle = validVehicles.find(v => v.vehicleId === selectedVehicle);
-          if (vehicle) {
-            console.log('🎯 Centering on selected vehicle:', vehicle.vehicleId, [vehicle.location.latitude, vehicle.location.longitude]);
-            map.setView([vehicle.location.latitude, vehicle.location.longitude], 15);
-          }
-        } else {
-          const bounds = validVehicles.map(v => [v.location.latitude, v.location.longitude] as [number, number]);
-          console.log('📍 Fitting bounds for vehicles:', bounds);
-          map.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });
+    console.log('🗺️ Map Update - Routes:', routes?.length || 0, 'Selected Route:', selectedRoute);
+    
+    // Get the routes to display (either selected route or all routes)
+    const routesToShow = selectedRoute && selectedRoute !== 'all' 
+      ? routes?.filter(route => route._id === selectedRoute) || []
+      : routes || [];
+    
+    console.log('📍 Routes to show:', routesToShow.length);
+    
+    // Collect all route points to fit bounds
+    const allPoints: [number, number][] = [];
+    
+    if (routesToShow.length > 0) {
+      routesToShow.forEach(route => {
+        // Add start point
+        if (route.startLocation?.coordinates) {
+          allPoints.push([route.startLocation.coordinates[1], route.startLocation.coordinates[0]]); // Convert [lng, lat] to [lat, lng]
         }
-      } else {
-        console.log('🏝️ No valid vehicles, centering on Sri Lanka');
-        map.setView([7.8731, 80.7718], 8);
-      }
+        // Add end point
+        if (route.endLocation?.coordinates) {
+          allPoints.push([route.endLocation.coordinates[1], route.endLocation.coordinates[0]]);
+        }
+        // Add waypoints
+        if (route.waypoints) {
+          route.waypoints.forEach(wp => {
+            if (wp.coordinates) {
+              allPoints.push([wp.coordinates[1], wp.coordinates[0]]);
+            }
+          });
+        }
+      });
+    }
+    
+    if (allPoints.length > 0) {
+      console.log('📍 Fitting bounds for route points:', allPoints.length);
+      map.fitBounds(allPoints, { padding: [50, 50], maxZoom: 15 });
     } else {
-      console.log('🗺️ No vehicles, showing Sri Lanka overview');
+      console.log('🗺️ No route data, showing Sri Lanka overview');
       map.setView([7.8731, 80.7718], 8);
     }
-  }, [vehicles, selectedVehicle, map]);
+  }, [routes, selectedRoute, map]);
   return null;
 };
 
@@ -138,63 +297,31 @@ const VehiclePopup = ({ vehicle }: { vehicle: Vehicle }) => (
   </div>
 );
 
-// MAIN ADVANCED MAP COMPONENT WITH GUARANTEED VEHICLE DISPLAY
+// MAIN ADVANCED MAP COMPONENT WITH ROUTE DISPLAY
 interface AdvancedMapProps {
-  vehicles: Vehicle[];
-  selectedVehicle?: string | null;
-  onVehicleSelect?: (vehicleId: string | null) => void;
+  routes?: RouteData[];
+  selectedRoute?: string | null;
   height?: string;
   showControls?: boolean;
+  showRouteDetails?: boolean;
 }
 
 const AdvancedMap: React.FC<AdvancedMapProps> = ({
-  vehicles = [],
-  selectedVehicle = null,
-  onVehicleSelect,
+  routes = [],
+  selectedRoute = null,
   height = '600px',
-  showControls = true
+  showControls = true,
+  showRouteDetails = false
 }) => {
   const [mapReady, setMapReady] = useState(false);
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [debugMode, setDebugMode] = useState(true);
   const mapRef = useRef<L.Map | null>(null);
 
-  // VEHICLE VALIDATION AND FILTERING
-  const processedVehicles: Vehicle[] = vehicles.map(vehicle => ({
-    ...vehicle,
-    location: {
-      latitude: vehicle.location?.latitude || 6.9271,
-      longitude: vehicle.location?.longitude || 79.8612,
-      speed: vehicle.location?.speed || 0,
-      heading: vehicle.location?.heading || 0,
-      accuracy: vehicle.location?.accuracy || 5
-    },
-    operationalInfo: {
-      ...vehicle.operationalInfo,
-      status: vehicle.operationalInfo?.status || 'on_route'
-    },
-    passengerLoad: {
-      currentCapacity: vehicle.passengerLoad?.currentCapacity || Math.floor(Math.random() * 40),
-      maxCapacity: vehicle.passengerLoad?.maxCapacity || 50,
-      loadPercentage: vehicle.passengerLoad?.loadPercentage || Math.floor(Math.random() * 80) + 20,
-      ...vehicle.passengerLoad
-    },
-    routeProgress: {
-      progressPercentage: vehicle.routeProgress?.progressPercentage || Math.floor(Math.random() * 80) + 10,
-      nextStopETA: vehicle.routeProgress?.nextStopETA || new Date(Date.now() + Math.random() * 30 * 60000),
-      ...vehicle.routeProgress
-    }
-  }));
-  const filteredVehicles = processedVehicles.filter(vehicle => filterStatus === 'all' || vehicle.operationalInfo?.status === filterStatus);
+  // Get the routes to display based on selection
+  const routesToDisplay = selectedRoute && selectedRoute !== 'all' 
+    ? routes.filter(route => route._id === selectedRoute)
+    : (showRouteDetails ? routes : []);
 
-  console.log('🚌 AdvancedMap Render:', { totalVehicles: vehicles.length, processedVehicles: processedVehicles.length, filteredVehicles: filteredVehicles.length, selectedVehicle, debugMode });
-  // FIX: Used optional chaining (?.) to prevent type error
-  console.log('📍 Vehicle Positions:', filteredVehicles.map(v => ({ id: v.vehicleId, lat: v.location.latitude, lng: v.location.longitude, status: v.operationalInfo?.status })));
-
-  const handleVehicleClick = useCallback((vehicleId: string) => {
-    console.log('🎯 Vehicle clicked:', vehicleId);
-    if (onVehicleSelect) onVehicleSelect(selectedVehicle === vehicleId ? null : vehicleId);
-  }, [selectedVehicle, onVehicleSelect]);
+  console.log('🗺️ AdvancedMap Render:', { totalRoutes: routes.length, routesToDisplay: routesToDisplay.length, selectedRoute, showRouteDetails });
 
   // SRI LANKA BOUNDS AND CENTER
   const sriLankaCenter: [number, number] = [7.8731, 80.7718];
@@ -202,16 +329,16 @@ const AdvancedMap: React.FC<AdvancedMapProps> = ({
 
   useEffect(() => {
     setMapReady(true);
-    console.log('🗺️ Map initialized with', vehicles.length, 'vehicles');
-  }, [vehicles.length]);
+    console.log('🗺️ Map initialized with', routes.length, 'routes');
+  }, [routes.length]);
 
   if (!mapReady) {
     return (
       <div style={{ height, backgroundColor: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '0.75rem', border: '2px dashed #d1d5db' }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{ width: '48px', height: '48px', border: '4px solid #e5e7eb', borderTop: '4px solid #3B82F6', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 1rem' }}></div>
-          <div style={{ color: '#6b7280', fontSize: '1.1rem', fontWeight: '500' }}>🗺️ Loading Advanced Map...</div>
-          <div style={{ color: '#9ca3af', fontSize: '0.9rem', marginTop: '0.5rem' }}>Preparing {vehicles.length} vehicles for display</div>
+          <div style={{ color: '#6b7280', fontSize: '1.1rem', fontWeight: '500' }}>🗺️ Loading Route Map...</div>
+          <div style={{ color: '#9ca3af', fontSize: '0.9rem', marginTop: '0.5rem' }}>Preparing {routes.length} routes for display</div>
         </div>
       </div>
     );
@@ -219,75 +346,70 @@ const AdvancedMap: React.FC<AdvancedMapProps> = ({
 
   return (
     <div style={{ position: 'relative', height, borderRadius: '0.75rem', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)', border: '1px solid #e5e7eb' }}>
-      {showControls && (
-        <div style={{ position: 'absolute', top: '1rem', left: '1rem', zIndex: 1000, display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-          <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} style={{ padding: '0.5rem 0.75rem', borderRadius: '0.5rem', border: '1px solid #d1d5db', backgroundColor: 'white', fontSize: '0.875rem', fontWeight: '500', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', minWidth: '120px' }}>
-            <option value="all">🚌 All Status ({filteredVehicles.length})</option>
-            <option value="on_route">🛣️ On Route</option>
-            <option value="at_stop">🚏 At Stop</option>
-            <option value="delayed">⏰ Delayed</option>
-            <option value="breakdown">🔧 Breakdown</option>
-          </select>
-          <button onClick={() => setDebugMode(!debugMode)} style={{ padding: '0.5rem 0.75rem', borderRadius: '0.5rem', border: 'none', backgroundColor: debugMode ? '#EF4444' : 'white', color: debugMode ? 'white' : '#374151', fontSize: '0.875rem', fontWeight: '500', cursor: 'pointer', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
-            {debugMode ? '🐛 Debug ON' : '🐛 Debug OFF'}
-          </button>
-        </div>
-      )}
       <div style={{ position: 'absolute', top: '1rem', right: '1rem', zIndex: 1000, backgroundColor: 'rgba(255, 255, 255, 0.95)', padding: '0.75rem 1rem', borderRadius: '0.75rem', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', backdropFilter: 'blur(10px)' }}>
         <div style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1f2937', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <div style={{ width: '8px', height: '8px', backgroundColor: '#10B981', borderRadius: '50%', animation: 'pulse 2s infinite' }}></div>
-          Live GPS Tracking
+          <div style={{ width: '8px', height: '8px', backgroundColor: '#3B82F6', borderRadius: '50%' }}></div>
+          Route Map
         </div>
-        <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>{filteredVehicles.length} vehicles • Updated {new Date().toLocaleTimeString()}</div>
+        <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>
+          {selectedRoute && selectedRoute !== 'all' ? '1 route selected' : `${routesToDisplay.length} routes displayed`}
+        </div>
       </div>
-      {debugMode && (
-        <div style={{ position: 'absolute', bottom: '1rem', left: '1rem', zIndex: 1000, backgroundColor: 'rgba(0, 0, 0, 0.8)', color: 'white', padding: '0.75rem', borderRadius: '0.5rem', fontSize: '0.75rem', maxWidth: '300px' }}>
-          <div style={{ fontWeight: 'bold', marginBottom: '0.25rem' }}>🐛 Debug Info:</div>
-          <div>Total Vehicles: {vehicles.length}</div>
-          <div>Filtered: {filteredVehicles.length}</div>
-          <div>Selected: {selectedVehicle || 'None'}</div>
-          <div>Valid Coords: {filteredVehicles.filter(v => v.location.latitude && v.location.longitude).length}</div>
-        </div>
-      )}
       <MapContainer ref={mapRef} center={sriLankaCenter} zoom={8} style={{ height: '100%', width: '100%', zIndex: 1 }} maxBounds={sriLankaBounds} maxBoundsViscosity={0.7}>
         <TileLayer attribution='© OpenStreetMap contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" maxZoom={18} />
-        <MapUpdater vehicles={filteredVehicles} selectedVehicle={selectedVehicle} />
-        {filteredVehicles.map((vehicle, index) => {
-          const position: [number, number] = [vehicle.location.latitude, vehicle.location.longitude];
-          const vehicleType = vehicle.vehicleId?.includes('TRAIN') ? 'train' : 'bus';
-          const status = vehicle.operationalInfo?.status || 'on_route';
-          const loadPercentage = vehicle.passengerLoad?.loadPercentage || 0;
-          const heading = vehicle.location?.heading || 0;
-          console.log(`🎯 Rendering vehicle ${index + 1}:`, { id: vehicle.vehicleId, position, type: vehicleType, status });
-          return (
-            <Marker
-              key={vehicle.vehicleId || index}
-              position={position}
-              icon={createVehicleIcon(vehicleType, status, heading, loadPercentage)}
-              eventHandlers={{ click: () => handleVehicleClick(vehicle.vehicleId) }}
-            >
-              <Popup maxWidth={320} closeButton={true}>
-                <VehiclePopup vehicle={vehicle} />
-              </Popup>
-            </Marker>
-          );
-        })}
-        {selectedVehicle && (() => {
-          const vehicle = filteredVehicles.find(v => v.vehicleId === selectedVehicle);
-          if (!vehicle) return null;
-          return (
-            <Circle
-              center={[vehicle.location.latitude, vehicle.location.longitude]}
-              radius={500}
-              pathOptions={{ color: '#3B82F6', fillColor: '#3B82F6', fillOpacity: 0.1, weight: 3, dashArray: '10, 5' }}
-            />
-          );
-        })()}
+        <MapUpdater routes={routes} selectedRoute={selectedRoute} />
+        
+        {/* RENDER ROUTE POINTS ONLY (NO LINES) */}
+        {routesToDisplay.map((route, routeIndex) => (
+          <div key={route._id}>
+            {/* Start Point Marker */}
+            {route.startLocation?.coordinates && (
+              <Marker
+                position={[route.startLocation.coordinates[1], route.startLocation.coordinates[0]]}
+                icon={createStartPointIcon(route.name)}
+              >
+                <Popup maxWidth={320} closeButton={true}>
+                  <RoutePointPopup route={route} pointType="start" location={route.startLocation} />
+                </Popup>
+              </Marker>
+            )}
+            
+            {/* Waypoint Markers */}
+            {route.waypoints?.map((waypoint, wpIndex) => (
+              waypoint.coordinates && (
+                <Marker
+                  key={`${route._id}-wp-${wpIndex}`}
+                  position={[waypoint.coordinates[1], waypoint.coordinates[0]]}
+                  icon={createWaypointIcon(waypoint.order)}
+                >
+                  <Popup maxWidth={320} closeButton={true}>
+                    <RoutePointPopup route={route} pointType="waypoint" location={waypoint} />
+                  </Popup>
+                </Marker>
+              )
+            ))}
+            
+            {/* End Point Marker */}
+            {route.endLocation?.coordinates && (
+              <Marker
+                position={[route.endLocation.coordinates[1], route.endLocation.coordinates[0]]}
+                icon={createEndPointIcon(route.name)}
+              >
+                <Popup maxWidth={320} closeButton={true}>
+                  <RoutePointPopup route={route} pointType="end" location={route.endLocation} />
+                </Popup>
+              </Marker>
+            )}
+          </div>
+        ))}
       </MapContainer>
       <style jsx>{`
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         .custom-vehicle-icon { background: none !important; border: none !important; }
+        .route-start-icon { background: none !important; border: none !important; }
+        .route-end-icon { background: none !important; border: none !important; }
+        .route-waypoint-icon { background: none !important; border: none !important; }
         .leaflet-popup-content-wrapper { border-radius: 12px !important; }
         .leaflet-popup-tip { display: none !important; }
       `}</style>
