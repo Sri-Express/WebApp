@@ -131,7 +131,7 @@ class PayHereService {
       merchant_id: this.merchantId,
       return_url: `${baseUrl}/payment-gateway?status=success`,
       cancel_url: `${baseUrl}/payment-gateway?status=cancel`,
-      notify_url: `${baseUrl}/api/payment/webhook/payhere`,
+      notify_url: `https://sri-express.mehara.io/api/payment/webhook/payhere`,
       order_id: orderId,
       items: `Bus Ticket - ${bookingData.routeId || 'Route'}`,
       amount: amount,
