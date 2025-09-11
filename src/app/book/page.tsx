@@ -183,8 +183,8 @@ export default function BookingPage() {
       paymentMethod: bookingData.paymentMethod,
       pricing: {
         basePrice: route?.pricing.basePrice || 0,
-        totalAmount: calculatePrice() + Math.round(calculatePrice() * 0.02),
-        taxes: Math.round(calculatePrice() * 0.02),
+        totalAmount: calculatePrice(),
+        taxes: 0,
         discounts: (route?.pricing.basePrice || 0) - calculatePrice()
       }
     };
@@ -286,10 +286,9 @@ export default function BookingPage() {
       </div>
       <div style={{ backgroundColor: currentThemeStyles.quickActionBg, padding: '1rem', borderRadius: '0.5rem', border: currentThemeStyles.quickActionBorder }}>
         <h4 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.5rem', color: currentThemeStyles.textPrimary }}>Price Summary</h4>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: currentThemeStyles.textSecondary }}><span>Base Price:</span><span>{formatPrice(route?.pricing.basePrice || 0)}</span></div>
         {bookingData.passengerInfo.passengerType !== 'regular' && (<div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: '#10B981' }}><span>Discount ({bookingData.passengerInfo.passengerType}):</span><span>-{formatPrice((route?.pricing.basePrice || 0) - calculatePrice())}</span></div>)}
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: currentThemeStyles.textSecondary }}><span>Taxes & Fees:</span><span>{formatPrice(Math.round(calculatePrice() * 0.02))}</span></div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '1.1rem', paddingTop: '0.5rem', borderTop: `1px solid ${currentThemeStyles.quickActionBorder}`, color: currentThemeStyles.textPrimary }}><span>Total:</span><span style={{ color: '#F59E0B' }}>{formatPrice(calculatePrice() + Math.round(calculatePrice() * 0.02))}</span></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '1.1rem', paddingTop: '0.5rem', borderTop: `1px solid ${currentThemeStyles.quickActionBorder}`, color: currentThemeStyles.textPrimary }}><span>Ticket Price:</span><span style={{ color: '#F59E0B' }}>{formatPrice(calculatePrice())}</span></div>
+        <div style={{ fontSize: '0.8rem', color: currentThemeStyles.textSecondary, marginTop: '0.25rem', textAlign: 'center' }}>*Includes all taxes and fees</div>
       </div>
     </div>
   );
