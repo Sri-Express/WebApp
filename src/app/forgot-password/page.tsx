@@ -71,7 +71,7 @@ export default function ForgotPasswordPage() {
       
       setMessage('Password reset instructions sent! Redirecting...');
       setTimeout(() => {
-        router.push(`/reset-password?email=${encodeURIComponent(email)}`);
+        router.push(`/reset-password/otp?email=${encodeURIComponent(email)}`);
       }, 2000);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
