@@ -126,38 +126,6 @@ class PayHereService {
     }
   }
 
-  // Client-side hash generation (for sandbox testing only)
-  private generateClientSideHash(orderId: string, amount: string, currency: string): string {
-    try {
-      // For client-side generation, we need to use the merchant secret
-      // This is NOT secure for production but works for sandbox testing
-      const merchantSecret = 'MjYwMDUxOTgzMDMwNzYwNjk5OTgzNjAyMDY2OTk1NDIzMjYyNjAwNg==';
-      const hashString = this.merchantId + orderId + amount + currency + merchantSecret;
-      
-      // Simple hash function for testing (not cryptographically secure)
-      let hash = 0;
-      for (let i = 0; i < hashString.length; i++) {
-        const char = hashString.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash = hash & hash;
-      }
-      
-      // Convert to hex and uppercase
-      const hexHash = Math.abs(hash).toString(16).toUpperCase();
-      
-      // Pad to 32 characters (MD5 length)
-      const paddedHash = hexHash.padEnd(32, '0').substring(0, 32);
-      
-      console.log('⚠️ Client-side hash generated (SANDBOX ONLY):', paddedHash);
-      return paddedHash;
-      
-    } catch (error) {
-      console.error('Client-side hash generation failed:', error);
-      // Return a dummy hash for testing
-      return 'SANDBOX_TEST_HASH_' + Date.now().toString(16).toUpperCase();
-    }
-  }
-
   // Create payment object
   async createPayment(bookingData: BookingData, orderId: string): Promise<PayHerePayment> {
     const baseUrl = window.location.origin;
