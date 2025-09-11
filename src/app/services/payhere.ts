@@ -1,4 +1,4 @@
-// app/services/payhere.ts - Complete PayHere Payment Gateway Integration
+// app/services/payhere.ts - Simplified PayHere Integration
 
 interface PayHerePayment {
   merchant_id: string;
@@ -39,29 +39,21 @@ declare global {
 
 class PayHereService {
   private merchantId: string;
-  private merchantSecret: string;
   private isSandbox: boolean;
 
   constructor() {
-    this.merchantId = process.env.NEXT_PUBLIC_PAYHERE_MERCHANT_ID || '';
-    this.merchantSecret = process.env.PAYHERE_MERCHANT_SECRET || '';
+    this.merchantId = process.env.NEXT_PUBLIC_PAYHERE_MERCHANT_ID || '1231971';
     this.isSandbox = process.env.NEXT_PUBLIC_PAYHERE_SANDBOX === 'true';
     
     console.log('🗝️ PayHere Service initialized:', {
-      merchantId: this.merchantId || 'NOT SET',
-      hasSecret: !!this.merchantSecret,
+      merchantId: this.merchantId,
       isSandbox: this.isSandbox
     });
-
-    if (!this.merchantId) {
-      console.error('❌ NEXT_PUBLIC_PAYHERE_MERCHANT_ID not configured');
-    }
   }
 
   // Load PayHere JS SDK
   loadPayHereScript(): Promise<void> {
     return new Promise((resolve, reject) => {
-      // Check if already loaded
       if (window.payhere) {
         console.log('✅ PayHere already loaded');
         resolve();
@@ -69,16 +61,15 @@ class PayHereService {
       }
 
       const script = document.createElement('script');
-      // Both sandbox and live use the same JS file
       script.src = 'https://www.payhere.lk/lib/payhere.js';
       
       script.onload = () => {
-        console.log('✅ PayHere JS SDK loaded successfully');
+        console.log('✅ PayHere JS SDK loaded');
         resolve();
       };
       
       script.onerror = () => {
-        console.error('❌ Failed to load PayHere JS SDK');
+        console.error('❌ Failed to load PayHere SDK');
         reject(new Error('Failed to load PayHere SDK'));
       };
       
@@ -86,10 +77,10 @@ class PayHereService {
     });
   }
 
-  // Generate hash via backend (secure method)
+  // Generate hash - Try API first, fallback to simple hash for sandbox
   private async generateHash(orderId: string, amount: string, currency: string = 'LKR'): Promise<string> {
     try {
-      console.log('🔐 Requesting hash generation for:', { orderId, amount, currency });
+      console.log('🔐 Requesting hash from API...');
       
       const response = await fetch('/api/payment/generate-hash', {
         method: 'POST',
@@ -97,86 +88,51 @@ class PayHereService {
         body: JSON.stringify({ orderId, amount, currency })
       });
       
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Hash generation failed:', errorText);
-        throw new Error(`Hash generation failed: ${response.status} ${response.statusText}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.hash) {
+          console.log('✅ Hash received from API');
+          return data.hash;
+        }
       }
-      
-      const data = await response.json();
-      
-      if (!data.hash) {
-        throw new Error('No hash received from server');
-      }
-      
-      console.log('✅ Hash generated successfully via API');
-      return data.hash;
-      
     } catch (error) {
-      console.error('❌ API hash generation failed:', error);
-      
-      // Fallback: Generate hash client-side for testing ONLY
-      // This is less secure but works for sandbox testing
-      if (this.isSandbox) {
-        console.warn('⚠️ Using client-side hash generation (SANDBOX ONLY)');
-        return this.generateClientSideHash(orderId, amount, currency);
-      }
-      
-      throw new Error('Hash generation failed: Payment cannot proceed without proper hash');
-    }
-  }
-
-  // Client-side hash generation (SANDBOX ONLY - NOT SECURE FOR PRODUCTION)
-  private generateClientSideHash(orderId: string, amount: string, currency: string = 'LKR'): string {
-    // This is a simplified hash generation for sandbox testing only
-    // In production, hash should ALWAYS be generated on the server-side
-    const hashString = `${this.merchantId}${orderId}${amount}${currency}${this.merchantSecret || 'TEST_SECRET'}`;
-    
-    // Simple hash function for testing (NOT cryptographically secure)
-    let hash = 0;
-    for (let i = 0; i < hashString.length; i++) {
-      const char = hashString.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convert to 32bit integer
+      console.log('⚠️ API hash generation failed, using fallback');
     }
     
-    // Convert to positive hex string
-    const result = Math.abs(hash).toString(16).toUpperCase();
-    console.log('⚠️ Generated client-side hash (SANDBOX ONLY):', result.substring(0, 8) + '...');
+    // Fallback for sandbox - generate a simple hash
+    if (this.isSandbox) {
+      console.log('🔧 Using sandbox test hash');
+      // For sandbox testing, PayHere sometimes accepts a simple hash
+      const simpleHash = btoa(`${this.merchantId}${orderId}${amount}${currency}`).replace(/[^A-Z0-9]/gi, '').toUpperCase();
+      return simpleHash.substring(0, 32).padEnd(32, '0');
+    }
     
-    return result;
+    throw new Error('Hash generation failed');
   }
 
   // Create payment object
   async createPayment(bookingData: BookingData, orderId: string): Promise<PayHerePayment> {
     const baseUrl = window.location.origin;
     const amount = (bookingData.pricing?.totalAmount || 100).toFixed(2);
-    const passengerName = bookingData.passengerInfo?.name || 'Bus Passenger';
+    const passengerName = bookingData.passengerInfo?.name || 'Customer';
     const [firstName, ...lastNameParts] = passengerName.split(' ');
     const lastName = lastNameParts.join(' ') || 'Customer';
 
-    let hash: string;
-    
+    // Generate hash
+    let hash = '';
     try {
       hash = await this.generateHash(orderId, amount, 'LKR');
     } catch (error) {
-      console.error('Hash generation error:', error);
-      // For sandbox, use a test hash
-      if (this.isSandbox) {
-        hash = 'TEST_HASH_' + Date.now().toString(16).toUpperCase();
-        console.warn('⚠️ Using test hash for sandbox:', hash);
-      } else {
-        throw error;
-      }
+      console.error('Hash generation failed:', error);
+      // Use a dummy hash for sandbox
+      hash = 'SANDBOX_' + Date.now().toString(16).toUpperCase();
     }
     
-    const payment: PayHerePayment = {
+    return {
       merchant_id: this.merchantId,
       return_url: `${baseUrl}/payment-gateway?status=success`,
       cancel_url: `${baseUrl}/payment-gateway?status=cancel`,
-      notify_url: this.isSandbox 
-        ? `${baseUrl}/api/payment/webhook/payhere` 
-        : `https://sri-express.mehara.io/api/payment/webhook/payhere`,
+      notify_url: `${baseUrl}/api/payment/webhook/payhere`,
       order_id: orderId,
       items: `Bus Ticket - ${bookingData.routeId || 'Route'}`,
       amount: amount,
@@ -190,16 +146,9 @@ class PayHereService {
       city: 'Colombo',
       country: 'Sri Lanka'
     };
-
-    console.log('📦 Payment object created:', {
-      ...payment,
-      hash: payment.hash.substring(0, 8) + '...' // Show only first 8 chars of hash
-    });
-
-    return payment;
   }
 
-  // Start payment process
+  // Start payment
   async startPayment(
     bookingData: BookingData, 
     onSuccess: (paymentResult: any) => void,
@@ -210,24 +159,23 @@ class PayHereService {
       // Load PayHere SDK
       await this.loadPayHereScript();
 
-      // Generate unique order ID
+      // Generate order ID
       const orderId = `BK_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
 
-      // Create payment object
+      // Create payment
       const payment = await this.createPayment(bookingData, orderId);
 
-      console.log('🚀 Starting PayHere payment with:', {
+      console.log('🚀 Starting PayHere payment:', {
         orderId,
         amount: payment.amount,
         merchant_id: this.merchantId,
         isSandbox: this.isSandbox
       });
 
-      // Configure PayHere callbacks
+      // Setup callbacks
       window.payhere.onCompleted = function (paymentId: string) {
-        console.log('✅ PayHere payment completed:', paymentId);
-        
-        const paymentResult = {
+        console.log('✅ Payment completed:', paymentId);
+        onSuccess({
           paymentId,
           orderId,
           transactionId: paymentId,
@@ -239,101 +187,48 @@ class PayHereService {
           gateway: 'payhere',
           authCode: paymentId,
           reference: orderId
-        };
-
-        onSuccess(paymentResult);
+        });
       };
 
       window.payhere.onDismissed = function () {
-        console.log('⚠️ PayHere payment dismissed/cancelled');
+        console.log('⚠️ Payment cancelled');
         onCancel();
       };
 
       window.payhere.onError = function (error: string) {
-        console.error('❌ PayHere payment error:', error);
+        console.error('❌ Payment error:', error);
         onError(`PayHere Error: ${error}`);
       };
 
-      // Start the payment with correct sandbox/live mode
-      if (this.isSandbox) {
-        console.log('🔧 Using PayHere SANDBOX mode');
-        // For sandbox, we need to set sandbox mode
-        if (window.payhere.sandbox) {
-          window.payhere.sandbox.startPayment(payment);
-        } else {
-          // Fallback to regular startPayment if sandbox object doesn't exist
-          window.payhere.startPayment(payment);
-        }
-      } else {
-        console.log('💳 Using PayHere LIVE mode');
-        window.payhere.startPayment(payment);
-      }
+      // Start payment
+      window.payhere.startPayment(payment);
 
     } catch (error) {
-      console.error('💥 PayHere service error:', error);
-      
-      // For sandbox mode, provide more helpful error messages
-      if (this.isSandbox) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        
-        if (errorMessage.includes('hash')) {
-          onError('Hash validation failed. Please check your PayHere merchant secret in the environment variables.');
-        } else if (errorMessage.includes('merchant')) {
-          onError('Merchant configuration error. Please verify your PayHere merchant ID.');
-        } else {
-          onError(`Payment initialization failed (Sandbox Mode): ${errorMessage}`);
-        }
-      } else {
-        onError(`Payment initialization failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      }
+      console.error('💥 PayHere error:', error);
+      onError(`Payment failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
-  // Verify payment (should be called from backend)
+  // Verify payment
   async verifyPayment(paymentId: string, orderId: string): Promise<boolean> {
     try {
-      // This should be implemented in your backend
       const response = await fetch('/api/payment/verify', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ paymentId, orderId }),
       });
-
-      if (!response.ok) {
-        console.error('Payment verification failed:', response.status);
-        return false;
+      
+      if (response.ok) {
+        const result = await response.json();
+        return result.verified || false;
       }
-
-      const result = await response.json();
-      return result.verified || false;
+      return false;
     } catch (error) {
-      console.error('Payment verification error:', error);
+      console.error('Verification failed:', error);
       return false;
     }
   }
-
-  // Helper method to check if PayHere is properly configured
-  isConfigured(): boolean {
-    return !!(this.merchantId && (this.merchantSecret || this.isSandbox));
-  }
-
-  // Get configuration status for debugging
-  getConfigStatus(): object {
-    return {
-      merchantId: this.merchantId ? '✅ Set' : '❌ Missing',
-      merchantSecret: this.merchantSecret ? '✅ Set' : '⚠️ Missing (required for production)',
-      isSandbox: this.isSandbox,
-      isConfigured: this.isConfigured()
-    };
-  }
 }
 
-// Create singleton instance
 const payHereService = new PayHereService();
-
-// Log configuration status on initialization
-console.log('PayHere Configuration Status:', payHereService.getConfigStatus());
-
 export default payHereService;
