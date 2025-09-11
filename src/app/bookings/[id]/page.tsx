@@ -144,8 +144,8 @@ export default function BookingDetailsPage() {
                 preferences: []
               },
               pricing: {
-                basePrice: payment.amount || 0,
-                taxes: payment.booking?.pricing?.taxes || 0,
+                basePrice: payment.booking?.pricing?.basePrice || Math.max((payment.amount || 0) - 50, (payment.amount || 0) * 0.85), // Estimate base price (total minus estimated taxes)
+                taxes: payment.booking?.pricing?.taxes || Math.min(50, (payment.amount || 0) * 0.15), // Estimate 15% taxes or max 50
                 discounts: payment.booking?.pricing?.discounts || 0,
                 totalAmount: payment.amount || 0,
                 currency: payment.currency || 'LKR'

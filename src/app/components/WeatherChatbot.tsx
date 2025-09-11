@@ -373,18 +373,73 @@ const WeatherChatbot: React.FC<WeatherChatbotProps> = ({
   }, []);
 
   // Generate fallback response for errors
-  const generateFallbackResponse = useCallback((): Message => {
+  const generateFallbackResponse = useCallback((userQuery: string = ''): Message => {
     let fallbackContent = '🌤️ I apologize, but I\'m having trouble accessing the latest weather data right now.';
+    let suggestions = ['Try asking again', 'Check weather analytics', 'Current conditions'];
     
     if (weatherData) {
       const { current } = weatherData;
-      fallbackContent = `🌤️ Based on the available data for ${currentLocation}:
+      
+      // Generate contextual responses based on user query
+      if (userQuery.toLowerCase().includes('umbrella')) {
+        const humidity = current.humidity;
+        const condition = current.condition.toLowerCase();
+        
+        if (condition.includes('rain') || condition.includes('storm')) {
+          fallbackContent = `🌧️ Yes, definitely bring an umbrella! Current conditions in ${currentLocation}:
 
-📍 Current conditions: ${current.temperature}°C, ${current.description}
+📍 ${current.temperature}°C, ${current.description}
+💧 Humidity: ${humidity}% - Rain likely
+☂️ Recommendation: Carry an umbrella and wear waterproof clothing`;
+          suggestions = ['Weather for travel', 'Rain forecast', 'Current conditions'];
+        } else if (humidity > 80 || condition.includes('cloud')) {
+          fallbackContent = `☁️ It might be wise to bring an umbrella as a precaution in ${currentLocation}:
+
+📍 ${current.temperature}°C, ${current.description}  
+💧 Humidity: ${humidity}% - High chance of rain
+☂️ Recommendation: Better safe than sorry - bring a small umbrella`;
+          suggestions = ['Rain chances', 'Weather alerts', 'Current conditions'];
+        } else {
+          fallbackContent = `☀️ You probably don't need an umbrella right now in ${currentLocation}:
+
+📍 ${current.temperature}°C, ${current.description}
+💧 Humidity: ${humidity}% - Clear conditions
+✅ Recommendation: Looks good to go without an umbrella`;
+          suggestions = ['Weather for tomorrow', 'Travel conditions', 'Current forecast'];
+        }
+      } else if (userQuery.toLowerCase().includes('travel')) {
+        const windSpeed = current.windSpeed;
+        const condition = current.condition.toLowerCase();
+        
+        if (condition.includes('rain') || condition.includes('storm') || windSpeed > 30) {
+          fallbackContent = `⚠️ Travel conditions need attention in ${currentLocation}:
+
+📍 ${current.temperature}°C, ${current.description}
+💨 Wind: ${windSpeed} km/h
+🚌 Travel Impact: Allow extra time, use caution
+💡 Recommendation: Check real-time updates before departure`;
+          suggestions = ['Route conditions', 'Travel alerts', 'Weather forecast'];
+        } else {
+          fallbackContent = `✅ Good travel conditions in ${currentLocation}:
+
+📍 ${current.temperature}°C, ${current.description}
+💨 Wind: ${windSpeed} km/h  
+🚌 Travel Impact: Normal conditions expected
+💡 Recommendation: Perfect weather for travel`;
+          suggestions = ['Route weather', 'Best travel times', 'Weather forecast'];
+        }
+      } else {
+        // General weather response
+        fallbackContent = `🌤️ Current weather in ${currentLocation}:
+
+📍 Temperature: ${current.temperature}°C, ${current.description}
 💨 Wind: ${current.windSpeed} km/h
 💧 Humidity: ${current.humidity}%
+🌡️ Feels like: ${current.feelsLike}°C
 
-For detailed forecasts and transportation impact, please check the analytics section or try asking again.`;
+For detailed forecasts and transportation impact, please check the analytics section.`;
+        suggestions = ['Do I need umbrella?', 'Weather for travel', 'Tomorrow forecast'];
+      }
     }
 
     return {
@@ -397,7 +452,7 @@ For detailed forecasts and transportation impact, please check the analytics sec
         condition: weatherData.current.condition,
         location: currentLocation,
       } : undefined,
-      suggestions: ['Try asking again', 'Check weather analytics', 'Current conditions'],
+      suggestions,
     };
   }, [weatherData, currentLocation]);
 
@@ -406,7 +461,11 @@ For detailed forecasts and transportation impact, please check the analytics sec
     try {
       const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
       
+      console.log('🤖 Generating AI response for:', userMessage);
+      console.log('🔑 Gemini API key available:', !!GEMINI_API_KEY);
+      
       if (!GEMINI_API_KEY) {
+        console.error('❌ Gemini API key not configured');
         throw new Error('Gemini API key not configured');
       }
 
@@ -446,26 +505,41 @@ Current time: ${new Date().toLocaleTimeString()}
 
 User query: "${userMessage}"`;
 
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`, {
+      console.log('🌤️ Weather context length:', weatherContext.length);
+      console.log('📝 System prompt ready, calling Gemini API...');
+
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-goog-api-key': GEMINI_API_KEY
+        },
         body: JSON.stringify({
           contents: [{
             parts: [{ text: systemPrompt }]
           }],
           generationConfig: {
             temperature: 0.7,
-            maxOutputTokens: 500,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 2048,
           },
         }),
       });
 
+      console.log('📡 Gemini API response status:', response.status);
+
       if (!response.ok) {
-        throw new Error(`Gemini API error: ${response.status}`);
+        const errorText = await response.text();
+        console.error('❌ Gemini API error response:', errorText);
+        throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json() as GeminiResponse;
+      console.log('✅ Gemini API response received:', data);
+      
       const aiResponseText = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Sorry, I could not process your request.';
+      console.log('🤖 AI response text:', aiResponseText);
 
       const weatherDataExtracted = extractWeatherDataFromResponse(aiResponseText, userMessage);
       const suggestions = generateSmartSuggestions(userMessage);
@@ -481,7 +555,7 @@ User query: "${userMessage}"`;
 
     } catch (error) {
       console.error('Error generating AI response:', error);
-      return generateFallbackResponse();
+      return generateFallbackResponse(userMessage);
     }
   }, [generateWeatherContext, messages, extractWeatherDataFromResponse, generateSmartSuggestions, generateFallbackResponse]);
 
@@ -515,7 +589,7 @@ User query: "${userMessage}"`;
       setMessages(prev => prev.filter(m => m.id !== 'typing').concat(aiResponse));
     } catch (error) {
       console.error('Error in chat:', error);
-      const errorResponse = generateFallbackResponse();
+      const errorResponse = generateFallbackResponse(messageText);
       setMessages(prev => prev.filter(m => m.id !== 'typing').concat(errorResponse));
     } finally {
       setIsLoading(false);
