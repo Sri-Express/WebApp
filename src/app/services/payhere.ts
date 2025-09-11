@@ -126,6 +126,27 @@ class PayHereService {
     }
   }
 
+  // Client-side hash generation (SANDBOX ONLY - NOT SECURE FOR PRODUCTION)
+  private generateClientSideHash(orderId: string, amount: string, currency: string = 'LKR'): string {
+    // This is a simplified hash generation for sandbox testing only
+    // In production, hash should ALWAYS be generated on the server-side
+    const hashString = `${this.merchantId}${orderId}${amount}${currency}${this.merchantSecret || 'TEST_SECRET'}`;
+    
+    // Simple hash function for testing (NOT cryptographically secure)
+    let hash = 0;
+    for (let i = 0; i < hashString.length; i++) {
+      const char = hashString.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    
+    // Convert to positive hex string
+    const result = Math.abs(hash).toString(16).toUpperCase();
+    console.log('⚠️ Generated client-side hash (SANDBOX ONLY):', result.substring(0, 8) + '...');
+    
+    return result;
+  }
+
   // Create payment object
   async createPayment(bookingData: BookingData, orderId: string): Promise<PayHerePayment> {
     const baseUrl = window.location.origin;
