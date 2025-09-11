@@ -7,7 +7,10 @@ export async function POST(request: NextRequest) {
 
     // Get merchant details from environment
     const merchantId = process.env.NEXT_PUBLIC_PAYHERE_MERCHANT_ID;
-    const merchantSecret = process.env.PAYHERE_MERCHANT_SECRET;
+    const merchantSecretEncoded = process.env.PAYHERE_MERCHANT_SECRET;
+    
+    // Decode the base64 merchant secret
+    const merchantSecret = Buffer.from(merchantSecretEncoded || '', 'base64').toString('utf-8');
 
     if (!merchantId || !merchantSecret) {
       console.error('❌ PayHere configuration missing:', {
