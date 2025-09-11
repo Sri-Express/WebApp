@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTheme } from '@/app/context/ThemeContext';
 import ThemeSwitcher from '@/app/components/ThemeSwitcher';
-import AnimatedBackground from '@/app/components/AnimatedBackground';
+import AnimatedBackground from '@/app/sysadmin/components/AnimatedBackground';
 import { 
   ExclamationTriangleIcon, ShieldCheckIcon, CheckCircleIcon,
   TicketIcon, CurrencyDollarIcon, CalendarDaysIcon, ClockIcon, 

@@ -1,7 +1,8 @@
 // src/app/track/components/RouteDetails.tsx - Display route details with start/end locations
-import React from 'react';
-import { MapPinIcon, ArrowRightIcon, ClockIcon, TruckIcon } from '@heroicons/react/24/outline';
+import React, { useState } from 'react';
+import { MapPinIcon, ArrowRightIcon, ClockIcon, TruckIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { getRouteDetails, getRouteDisplayName } from '../../utils/locationUtils';
+import StreetViewModal from './StreetViewModal';
 
 interface Route {
   _id: string;
@@ -42,6 +43,21 @@ const RouteDetails: React.FC<RouteDetailsProps> = ({
   onClick
 }) => {
   const routeDetails = getRouteDetails(route);
+  const [showStreetView, setShowStreetView] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState<{
+    location: { name: string; coordinates: [number, number]; address: string };
+    label: string;
+  } | null>(null);
+
+  const openStreetView = (location: { name: string; coordinates: [number, number]; address: string }, label: string) => {
+    setSelectedLocation({ location, label });
+    setShowStreetView(true);
+  };
+
+  const closeStreetView = () => {
+    setShowStreetView(false);
+    setSelectedLocation(null);
+  };
 
   return (
     <div
@@ -168,7 +184,8 @@ const RouteDetails: React.FC<RouteDetailsProps> = ({
           <div style={{
             fontSize: '0.75rem',
             color: currentThemeStyles.textMuted,
-            lineHeight: '1.3'
+            lineHeight: '1.3',
+            marginBottom: '0.5rem'
           }}>
             {route.startLocation.address}
           </div>
@@ -177,11 +194,40 @@ const RouteDetails: React.FC<RouteDetailsProps> = ({
               fontSize: '0.75rem',
               color: '#3B82F6',
               fontWeight: '500',
-              marginTop: '0.25rem'
+              marginBottom: '0.5rem'
             }}>
               📍 {routeDetails.startDistrict}, {routeDetails.province}
             </div>
           )}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              openStreetView(route.startLocation, 'Start Point');
+            }}
+            style={{
+              backgroundColor: 'rgba(16, 185, 129, 0.1)',
+              color: '#10B981',
+              border: '1px solid rgba(16, 185, 129, 0.3)',
+              borderRadius: '0.375rem',
+              padding: '0.5rem 0.75rem',
+              cursor: 'pointer',
+              fontSize: '0.75rem',
+              fontWeight: '500',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.375rem',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(16, 185, 129, 0.2)';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(16, 185, 129, 0.1)';
+            }}
+          >
+            <EyeIcon width={14} height={14} />
+            360° View
+          </button>
         </div>
 
         {/* Arrow */}
@@ -230,7 +276,8 @@ const RouteDetails: React.FC<RouteDetailsProps> = ({
           <div style={{
             fontSize: '0.75rem',
             color: currentThemeStyles.textMuted,
-            lineHeight: '1.3'
+            lineHeight: '1.3',
+            marginBottom: '0.5rem'
           }}>
             {route.endLocation.address}
           </div>
@@ -239,11 +286,40 @@ const RouteDetails: React.FC<RouteDetailsProps> = ({
               fontSize: '0.75rem',
               color: '#EF4444',
               fontWeight: '500',
-              marginTop: '0.25rem'
+              marginBottom: '0.5rem'
             }}>
               📍 {routeDetails.endDistrict}
             </div>
           )}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              openStreetView(route.endLocation, 'End Point');
+            }}
+            style={{
+              backgroundColor: 'rgba(239, 68, 68, 0.1)',
+              color: '#EF4444',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              borderRadius: '0.375rem',
+              padding: '0.5rem 0.75rem',
+              cursor: 'pointer',
+              fontSize: '0.75rem',
+              fontWeight: '500',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.375rem',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.2)';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+            }}
+          >
+            <EyeIcon width={14} height={14} />
+            360° View
+          </button>
         </div>
       </div>
 
@@ -329,6 +405,17 @@ const RouteDetails: React.FC<RouteDetailsProps> = ({
           Start: [{route.startLocation.coordinates.join(', ')}] • 
           End: [{route.endLocation.coordinates.join(', ')}]
         </div>
+      )}
+
+      {/* Street View Modal */}
+      {showStreetView && selectedLocation && (
+        <StreetViewModal
+          isOpen={showStreetView}
+          onClose={closeStreetView}
+          location={selectedLocation.location}
+          locationLabel={selectedLocation.label}
+          currentThemeStyles={currentThemeStyles}
+        />
       )}
     </div>
   );
