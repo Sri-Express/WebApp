@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useTheme } from '@/app/context/ThemeContext';
 import ThemeSwitcher from '@/app/components/ThemeSwitcher';
 import AnimatedBackground from '@/app/components/AnimatedBackground';
+import SeatSelector from '@/app/components/SeatSelector';
 import { ShieldCheckIcon } from '@heroicons/react/24/outline';
 
 // --- Data Interfaces (unchanged) ---
@@ -31,6 +32,7 @@ interface BookingData {
   scheduleId: string;
   travelDate: string;
   departureTime: string;
+  seatQuantity: number;
   passengerInfo: {
     name: string;
     phone: string;
@@ -65,6 +67,7 @@ export default function BookingPage() {
     scheduleId: '',
     travelDate: new Date().toISOString().split('T')[0],
     departureTime: '',
+    seatQuantity: 1,
     passengerInfo: { name: '', phone: '', email: '', idType: 'nic', idNumber: '', passengerType: 'regular' },
     seatInfo: { seatNumber: '', seatType: 'window', preferences: [] },
     paymentMethod: 'card'
@@ -163,7 +166,8 @@ export default function BookingPage() {
     if (bookingData.passengerInfo.email && !emailRegex.test(bookingData.passengerInfo.email)) errors.push('Please enter a valid email address');
     const phoneRegex = /^[0-9+\-\s()]{10,}$/;
     if (bookingData.passengerInfo.phone && !phoneRegex.test(bookingData.passengerInfo.phone)) errors.push('Please enter a valid phone number');
-    if (!bookingData.seatInfo.seatNumber) bookingData.seatInfo.seatNumber = `${Math.floor(Math.random() * 50) + 1}${bookingData.seatInfo.seatType[0].toUpperCase()}`;
+    if (!bookingData.seatQuantity || bookingData.seatQuantity < 1) errors.push('Please select at least 1 seat');
+    if (bookingData.seatQuantity > 10) errors.push('Maximum 10 seats can be booked at once');
     if (!bookingData.paymentMethod) errors.push('Payment method is required');
     return errors;
   };
@@ -178,14 +182,19 @@ export default function BookingPage() {
       scheduleId: bookingData.scheduleId,
       travelDate: bookingData.travelDate,
       departureTime: bookingData.departureTime,
+      seatQuantity: bookingData.seatQuantity,
       passengerInfo: { ...bookingData.passengerInfo },
-      seatInfo: { seatNumber: bookingData.seatInfo.seatNumber || `${Math.floor(Math.random() * 50) + 1}W`, seatType: bookingData.seatInfo.seatType, preferences: bookingData.seatInfo.preferences || [] },
+      seatInfo: { 
+        seatNumber: `${Math.floor(Math.random() * 50) + 1}${bookingData.seatInfo.seatType[0].toUpperCase()}`, 
+        seatType: bookingData.seatInfo.seatType, 
+        preferences: bookingData.seatInfo.preferences || [] 
+      },
       paymentMethod: bookingData.paymentMethod,
       pricing: {
         basePrice: route?.pricing.basePrice || 0,
         totalAmount: calculatePrice(),
         taxes: 0,
-        discounts: (route?.pricing.basePrice || 0) - calculatePrice()
+        discounts: ((route?.pricing.basePrice || 0) * bookingData.seatQuantity) - calculatePrice()
       }
     };
     
@@ -197,12 +206,12 @@ export default function BookingPage() {
   };
   
   // --- Helper and Render Functions ---
-  const calculatePrice = () => { /* ... Unchanged ... */ 
+  const calculatePrice = () => { 
     if (!route) return 0;
     let price = route.pricing.basePrice;
     const discount = route.pricing.discounts.find(d => d.type === bookingData.passengerInfo.passengerType);
     if (discount) { price -= (price * discount.percentage / 100); }
-    return Math.round(price);
+    return Math.round(price * bookingData.seatQuantity); // Multiply by seat quantity
   };
   const formatPrice = (price: number) => `Rs. ${price.toLocaleString()}`;
 
@@ -273,21 +282,64 @@ export default function BookingPage() {
 
   const renderStep3 = () => (
     <div className="animate-fade-in-up">
-      <h3 style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '1rem', color: currentThemeStyles.textPrimary }}>Seat Preferences & Payment</h3>
-      <div style={{ display: 'grid', gap: '1rem', marginBottom: '1.5rem' }}>
-        <div>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: currentThemeStyles.textSecondary }}>Seat Preference</label>
-          <select value={bookingData.seatInfo.seatType} onChange={(e) => setBookingData(prev => ({ ...prev, seatInfo: { ...prev.seatInfo, seatType: e.target.value as 'window' | 'aisle' | 'middle' } }))} style={inputStyle}><option value="window">Window Seat</option><option value="aisle">Aisle Seat</option><option value="middle">Middle Seat</option></select>
-        </div>
-        <div>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: currentThemeStyles.textSecondary }}>Payment Method *</label>
-          <select value={bookingData.paymentMethod} onChange={(e) => setBookingData(prev => ({ ...prev, paymentMethod: e.target.value as 'card' | 'bank' | 'digital_wallet' | 'cash' }))} style={inputStyle}><option value="card">💳 Credit/Debit Card</option><option value="bank">🏦 Bank Transfer</option><option value="digital_wallet">📱 Digital Wallet</option><option value="cash">💵 Cash on Booking</option></select>
-        </div>
+      <h3 style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '1rem', color: currentThemeStyles.textPrimary }}>Seat Selection & Payment</h3>
+      
+      {/* Seat Quantity Selection */}
+      <div style={{ marginBottom: '1.5rem' }}>
+        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: currentThemeStyles.textSecondary }}>Number of Seats *</label>
+        <select 
+          value={bookingData.seatQuantity} 
+          onChange={(e) => setBookingData(prev => ({ ...prev, seatQuantity: parseInt(e.target.value) }))} 
+          style={inputStyle}
+        >
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
+            <option key={num} value={num}>{num} Seat{num > 1 ? 's' : ''}</option>
+          ))}
+        </select>
       </div>
+
+      {/* Seat Availability Display */}
+      <div style={{ marginBottom: '2rem' }}>
+        <SeatSelector 
+          routeId={bookingData.routeId}
+          travelDate={bookingData.travelDate}
+          departureTime={bookingData.departureTime}
+          theme={theme}
+        />
+      </div>
+
+      {/* Payment Method */}
+      <div style={{ marginBottom: '1.5rem' }}>
+        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: currentThemeStyles.textSecondary }}>Payment Method *</label>
+        <select value={bookingData.paymentMethod} onChange={(e) => setBookingData(prev => ({ ...prev, paymentMethod: e.target.value as 'card' | 'bank' | 'digital_wallet' | 'cash' }))} style={inputStyle}>
+          <option value="card">💳 Credit/Debit Card</option>
+          <option value="bank">🏦 Bank Transfer</option>
+          <option value="digital_wallet">📱 Digital Wallet</option>
+          <option value="cash">💵 Cash on Booking</option>
+        </select>
+      </div>
+
+      {/* Price Summary */}
       <div style={{ backgroundColor: currentThemeStyles.quickActionBg, padding: '1rem', borderRadius: '0.5rem', border: currentThemeStyles.quickActionBorder }}>
         <h4 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.5rem', color: currentThemeStyles.textPrimary }}>Price Summary</h4>
-        {bookingData.passengerInfo.passengerType !== 'regular' && (<div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: '#10B981' }}><span>Discount ({bookingData.passengerInfo.passengerType}):</span><span>-{formatPrice((route?.pricing.basePrice || 0) - calculatePrice())}</span></div>)}
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '1.1rem', paddingTop: '0.5rem', borderTop: `1px solid ${currentThemeStyles.quickActionBorder}`, color: currentThemeStyles.textPrimary }}><span>Ticket Price:</span><span style={{ color: '#F59E0B' }}>{formatPrice(calculatePrice())}</span></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: currentThemeStyles.textSecondary }}>
+          <span>Base Price per seat:</span>
+          <span>{formatPrice(route?.pricing.basePrice || 0)}</span>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: currentThemeStyles.textSecondary }}>
+          <span>Seats selected:</span>
+          <span>{bookingData.seatQuantity}</span>
+        </div>
+        {bookingData.passengerInfo.passengerType !== 'regular' && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: '#10B981' }}>
+            <span>Discount ({bookingData.passengerInfo.passengerType}):</span>
+            <span>-{formatPrice((route?.pricing.basePrice || 0) * bookingData.seatQuantity - calculatePrice())}</span>
+          </div>
+        )}
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '1.1rem', paddingTop: '0.5rem', borderTop: `1px solid ${currentThemeStyles.quickActionBorder}`, color: currentThemeStyles.textPrimary }}>
+          <span>Total Amount:</span>
+          <span style={{ color: '#F59E0B' }}>{formatPrice(calculatePrice())}</span>
+        </div>
         <div style={{ fontSize: '0.8rem', color: currentThemeStyles.textSecondary, marginTop: '0.25rem', textAlign: 'center' }}>*Includes all taxes and fees</div>
       </div>
     </div>
