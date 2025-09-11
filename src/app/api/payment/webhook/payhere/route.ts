@@ -33,8 +33,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Configuration error' }, { status: 500 });
     }
 
-    // Create verification hash
-    const verificationString = `${merchantId}${orderId}${payHereAmount}${payHereCurrency}${statusCode}${merchantSecret}`;
+    // Create verification hash according to PayHere documentation
+    // md5sig = MD5(merchant_id + order_id + payhere_amount + payhere_currency + status_code + MD5(merchant_secret).toUpperCase()).toUpperCase()
+    const hashedSecret = crypto.createHash('md5').update(merchantSecret).digest('hex').toUpperCase();
+    const verificationString = `${merchantId}${orderId}${payHereAmount}${payHereCurrency}${statusCode}${hashedSecret}`;
     const expectedHash = crypto.createHash('md5').update(verificationString).digest('hex').toUpperCase();
 
     if (md5sig !== expectedHash) {

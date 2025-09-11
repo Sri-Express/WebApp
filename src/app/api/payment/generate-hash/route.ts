@@ -31,10 +31,16 @@ export async function POST(request: NextRequest) {
     const formattedAmount = parseFloat(amount).toFixed(2);
 
     // Generate hash according to PayHere documentation
-    // Hash = MD5(merchant_id + order_id + amount + currency + merchant_secret)
-    const hashString = merchantId + orderId + formattedAmount + currency + merchantSecret;
+    // Hash = MD5(merchant_id + order_id + amount + currency + MD5(merchant_secret).toUpperCase()).toUpperCase()
+    const hashedSecret = crypto
+      .createHash('md5')
+      .update(merchantSecret)
+      .digest('hex')
+      .toUpperCase();
     
-    console.log('Hash string format:', `${merchantId}${orderId}${formattedAmount}${currency}[SECRET]`);
+    const hashString = merchantId + orderId + formattedAmount + currency + hashedSecret;
+    
+    console.log('Hash string format:', `${merchantId}${orderId}${formattedAmount}${currency}[HASHED_SECRET]`);
     
     const hash = crypto
       .createHash('md5')
