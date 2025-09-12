@@ -52,7 +52,7 @@ const sriLankanLocations = [
   { name: "Mirissa", address: "Mirissa, Southern Province, Sri Lanka", coordinates: [80.4585, 5.9487] },
   { name: "Unawatuna", address: "Unawatuna, Southern Province, Sri Lanka", coordinates: [80.2493, 6.0108] },
   { name: "Arugam Bay", address: "Arugam Bay, Eastern Province, Sri Lanka", coordinates: [81.8344, 6.8402] },
-  { name: "Kottawa", address: "Kottawa, Western Province, Sri Lanka", coordinates: [79.9739, 6.8276] },
+  { name: "Kottawa", address: "Kottawa, Western Province, Sri Lanka", coordinates: [79.9739, 6.9147] },
   { name: "Maharagama", address: "Maharagama, Western Province, Sri Lanka", coordinates: [79.9275, 6.8448] },
   { name: "Nugegoda", address: "Nugegoda, Western Province, Sri Lanka", coordinates: [79.8990, 6.8748] },
   { name: "Mount Lavinia", address: "Mount Lavinia, Western Province, Sri Lanka", coordinates: [79.8638, 6.8389] },
@@ -319,54 +319,151 @@ export default function HybridLocationSelector({
       return;
     }
 
-    const filtered = sriLankanLocations.filter(location =>
-      location.name.toLowerCase().includes(query.toLowerCase()) ||
-      location.address.toLowerCase().includes(query.toLowerCase())
-    ).slice(0, 5);
-
-    setSuggestions(filtered);
-    setShowSuggestions(filtered.length > 0);
+    // Use Google Maps Places API for real location search
+    if (window.google?.maps?.places?.AutocompleteService) {
+      const service = new window.google.maps.places.AutocompleteService();
+      
+      service.getPlacePredictions({
+        input: query,
+        componentRestrictions: { country: 'lk' }, // Restrict to Sri Lanka
+        types: ['geocode'], // All geographic locations
+      }, (predictions: any, status: any) => {
+        if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
+          const mappedSuggestions = predictions.slice(0, 5).map((prediction: any) => ({
+            name: prediction.structured_formatting.main_text,
+            address: prediction.description,
+            place_id: prediction.place_id
+          }));
+          setSuggestions(mappedSuggestions);
+          setShowSuggestions(true);
+        } else {
+          // Fallback to minimal hardcoded locations only if Google Places fails
+          const filtered = sriLankanLocationsFallback.filter(location =>
+            location.name.toLowerCase().includes(query.toLowerCase()) ||
+            location.address.toLowerCase().includes(query.toLowerCase())
+          ).slice(0, 3);
+          setSuggestions(filtered);
+          setShowSuggestions(filtered.length > 0);
+        }
+      });
+    } else {
+      // Fallback to minimal hardcoded locations if Places API not available
+      const filtered = sriLankanLocationsFallback.filter(location =>
+        location.name.toLowerCase().includes(query.toLowerCase()) ||
+        location.address.toLowerCase().includes(query.toLowerCase())
+      ).slice(0, 3);
+      setSuggestions(filtered);
+      setShowSuggestions(filtered.length > 0);
+    }
   };
 
   const handleSuggestionSelect = (suggestion: any) => {
-    const location: LocationData = {
-      name: suggestion.name,
-      coordinates: suggestion.coordinates,
-      address: suggestion.address
-    };
-    
-    setSearchValue(suggestion.address);
-    onLocationSelect(location);
-    setShowSuggestions(false);
+    // If it's from Google Places API (has place_id), get real coordinates
+    if (suggestion.place_id && window.google?.maps?.places?.PlacesService) {
+      const service = new window.google.maps.places.PlacesService(map);
+      
+      service.getDetails({
+        placeId: suggestion.place_id,
+        fields: ['name', 'formatted_address', 'geometry']
+      }, (place: any, status: any) => {
+        if (status === window.google.maps.places.PlacesServiceStatus.OK && place) {
+          const location: LocationData = {
+            name: place.name || suggestion.name,
+            coordinates: [place.geometry.location.lng(), place.geometry.location.lat()],
+            address: place.formatted_address || suggestion.address
+          };
+          
+          setSearchValue(location.address);
+          onLocationSelect(location);
+          setShowSuggestions(false);
 
-    // Update map if loaded
-    if (map) {
-      const [lng, lat] = suggestion.coordinates;
-      map.setCenter({ lat, lng });
-      map.setZoom(15);
-      updateMarker(lat, lng, map);
+          // Update map with real coordinates
+          if (map) {
+            const lat = place.geometry.location.lat();
+            const lng = place.geometry.location.lng();
+            map.setCenter({ lat, lng });
+            map.setZoom(15);
+            updateMarker(lat, lng, map);
+          }
+        }
+      });
+    } else {
+      // Fallback for hardcoded locations
+      const location: LocationData = {
+        name: suggestion.name,
+        coordinates: suggestion.coordinates || [79.8612, 6.9271], // Default to Colombo
+        address: suggestion.address
+      };
+      
+      setSearchValue(suggestion.address);
+      onLocationSelect(location);
+      setShowSuggestions(false);
+
+      // Update map if loaded
+      if (map && suggestion.coordinates) {
+        const [lng, lat] = suggestion.coordinates;
+        map.setCenter({ lat, lng });
+        map.setZoom(15);
+        updateMarker(lat, lng, map);
+      }
     }
   };
 
   const handleManualSearch = () => {
     if (!searchValue.trim()) return;
 
-    // Try to find exact match first
-    const exactMatch = sriLankanLocations.find(location =>
-      location.name.toLowerCase() === searchValue.toLowerCase()
-    );
+    // Use Google Places Text Search for manual search
+    if (window.google?.maps?.places?.PlacesService) {
+      const service = new window.google.maps.places.PlacesService(map);
+      
+      service.textSearch({
+        query: searchValue + ', Sri Lanka',
+        fields: ['name', 'formatted_address', 'geometry']
+      }, (results: any, status: any) => {
+        if (status === window.google.maps.places.PlacesServiceStatus.OK && results && results[0]) {
+          const place = results[0];
+          const location: LocationData = {
+            name: place.name || searchValue,
+            coordinates: [place.geometry.location.lng(), place.geometry.location.lat()],
+            address: place.formatted_address
+          };
+          
+          setSearchValue(location.address);
+          onLocationSelect(location);
+          setShowSuggestions(false);
 
-    if (exactMatch) {
-      handleSuggestionSelect(exactMatch);
+          // Update map with real coordinates
+          if (map) {
+            const lat = place.geometry.location.lat();
+            const lng = place.geometry.location.lng();
+            map.setCenter({ lat, lng });
+            map.setZoom(15);
+            updateMarker(lat, lng, map);
+          }
+        } else {
+          // Try minimal hardcoded locations as fallback
+          const exactMatch = sriLankanLocationsFallback.find(location =>
+            location.name.toLowerCase() === searchValue.toLowerCase()
+          );
+
+          if (exactMatch) {
+            handleSuggestionSelect(exactMatch);
+          } else {
+            alert('Location not found. Please try a different search term or click on the map.');
+          }
+        }
+      });
     } else {
-      // Create a generic location
-      const location: LocationData = {
-        name: searchValue,
-        coordinates: [79.8612, 6.9271], // Default to Colombo
-        address: searchValue
-      };
-      onLocationSelect(location);
-      setShowSuggestions(false);
+      // Fallback to minimal hardcoded search if Google Places not available
+      const exactMatch = sriLankanLocationsFallback.find(location =>
+        location.name.toLowerCase() === searchValue.toLowerCase()
+      );
+
+      if (exactMatch) {
+        handleSuggestionSelect(exactMatch);
+      } else {
+        alert('Location not found. Please try a different search term or click on the map.');
+      }
     }
   };
 
@@ -658,17 +755,39 @@ export default function HybridLocationSelector({
         </div>
       )}
 
-      <p style={{ 
-        color: currentTheme.textSecondary, 
-        fontSize: '0.75rem', 
-        marginTop: '0.5rem',
-        textAlign: 'center'
+      <div style={{ 
+        marginTop: '1rem',
+        padding: '1rem',
+        backgroundColor: currentTheme.inputBg,
+        border: currentTheme.inputBorder,
+        borderRadius: '0.5rem'
       }}>
-        {isGoogleMapsLoaded ? 
-          'Type to search or click on the map to select a location' : 
-          'Type to search for locations (map loading...)'
-        }
-      </p>
+        <h4 style={{ 
+          color: currentTheme.textPrimary, 
+          fontSize: '0.875rem', 
+          margin: '0 0 0.5rem 0',
+          fontWeight: '600'
+        }}>
+          📍 How to get accurate coordinates:
+        </h4>
+        <div style={{ fontSize: '0.75rem', color: currentTheme.textSecondary, lineHeight: '1.4' }}>
+          <div style={{ marginBottom: '0.25rem' }}>
+            <strong>🔍 Best:</strong> Type location name (uses real Google Maps data)
+          </div>
+          <div style={{ marginBottom: '0.25rem' }}>
+            <strong>🖱️ Accurate:</strong> Click directly on the map at the exact spot
+          </div>
+          <div style={{ marginBottom: '0.25rem' }}>
+            <strong>⚠️ Avoid:</strong> Using old/hardcoded coordinates - they may be wrong!
+          </div>
+          <div style={{ marginTop: '0.5rem', fontStyle: 'italic', color: currentTheme.textMuted }}>
+            {isGoogleMapsLoaded ? 
+              'Map is ready - search or click for precise location' : 
+              'Loading map... Please wait'
+            }
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

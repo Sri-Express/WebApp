@@ -2,6 +2,7 @@
 "use client";
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { MapPinIcon, TruckIcon } from '@heroicons/react/24/outline';
+import { io, Socket } from 'socket.io-client';
 
 // --- TYPE DEFINITIONS FOR VEHICLE DATA ---
 interface VehicleLocation {
@@ -38,6 +39,8 @@ interface Vehicle {
   passengerLoad?: PassengerLoad;
   routeProgress?: RouteProgress;
   timestamp?: string | number | Date;
+  lastSeenMinutesAgo?: number;
+  connectionStatus?: 'online' | 'recently_offline' | 'offline';
 }
 
 // --- ROUTE DATA TYPES ---
@@ -81,6 +84,22 @@ const createVehicleMarker = (
 ) => {
   const heading = vehicle.location?.heading || 0;
 
+  // Determine color based on connection status
+  const getStatusColor = () => {
+    switch (vehicle.connectionStatus) {
+      case 'online':
+        return { bg: '#10B981', border: '#059669', label: 'Online' };
+      case 'recently_offline':
+        return { bg: '#F59E0B', border: '#D97706', label: 'Recently Offline' };
+      case 'offline':
+        return { bg: '#EF4444', border: '#DC2626', label: 'Offline' };
+      default:
+        return { bg: '#6B7280', border: '#4B5563', label: 'Unknown' };
+    }
+  };
+
+  const statusColor = getStatusColor();
+
   // Create simple HTML marker
   const markerElement = document.createElement('div');
   markerElement.innerHTML = `
@@ -93,7 +112,7 @@ const createVehicleMarker = (
       <div style="
         width: 42px;
         height: 42px;
-        background: linear-gradient(135deg, #10B981, #059669);
+        background: linear-gradient(135deg, ${statusColor.bg}, ${statusColor.border});
         border: 3px solid white;
         border-radius: 50%;
         display: flex;
@@ -101,17 +120,48 @@ const createVehicleMarker = (
         justify-content: center;
         font-size: 18px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+        ${vehicle.connectionStatus === 'offline' ? 'opacity: 0.7;' : ''}
       ">
-        🚌
+        🚐
       </div>
+      ${vehicle.lastSeenMinutesAgo !== undefined ? `
+        <div style="
+          position: absolute;
+          top: -8px;
+          right: -8px;
+          width: 20px;
+          height: 20px;
+          background: ${statusColor.bg};
+          border: 2px solid white;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 10px;
+          color: white;
+          font-weight: bold;
+        ">
+          ${vehicle.lastSeenMinutesAgo < 60 ? Math.round(vehicle.lastSeenMinutesAgo) : '60+'}
+        </div>
+      ` : ''}
     </div>
   `;
+
+  // Get friendly status text
+  const status = vehicle.operationalInfo?.status || 'unknown';
+  const statusText = {
+    'on_route': 'On Route',
+    'at_stop': 'At Stop',
+    'delayed': 'Delayed',
+    'breakdown': 'Breakdown',
+    'offline': 'Offline'
+  }[status] || 'Unknown';
 
   // Create advanced marker
   const marker = new window.google.maps.marker.AdvancedMarkerElement({
     position: { lat: vehicle.location.latitude, lng: vehicle.location.longitude },
     map: map,
-    title: `${vehicle.vehicleNumber || vehicle.vehicleId} - ${status}`,
+    title: `${vehicle.vehicleNumber || vehicle.vehicleId} - ${statusColor.label} ${vehicle.lastSeenMinutesAgo !== undefined ? `(${Math.round(vehicle.lastSeenMinutesAgo)}m ago)` : ''}`,
     content: markerElement
   });
 
@@ -130,7 +180,87 @@ const createVehicleMarker = (
   return marker;
 };
 
-// ROUTE MARKERS
+// UPDATE EXISTING VEHICLE MARKER WITHOUT RECREATING
+const updateVehicleMarker = (marker: any, vehicle: Vehicle) => {
+  // Update marker position
+  const newPosition = { lat: vehicle.location.latitude, lng: vehicle.location.longitude };
+  marker.position = newPosition;
+
+  // Update marker content with new status
+  const heading = vehicle.location?.heading || 0;
+  
+  // Determine color based on connection status
+  const getStatusColor = () => {
+    switch (vehicle.connectionStatus) {
+      case 'online':
+        return { bg: '#10B981', border: '#059669', label: 'Online' };
+      case 'recently_offline':
+        return { bg: '#F59E0B', border: '#D97706', label: 'Recently Offline' };
+      case 'offline':
+        return { bg: '#EF4444', border: '#DC2626', label: 'Offline' };
+      default:
+        return { bg: '#6B7280', border: '#4B5563', label: 'Unknown' };
+    }
+  };
+
+  const statusColor = getStatusColor();
+
+  // Update the marker's content element
+  const markerElement = marker.content;
+  if (markerElement) {
+    markerElement.innerHTML = `
+      <div class="vehicle-marker" style="
+        position: relative;
+        transform: rotate(${heading}deg);
+        transition: all 0.3s ease;
+        cursor: pointer;
+      ">
+        <div style="
+          width: 42px;
+          height: 42px;
+          background: linear-gradient(135deg, ${statusColor.bg}, ${statusColor.border});
+          border: 3px solid white;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 18px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+          ${vehicle.connectionStatus === 'offline' ? 'opacity: 0.7;' : ''}
+        ">
+          🚐
+        </div>
+        ${vehicle.lastSeenMinutesAgo !== undefined ? `
+          <div style="
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 20px;
+            height: 20px;
+            background: ${statusColor.bg};
+            border: 2px solid white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: white;
+            font-weight: bold;
+          ">
+            ${vehicle.lastSeenMinutesAgo < 60 ? Math.round(vehicle.lastSeenMinutesAgo) : '60+'}
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }
+
+  // Update marker title
+  marker.title = `${vehicle.vehicleNumber || vehicle.vehicleId} - ${statusColor.label} ${vehicle.lastSeenMinutesAgo !== undefined ? `(${Math.round(vehicle.lastSeenMinutesAgo)}m ago)` : ''}`;
+
+  console.log(`🔄 Updated marker for vehicle: ${vehicle.vehicleId} - ${statusColor.label}`);
+};
+
+// ROUTE MARKERS WITH PLACE NAMES
 const createRouteMarker = (map: any, location: RouteLocation | RouteWaypoint, type: 'start' | 'end' | 'waypoint') => {
   const colors = {
     start: '#10B981',
@@ -138,11 +268,19 @@ const createRouteMarker = (map: any, location: RouteLocation | RouteWaypoint, ty
     waypoint: '#3B82F6'
   };
   
-  const labels = {
-    start: 'A',
-    end: 'B',
-    waypoint: (location as RouteWaypoint).order?.toString() || '?'
+  const icons = {
+    start: '🚏',
+    end: '🏁',
+    waypoint: '📍'
   };
+
+  // Get a shortened version of the place name (max 12 characters)
+  const getShortName = (name: string) => {
+    if (name.length <= 12) return name;
+    return name.substring(0, 10) + '..';
+  };
+
+  const shortName = getShortName(location.name);
 
   const markerElement = document.createElement('div');
   markerElement.innerHTML = `
@@ -151,6 +289,7 @@ const createRouteMarker = (map: any, location: RouteLocation | RouteWaypoint, ty
       display: flex;
       flex-direction: column;
       align-items: center;
+      cursor: pointer;
     ">
       <div style="
         width: ${type === 'waypoint' ? '36px' : '44px'};
@@ -161,46 +300,140 @@ const createRouteMarker = (map: any, location: RouteLocation | RouteWaypoint, ty
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: ${type === 'waypoint' ? '14px' : '16px'};
-        font-weight: bold;
-        color: white;
+        font-size: ${type === 'waypoint' ? '16px' : '18px'};
         box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-        cursor: pointer;
       ">
-        ${labels[type]}
+        ${icons[type]}
       </div>
       <div style="
         position: absolute;
         top: ${type === 'waypoint' ? '40px' : '48px'};
         background: ${colors[type]};
         color: white;
-        padding: 2px 6px;
-        border-radius: 6px;
-        font-size: 9px;
+        padding: 4px 8px;
+        border-radius: 8px;
+        font-size: 11px;
         font-weight: 600;
         white-space: nowrap;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        min-width: 60px;
+        text-align: center;
       ">
-        ${type.toUpperCase()}
+        ${shortName}
       </div>
     </div>
   `;
 
-  return new window.google.maps.marker.AdvancedMarkerElement({
+  const marker = new window.google.maps.marker.AdvancedMarkerElement({
     position: { lat: location.coordinates[1], lng: location.coordinates[0] },
     map: map,
     title: `${type}: ${location.name}`,
     content: markerElement
   });
+
+  // Add click listener to show full place name and address
+  marker.addListener('click', () => {
+    const infoWindow = new window.google.maps.InfoWindow({
+      content: `
+        <div style="
+          font-family: system-ui;
+          padding: 8px;
+          min-width: 200px;
+        ">
+          <h4 style="
+            margin: 0 0 8px 0;
+            color: ${colors[type]};
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+          ">
+            ${icons[type]} ${location.name}
+          </h4>
+          <p style="
+            margin: 0;
+            color: #666;
+            font-size: 12px;
+            line-height: 1.4;
+          ">
+            ${(location as RouteLocation).address || 'Route waypoint'}
+          </p>
+          <div style="
+            margin-top: 8px;
+            padding: 4px 8px;
+            background: ${colors[type]}22;
+            border-radius: 4px;
+            font-size: 10px;
+            color: ${colors[type]};
+            font-weight: 600;
+            text-transform: uppercase;
+          ">
+            ${type === 'start' ? 'Starting Point' : type === 'end' ? 'Destination' : 'Waypoint'}
+          </div>
+        </div>
+      `
+    });
+    infoWindow.open(map, marker);
+  });
+
+  return marker;
 };
 
-// SIMPLE INFO WINDOW COMPONENT
+// USER-FRIENDLY INFO WINDOW COMPONENT
 const createVehicleInfoWindow = (vehicle: Vehicle) => {
+  const status = vehicle.operationalInfo?.status || 'unknown';
+  const statusText = {
+    'on_route': 'On Route',
+    'at_stop': 'At Stop',
+    'delayed': 'Delayed',
+    'breakdown': 'Breakdown',
+    'offline': 'Offline'
+  }[status] || 'Unknown';
+
+  const statusColor = {
+    'on_route': '#10B981',
+    'at_stop': '#3B82F6',
+    'delayed': '#F59E0B',
+    'breakdown': '#EF4444',
+    'offline': '#6B7280'
+  }[status] || '#6B7280';
+
+  // Connection status info
+  const getConnectionStatusDisplay = () => {
+    if (vehicle.connectionStatus && vehicle.lastSeenMinutesAgo !== undefined) {
+      const connectionColors = {
+        'online': '#10B981',
+        'recently_offline': '#F59E0B', 
+        'offline': '#EF4444'
+      };
+      
+      const connectionLabels = {
+        'online': 'Online',
+        'recently_offline': 'Recently Offline',
+        'offline': 'Offline'
+      };
+      
+      return {
+        color: connectionColors[vehicle.connectionStatus],
+        label: connectionLabels[vehicle.connectionStatus],
+        timeText: vehicle.lastSeenMinutesAgo < 1 ? 'Just now' : `${Math.round(vehicle.lastSeenMinutesAgo)} min ago`
+      };
+    }
+    return null;
+  };
+
+  const connectionStatus = getConnectionStatusDisplay();
+
+  const currentLoad = vehicle.passengerLoad?.currentCapacity || 0;
+  const maxCapacity = vehicle.passengerLoad?.maxCapacity || 50;
+  const loadPercentage = Math.round((currentLoad / maxCapacity) * 100);
+
   return `
     <div style="
-      min-width: 280px;
+      min-width: 320px;
       font-family: system-ui;
       line-height: 1.5;
-      padding: 8px;
+      padding: 12px;
     ">
       <div style="
         border-bottom: 2px solid #e5e7eb;
@@ -216,35 +449,55 @@ const createVehicleInfoWindow = (vehicle: Vehicle) => {
           align-items: center;
           gap: 12px;
         ">
-          🚌 ${vehicle.vehicleNumber || vehicle.vehicleId}
+          🚐 Bus ${vehicle.vehicleNumber || vehicle.vehicleId}
         </h3>
+        <div style="
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex-wrap: wrap;
+        ">
+          <div style="
+            background: ${statusColor};
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+          ">
+            ${statusText}
+          </div>
+          ${connectionStatus ? `
+            <div style="
+              background: ${connectionStatus.color};
+              color: white;
+              padding: 2px 8px;
+              border-radius: 12px;
+              font-size: 12px;
+              font-weight: 600;
+              display: flex;
+              align-items: center;
+              gap: 4px;
+            ">
+              ${connectionStatus.label === 'Online' ? '🟢' : connectionStatus.label === 'Recently Offline' ? '🟡' : '🔴'}
+              ${connectionStatus.label}
+            </div>
+          ` : ''}
+          <div style="
+            color: #6b7280;
+            font-size: 12px;
+          ">
+            ${currentLoad}/${maxCapacity} passengers (${loadPercentage}%)
+          </div>
+        </div>
       </div>
       
       <div style="
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr;
         gap: 20px;
         margin-bottom: 16px;
       ">
-        <div style="text-align: center;">
-          <div style="
-            font-size: 12px;
-            color: #6b7280;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 4px;
-          ">Speed</div>
-          <div style="
-            font-size: 24px;
-            font-weight: bold;
-            color: #1f2937;
-          ">${(vehicle.location?.speed || 0).toFixed(1)}</div>
-          <div style="
-            font-size: 12px;
-            color: #6b7280;
-          ">km/h</div>
-        </div>
-        
         <div style="text-align: center;">
           <div style="
             font-size: 12px;
@@ -265,16 +518,52 @@ const createVehicleInfoWindow = (vehicle: Vehicle) => {
         </div>
       </div>
       
+      ${vehicle.operationalInfo?.delays?.currentDelay && vehicle.operationalInfo.delays.currentDelay > 0 ? `
+        <div style="
+          background: #FEF3C7;
+          border: 1px solid #F59E0B;
+          border-radius: 6px;
+          padding: 8px;
+          margin: 12px 0;
+        ">
+          <div style="
+            font-size: 12px;
+            font-weight: 600;
+            color: #D97706;
+            margin-bottom: 4px;
+          ">
+            ⚠️ Delayed by ${vehicle.operationalInfo.delays.currentDelay} minutes
+          </div>
+          ${vehicle.operationalInfo.delays.reason ? `
+            <div style="
+              font-size: 11px;
+              color: #92400E;
+            ">
+              Reason: ${vehicle.operationalInfo.delays.reason}
+            </div>
+          ` : ''}
+        </div>
+      ` : ''}
+      
       <div style="
-        font-size: 12px;
+        font-size: 11px;
         color: #6b7280;
         padding-top: 12px;
         border-top: 1px solid #e5e7eb;
-        display: flex;
-        justify-content: space-between;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 4px;
       ">
-        <span>📍 ${vehicle.location?.latitude?.toFixed(4) || 'N/A'}, ${vehicle.location?.longitude?.toFixed(4) || 'N/A'}</span>
-        <span>🕒 ${new Date(vehicle.timestamp || Date.now()).toLocaleTimeString()}</span>
+        <div>📍 Location: ${vehicle.location?.latitude?.toFixed(4) || 'N/A'}, ${vehicle.location?.longitude?.toFixed(4) || 'N/A'}</div>
+        <div>🕒 Last Update: ${new Date(vehicle.timestamp || Date.now()).toLocaleString()}</div>
+        ${connectionStatus ? `
+          <div style="color: ${connectionStatus.color}; font-weight: 600;">
+            📡 Last Seen: ${connectionStatus.timeText}
+          </div>
+        ` : ''}
+        ${vehicle.operationalInfo?.driverInfo?.driverName ? `
+          <div>👨‍✈️ Driver: ${vehicle.operationalInfo.driverInfo.driverName}</div>
+        ` : ''}
       </div>
     </div>
   `;
@@ -305,6 +594,8 @@ const GoogleMapsTracker: React.FC<GoogleMapsTrackerProps> = ({
   const [infoWindow, setInfoWindow] = useState<any>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [vehiclesLoading, setVehiclesLoading] = useState(false);
+  const [socket, setSocket] = useState<Socket | null>(null);
+  const [isRealTimeConnected, setIsRealTimeConnected] = useState(false);
 
   const mapRef = useRef<HTMLDivElement>(null);
   const markersRef = useRef<Map<string, any>>(new Map());
@@ -460,32 +751,132 @@ const GoogleMapsTracker: React.FC<GoogleMapsTrackerProps> = ({
     infoWindow.open(map);
   }, [infoWindow, map]);
 
-  // Update vehicle markers
+  // Update vehicle markers - Smart update instead of recreating
   useEffect(() => {
     if (!map) return;
 
     console.log(`🚌 Updating ${vehicles.length} vehicle markers`);
 
-    // Clear existing markers
-    markersRef.current.forEach(marker => {
-      if (marker.setMap) marker.setMap(null);
-    });
-    markersRef.current.clear();
+    const existingMarkerIds = new Set(markersRef.current.keys());
+    const currentVehicleIds = new Set(vehicles.map(v => v.vehicleId));
 
-    // Create new markers
+    // Remove markers for vehicles that no longer exist
+    existingMarkerIds.forEach(vehicleId => {
+      if (!currentVehicleIds.has(vehicleId)) {
+        const marker = markersRef.current.get(vehicleId);
+        if (marker && marker.setMap) {
+          marker.setMap(null);
+        }
+        markersRef.current.delete(vehicleId);
+        console.log(`🗑️ Removed marker for vehicle: ${vehicleId}`);
+      }
+    });
+
+    // Update or create markers for current vehicles
     vehicles.forEach(vehicle => {
       if (vehicle.location?.latitude && vehicle.location?.longitude) {
-        try {
-          const marker = createVehicleMarker(map, vehicle, handleVehicleClick);
-          markersRef.current.set(vehicle.vehicleId, marker);
-        } catch (error) {
-          console.error('Error creating marker for vehicle:', vehicle.vehicleId, error);
+        const existingMarker = markersRef.current.get(vehicle.vehicleId);
+        
+        if (existingMarker) {
+          // Update existing marker position and content
+          updateVehicleMarker(existingMarker, vehicle);
+        } else {
+          // Create new marker for new vehicles
+          try {
+            const marker = createVehicleMarker(map, vehicle, handleVehicleClick);
+            markersRef.current.set(vehicle.vehicleId, marker);
+            console.log(`✅ Created new marker for vehicle: ${vehicle.vehicleId}`);
+          } catch (error) {
+            console.error('Error creating marker for vehicle:', vehicle.vehicleId, error);
+          }
         }
       }
     });
 
     setVehicleMarkers(new Map(markersRef.current));
   }, [map, vehicles, handleVehicleClick]);
+
+  // WebSocket real-time connection
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const wsURL = baseURL.replace('http://', 'ws://').replace('https://', 'wss://');
+
+    console.log('🔌 Attempting WebSocket connection to:', wsURL);
+
+    const socketInstance = io(wsURL, {
+      auth: {
+        token: 'anonymous-tracking-token' // For tracking page, we can use anonymous token
+      },
+      transports: ['websocket', 'polling'],
+      forceNew: true
+    });
+
+    socketInstance.on('connect', () => {
+      console.log('✅ WebSocket connected for real-time vehicle tracking');
+      setIsRealTimeConnected(true);
+      setSocket(socketInstance);
+    });
+
+    socketInstance.on('disconnect', () => {
+      console.log('❌ WebSocket disconnected');
+      setIsRealTimeConnected(false);
+    });
+
+    // Listen for real-time vehicle updates
+    socketInstance.on('vehicle_status_update', (data) => {
+      console.log('🚐 Real-time vehicle update received:', data);
+      handleRealTimeVehicleUpdate(data);
+    });
+
+    socketInstance.on('vehicle_online', (data) => {
+      console.log('🟢 Vehicle came online:', data.vehicleId);
+      handleRealTimeVehicleUpdate({ ...data, connectionStatus: 'online' });
+    });
+
+    socketInstance.on('vehicle_offline', (data) => {
+      console.log('🔴 Vehicle went offline:', data.vehicleId);
+      handleRealTimeVehicleUpdate({ ...data, connectionStatus: 'offline' });
+    });
+
+    socketInstance.on('connect_error', (error) => {
+      console.error('❌ WebSocket connection error:', error);
+      setIsRealTimeConnected(false);
+    });
+
+    // Cleanup on unmount
+    return () => {
+      if (socketInstance) {
+        socketInstance.disconnect();
+      }
+    };
+  }, [isLoaded]);
+
+  // Handle real-time vehicle updates
+  const handleRealTimeVehicleUpdate = useCallback((data: any) => {
+    console.log('📡 Processing real-time update for vehicle:', data.vehicleId);
+    
+    setVehicles(prevVehicles => {
+      const updatedVehicles = prevVehicles.map(vehicle => {
+        if (vehicle.vehicleId === data.vehicleId) {
+          return {
+            ...vehicle,
+            location: data.location || vehicle.location,
+            connectionStatus: data.connectionStatus,
+            lastSeenMinutesAgo: data.lastSeenMinutesAgo || 0,
+            timestamp: data.timestamp || new Date(),
+            operationalInfo: data.operationalInfo || vehicle.operationalInfo,
+            passengerLoad: data.passengerLoad || vehicle.passengerLoad
+          };
+        }
+        return vehicle;
+      });
+      
+      console.log(`🔄 Updated vehicle data in real-time for ${data.vehicleId}`);
+      return updatedVehicles;
+    });
+  }, []);
 
   // Initial auto-center (only once when vehicles first load)
   const [hasInitialCentered, setHasInitialCentered] = useState(false);
@@ -644,16 +1035,33 @@ const GoogleMapsTracker: React.FC<GoogleMapsTrackerProps> = ({
           <div style={{
             width: '8px',
             height: '8px',
-            backgroundColor: vehicles.length > 0 ? '#10B981' : '#6B7280',
+            backgroundColor: isRealTimeConnected ? '#10B981' : '#EF4444',
             borderRadius: '50%'
           }}></div>
-          Live Tracking
+          {isRealTimeConnected ? 'Live Tracking' : 'Offline Mode'}
         </div>
         <div style={{
           fontSize: '12px',
           color: theme === 'dark' ? '#9ca3af' : '#6b7280'
         }}>
-          🚌 {vehicles.length} vehicles active
+          🚌 {vehicles.length} vehicles total
+        </div>
+        <div style={{
+          fontSize: '12px',
+          color: theme === 'dark' ? '#9ca3af' : '#6b7280',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
+        }}>
+          <span style={{ color: '#10B981' }}>🟢 {vehicles.filter(v => v.connectionStatus === 'online').length}</span>
+          <span style={{ color: '#F59E0B' }}>🟡 {vehicles.filter(v => v.connectionStatus === 'recently_offline').length}</span>
+          <span style={{ color: '#EF4444' }}>🔴 {vehicles.filter(v => v.connectionStatus === 'offline').length}</span>
+        </div>
+        <div style={{
+          fontSize: '12px',
+          color: theme === 'dark' ? '#9ca3af' : '#6b7280'
+        }}>
+          {isRealTimeConnected ? '⚡ Real-time updates active' : '📶 Connecting to updates...'}
         </div>
         <div style={{
           fontSize: '12px',
