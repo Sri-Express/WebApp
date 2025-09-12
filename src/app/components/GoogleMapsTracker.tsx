@@ -555,12 +555,15 @@ const createVehicleInfoWindow = (vehicle: Vehicle) => {
         gap: 4px;
       ">
         <div>📍 Location: ${vehicle.location?.latitude?.toFixed(4) || 'N/A'}, ${vehicle.location?.longitude?.toFixed(4) || 'N/A'}</div>
-        <div>🕒 Last Update: ${new Date(vehicle.timestamp || Date.now()).toLocaleString()}</div>
+        <div>🕒 GPS Data: ${new Date(vehicle.timestamp || Date.now()).toLocaleString()}</div>
         ${connectionStatus ? `
           <div style="color: ${connectionStatus.color}; font-weight: 600;">
             📡 Last Seen: ${connectionStatus.timeText}
           </div>
         ` : ''}
+        <div style="color: #10B981; font-weight: 600;">
+          🔄 Live tracking active - updates automatically
+        </div>
         ${vehicle.operationalInfo?.driverInfo?.driverName ? `
           <div>👨‍✈️ Driver: ${vehicle.operationalInfo.driverInfo.driverName}</div>
         ` : ''}
@@ -596,9 +599,34 @@ const GoogleMapsTracker: React.FC<GoogleMapsTrackerProps> = ({
   const [vehiclesLoading, setVehiclesLoading] = useState(false);
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isRealTimeConnected, setIsRealTimeConnected] = useState(false);
+  const [lastUpdateTime, setLastUpdateTime] = useState<Date>(new Date());
+  const [lastApiCallTime, setLastApiCallTime] = useState<Date | null>(null);
+  const [currentTime, setCurrentTime] = useState<Date>(new Date());
 
   const mapRef = useRef<HTMLDivElement>(null);
   const markersRef = useRef<Map<string, any>>(new Map());
+
+  // Helper function to get time difference
+  const getTimeAgo = (date: Date) => {
+    const now = currentTime;
+    const diffMs = now.getTime() - date.getTime();
+    const diffSeconds = Math.floor(diffMs / 1000);
+    const diffMinutes = Math.floor(diffSeconds / 60);
+    
+    if (diffSeconds < 10) return 'just now';
+    if (diffSeconds < 60) return `${diffSeconds}s ago`;
+    if (diffMinutes < 60) return `${diffMinutes}m ago`;
+    return `${Math.floor(diffMinutes / 60)}h ago`;
+  };
+
+  // Helper function to get next update countdown
+  const getNextUpdateCountdown = () => {
+    if (!lastApiCallTime) return '...';
+    const timeSinceLastCall = currentTime.getTime() - lastApiCallTime.getTime();
+    const nextUpdateIn = Math.max(0, 10000 - timeSinceLastCall); // 10 second intervals
+    const secondsRemaining = Math.ceil(nextUpdateIn / 1000);
+    return secondsRemaining > 0 ? `${secondsRemaining}s` : 'updating...';
+  };
 
   // Dark theme map styles
   const darkMapStyles = [
@@ -636,6 +664,15 @@ const GoogleMapsTracker: React.FC<GoogleMapsTrackerProps> = ({
       stylers: [{ color: "#17263c" }],
     }
   ];
+
+  // Update current time every second for live timestamps
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   // Load Google Maps API
   useEffect(() => {
@@ -723,8 +760,12 @@ const GoogleMapsTracker: React.FC<GoogleMapsTrackerProps> = ({
       
       console.log('🚌 Vehicle data received:', data);
       
+      // Update API call time
+      setLastApiCallTime(new Date());
+      
       if (data.vehicles && Array.isArray(data.vehicles)) {
         setVehicles(data.vehicles);
+        setLastUpdateTime(new Date());
         console.log(`✅ Loaded ${data.vehicles.length} vehicles`);
       } else {
         console.log('❌ No vehicles found in response');
@@ -856,6 +897,9 @@ const GoogleMapsTracker: React.FC<GoogleMapsTrackerProps> = ({
   // Handle real-time vehicle updates
   const handleRealTimeVehicleUpdate = useCallback((data: any) => {
     console.log('📡 Processing real-time update for vehicle:', data.vehicleId);
+    
+    // Update last update time when real-time data comes in
+    setLastUpdateTime(new Date());
     
     setVehicles(prevVehicles => {
       const updatedVehicles = prevVehicles.map(vehicle => {
@@ -1021,13 +1065,14 @@ const GoogleMapsTracker: React.FC<GoogleMapsTrackerProps> = ({
         padding: '12px 16px',
         borderRadius: '12px',
         boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-        backdropFilter: 'blur(10px)'
+        backdropFilter: 'blur(10px)',
+        minWidth: '220px'
       }}>
         <div style={{
           fontSize: '14px',
           fontWeight: '600',
           color: theme === 'dark' ? '#f9fafb' : '#1f2937',
-          marginBottom: '4px',
+          marginBottom: '8px',
           display: 'flex',
           alignItems: 'center',
           gap: '8px'
@@ -1036,13 +1081,60 @@ const GoogleMapsTracker: React.FC<GoogleMapsTrackerProps> = ({
             width: '8px',
             height: '8px',
             backgroundColor: isRealTimeConnected ? '#10B981' : '#EF4444',
-            borderRadius: '50%'
+            borderRadius: '50%',
+            animation: isRealTimeConnected ? 'pulse 2s infinite' : 'none'
           }}></div>
           {isRealTimeConnected ? 'Live Tracking' : 'Offline Mode'}
         </div>
+
+        {/* Live Update Status */}
+        <div style={{
+          fontSize: '11px',
+          color: '#10B981',
+          backgroundColor: 'rgba(16, 185, 129, 0.1)',
+          padding: '4px 8px',
+          borderRadius: '6px',
+          marginBottom: '8px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '4px',
+          border: '1px solid rgba(16, 185, 129, 0.2)'
+        }}>
+          <div style={{
+            width: '6px',
+            height: '6px',
+            backgroundColor: vehiclesLoading ? '#F59E0B' : '#10B981',
+            borderRadius: '50%',
+            animation: vehiclesLoading ? 'pulse 1s infinite' : 'none'
+          }}></div>
+          {vehiclesLoading ? 'Updating...' : `Last update: ${getTimeAgo(lastUpdateTime)}`}
+        </div>
+
+        {/* API Call Countdown */}
+        {lastApiCallTime && (
+          <div style={{
+            fontSize: '11px',
+            color: theme === 'dark' ? '#9ca3af' : '#6b7280',
+            marginBottom: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}>
+            <span>📡 Next check in:</span>
+            <span style={{
+              color: '#3B82F6',
+              fontWeight: '600',
+              fontFamily: 'monospace'
+            }}>
+              {getNextUpdateCountdown()}
+            </span>
+          </div>
+        )}
+
         <div style={{
           fontSize: '12px',
-          color: theme === 'dark' ? '#9ca3af' : '#6b7280'
+          color: theme === 'dark' ? '#9ca3af' : '#6b7280',
+          marginBottom: '4px'
         }}>
           🚌 {vehicles.length} vehicles total
         </div>
@@ -1051,29 +1143,21 @@ const GoogleMapsTracker: React.FC<GoogleMapsTrackerProps> = ({
           color: theme === 'dark' ? '#9ca3af' : '#6b7280',
           display: 'flex',
           alignItems: 'center',
-          gap: '8px'
+          gap: '8px',
+          marginBottom: '4px'
         }}>
           <span style={{ color: '#10B981' }}>🟢 {vehicles.filter(v => v.connectionStatus === 'online').length}</span>
           <span style={{ color: '#F59E0B' }}>🟡 {vehicles.filter(v => v.connectionStatus === 'recently_offline').length}</span>
           <span style={{ color: '#EF4444' }}>🔴 {vehicles.filter(v => v.connectionStatus === 'offline').length}</span>
         </div>
         <div style={{
-          fontSize: '12px',
-          color: theme === 'dark' ? '#9ca3af' : '#6b7280'
+          fontSize: '11px',
+          color: theme === 'dark' ? '#6b7280' : '#9ca3af',
+          borderTop: '1px solid rgba(156, 163, 175, 0.2)',
+          paddingTop: '6px',
+          marginTop: '6px'
         }}>
-          {isRealTimeConnected ? '⚡ Real-time updates active' : '📶 Connecting to updates...'}
-        </div>
-        <div style={{
-          fontSize: '12px',
-          color: theme === 'dark' ? '#9ca3af' : '#6b7280'
-        }}>
-          🚦 Traffic layer enabled
-        </div>
-        <div style={{
-          fontSize: '12px',
-          color: theme === 'dark' ? '#9ca3af' : '#6b7280'
-        }}>
-          📍 {routeMarkers.length} route points
+          🚦 Live traffic • 📍 {routeMarkers.length} stops
         </div>
       </div>
 
@@ -1089,6 +1173,7 @@ const GoogleMapsTracker: React.FC<GoogleMapsTrackerProps> = ({
 
       <style jsx>{`
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
       `}</style>
     </div>
   );
