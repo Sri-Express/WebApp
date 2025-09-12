@@ -413,10 +413,13 @@ const createVehicleInfoWindow = (vehicle: Vehicle) => {
         'offline': 'Offline'
       };
       
+      // Calculate actual last seen time
+      const lastSeenTime = new Date(Date.now() - (vehicle.lastSeenMinutesAgo * 60 * 1000));
+      
       return {
         color: connectionColors[vehicle.connectionStatus],
         label: connectionLabels[vehicle.connectionStatus],
-        timeText: vehicle.lastSeenMinutesAgo < 1 ? 'Just now' : `${Math.round(vehicle.lastSeenMinutesAgo)} min ago`
+        timeText: vehicle.lastSeenMinutesAgo < 1 ? 'Live now' : `${lastSeenTime.toLocaleTimeString('en-US', { hour12: true, hour: 'numeric', minute: '2-digit', second: '2-digit' })}`
       };
     }
     return null;
@@ -555,14 +558,14 @@ const createVehicleInfoWindow = (vehicle: Vehicle) => {
         gap: 4px;
       ">
         <div>📍 Location: ${vehicle.location?.latitude?.toFixed(4) || 'N/A'}, ${vehicle.location?.longitude?.toFixed(4) || 'N/A'}</div>
-        <div>🕒 GPS Data: ${new Date(vehicle.timestamp || Date.now()).toLocaleString()}</div>
+        <div>🛰️ GPS Time: ${new Date(vehicle.timestamp || Date.now()).toLocaleTimeString('en-US', { hour12: true, hour: 'numeric', minute: '2-digit', second: '2-digit' })}</div>
         ${connectionStatus ? `
           <div style="color: ${connectionStatus.color}; font-weight: 600;">
-            📡 Last Seen: ${connectionStatus.timeText}
+            📡 ${connectionStatus.label}: ${connectionStatus.timeText}
           </div>
         ` : ''}
         <div style="color: #10B981; font-weight: 600;">
-          🔄 Live tracking active - updates automatically
+          🔄 Auto-refreshing every 10 seconds
         </div>
         ${vehicle.operationalInfo?.driverInfo?.driverName ? `
           <div>👨‍✈️ Driver: ${vehicle.operationalInfo.driverInfo.driverName}</div>
@@ -606,17 +609,26 @@ const GoogleMapsTracker: React.FC<GoogleMapsTrackerProps> = ({
   const mapRef = useRef<HTMLDivElement>(null);
   const markersRef = useRef<Map<string, any>>(new Map());
 
-  // Helper function to get time difference
-  const getTimeAgo = (date: Date) => {
+  // Helper function to get live time format
+  const getLiveTimeFormat = (date: Date) => {
+    return date.toLocaleTimeString('en-US', { 
+      hour12: true,
+      hour: 'numeric',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+  };
+
+  // Helper function to get time difference  
+  const getTimeDifference = (date: Date) => {
     const now = currentTime;
     const diffMs = now.getTime() - date.getTime();
     const diffSeconds = Math.floor(diffMs / 1000);
     const diffMinutes = Math.floor(diffSeconds / 60);
     
-    if (diffSeconds < 10) return 'just now';
-    if (diffSeconds < 60) return `${diffSeconds}s ago`;
-    if (diffMinutes < 60) return `${diffMinutes}m ago`;
-    return `${Math.floor(diffMinutes / 60)}h ago`;
+    if (diffSeconds < 60) return `${diffSeconds}s`;
+    if (diffMinutes < 60) return `${diffMinutes}m`;
+    return `${Math.floor(diffMinutes / 60)}h`;
   };
 
   // Helper function to get next update countdown
@@ -1087,27 +1099,48 @@ const GoogleMapsTracker: React.FC<GoogleMapsTrackerProps> = ({
           {isRealTimeConnected ? 'Live Tracking' : 'Offline Mode'}
         </div>
 
-        {/* Live Update Status */}
+        {/* Live Clock and Update Status */}
         <div style={{
           fontSize: '11px',
-          color: '#10B981',
-          backgroundColor: 'rgba(16, 185, 129, 0.1)',
-          padding: '4px 8px',
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          padding: '6px 8px',
           borderRadius: '6px',
           marginBottom: '8px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '4px',
-          border: '1px solid rgba(16, 185, 129, 0.2)'
+          border: '1px solid rgba(59, 130, 246, 0.2)'
         }}>
           <div style={{
-            width: '6px',
-            height: '6px',
-            backgroundColor: vehiclesLoading ? '#F59E0B' : '#10B981',
-            borderRadius: '50%',
-            animation: vehiclesLoading ? 'pulse 1s infinite' : 'none'
-          }}></div>
-          {vehiclesLoading ? 'Updating...' : `Last update: ${getTimeAgo(lastUpdateTime)}`}
+            color: '#3B82F6',
+            fontWeight: '600',
+            fontFamily: 'monospace',
+            marginBottom: '2px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px'
+          }}>
+            🕐 {getLiveTimeFormat(currentTime)}
+            <div style={{
+              width: '6px',
+              height: '6px',
+              backgroundColor: '#3B82F6',
+              borderRadius: '50%',
+              animation: 'pulse 1s infinite'
+            }}></div>
+          </div>
+          <div style={{
+            color: vehiclesLoading ? '#F59E0B' : '#10B981',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px'
+          }}>
+            <div style={{
+              width: '4px',
+              height: '4px',
+              backgroundColor: vehiclesLoading ? '#F59E0B' : '#10B981',
+              borderRadius: '50%',
+              animation: vehiclesLoading ? 'pulse 0.5s infinite' : 'none'
+            }}></div>
+            {vehiclesLoading ? 'Fetching updates...' : `Updated: ${getLiveTimeFormat(lastUpdateTime)} (${getTimeDifference(lastUpdateTime)} ago)`}
+          </div>
         </div>
 
         {/* API Call Countdown */}
