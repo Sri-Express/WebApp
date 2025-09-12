@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useTheme } from '@/app/context/ThemeContext';
 import ThemeSwitcher from '@/app/components/ThemeSwitcher';
 import AnimatedBackground from '@/app/components/AnimatedBackground';
-import { ShieldCheckIcon, TicketIcon, CheckCircleIcon, ClockIcon, XCircleIcon, QrCodeIcon, CalendarDaysIcon, CurrencyDollarIcon, UserIcon, DevicePhoneMobileIcon, AtSymbolIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
+import { ShieldCheckIcon, TicketIcon, CheckCircleIcon, ClockIcon, XCircleIcon, QrCodeIcon, CalendarDaysIcon, CurrencyDollarIcon, UserIcon, DevicePhoneMobileIcon, AtSymbolIcon, InformationCircleIcon, StarIcon } from '@heroicons/react/24/outline';
 
 // --- Data Interfaces ---
 interface Booking { 
@@ -421,6 +421,14 @@ export default function BookingsPage() {
                         >
                           <QrCodeIcon width={16} /> Get QR Code
                         </button>
+                      )}
+                      {booking.status === 'completed' && booking.paymentInfo.status === 'completed' && !booking.ratingInfo?.hasRated && (
+                        <Link 
+                          href="/ratings" 
+                          style={{ backgroundColor: 'rgba(245, 158, 11, 0.8)', color: 'white', padding: '0.5rem 1rem', borderRadius: '0.5rem', textDecoration: 'none', fontSize: '0.9rem', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                        >
+                          <StarIcon width={16} /> Rate Journey
+                        </Link>
                       )}
                       {canCancelBooking(booking) && (
                         <button 

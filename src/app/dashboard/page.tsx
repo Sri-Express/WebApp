@@ -11,7 +11,7 @@ import {
   ExclamationTriangleIcon, ShieldCheckIcon, CheckCircleIcon,
   TicketIcon, CurrencyDollarIcon, CalendarDaysIcon, ClockIcon, 
   MagnifyingGlassIcon, MapPinIcon, CreditCardIcon, XCircleIcon, 
-  ArrowRightIcon, BellIcon, CloudIcon, ArrowPathIcon
+  ArrowRightIcon, BellIcon, CloudIcon, ArrowPathIcon, StarIcon
 } from '@heroicons/react/24/outline';
 import RealTimeEmergencyClient from '../components/RealTimeEmergencyClient';
 import UserEmergencyAlerts from '../components/UserEmergencyAlerts';
@@ -457,6 +457,7 @@ function DashboardContent() {
           {[
             { name: 'Search Routes', href: '/search', icon: MagnifyingGlassIcon },
             { name: 'My Bookings', href: '/bookings', icon: TicketIcon },
+            { name: 'Rate Journeys', href: '/ratings', icon: StarIcon },
             { name: 'Track Vehicle', href: '/track', icon: MapPinIcon },
             { name: 'Payment History', href: '/payments', icon: CreditCardIcon },
             { name: 'Weather & Travel', href: '/weather', icon: CloudIcon },
