@@ -42,6 +42,13 @@ interface Booking {
     checkedIn: boolean; 
     checkInTime?: string; 
   }; 
+  ratingInfo?: {
+    hasRated: boolean;
+    ratingId?: string;
+    ratedAt?: string;
+    overallRating?: number;
+    deviceId?: string;
+  };
   createdAt: string; 
   updatedAt: string;
 }
