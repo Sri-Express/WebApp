@@ -335,27 +335,7 @@ export default function AdvancedTrackingPage() {
 
           {/* Route Summary Info */}
           <div style={{ marginTop: '1rem', color: currentThemeStyles.textMuted, fontSize: '0.875rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <span>Routes loaded: {new Date().toLocaleTimeString()}</span>
-              {lastApiCallTime && (
-                <span style={{ 
-                  color: '#10B981', 
-                  fontSize: '0.8rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px'
-                }}>
-                  <div style={{
-                    width: '6px',
-                    height: '6px',
-                    backgroundColor: '#10B981',
-                    borderRadius: '50%',
-                    animation: 'pulse 2s infinite'
-                  }}></div>
-                  Live tracking updated: {lastApiCallTime.toLocaleTimeString()} ({getTimeDifference(lastApiCallTime)})
-                </span>
-              )}
-            </div>
+            <span>Routes loaded: {new Date().toLocaleTimeString()}</span>
             <span>{filteredRoutes.length} route{filteredRoutes.length !== 1 ? 's' : ''} matching current filters</span>
           </div>
         </div>

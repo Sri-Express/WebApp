@@ -558,7 +558,7 @@ const createVehicleInfoWindow = (vehicle: Vehicle) => {
         gap: 4px;
       ">
         <div>📍 Location: ${vehicle.location?.latitude?.toFixed(4) || 'N/A'}, ${vehicle.location?.longitude?.toFixed(4) || 'N/A'}</div>
-        <div>🛰️ GPS Time: ${new Date(vehicle.timestamp || Date.now()).toLocaleTimeString('en-US', { hour12: true, hour: 'numeric', minute: '2-digit', second: '2-digit' })}</div>
+        <div>📡 Last API Request: ${new Date(vehicle.timestamp || Date.now()).toLocaleTimeString('en-US', { hour12: true, hour: 'numeric', minute: '2-digit', second: '2-digit' })}</div>
         ${connectionStatus ? `
           <div style="color: ${connectionStatus.color}; font-weight: 600;">
             📡 ${connectionStatus.label}: ${connectionStatus.timeText}
