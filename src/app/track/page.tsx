@@ -55,6 +55,8 @@ export default function AdvancedTrackingPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('map');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [lastApiCallTime, setLastApiCallTime] = useState<Date | null>(null);
+  const [currentTime, setCurrentTime] = useState<Date>(new Date());
   
   // --- CONSISTENT THEME STYLING ---
   const lightTheme = {
@@ -100,6 +102,27 @@ export default function AdvancedTrackingPage() {
   };
 
   const currentThemeStyles = theme === 'dark' ? darkTheme : lightTheme;
+
+  // Update current time every second for live timestamps
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  // Helper function to get time difference
+  const getTimeDifference = (date: Date) => {
+    const now = currentTime;
+    const diffMs = now.getTime() - date.getTime();
+    const diffSeconds = Math.floor(diffMs / 1000);
+    
+    if (diffSeconds < 60) return `${diffSeconds}s ago`;
+    const diffMinutes = Math.floor(diffSeconds / 60);
+    if (diffMinutes < 60) return `${diffMinutes}m ago`;
+    return `${Math.floor(diffMinutes / 60)}h ago`;
+  };
 
   // --- API & DATA LOGIC ---
   const getToken = () => typeof window !== 'undefined' ? localStorage.getItem('token') : null;
@@ -312,7 +335,27 @@ export default function AdvancedTrackingPage() {
 
           {/* Route Summary Info */}
           <div style={{ marginTop: '1rem', color: currentThemeStyles.textMuted, fontSize: '0.875rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span>Routes loaded: {new Date().toLocaleTimeString()}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <span>Routes loaded: {new Date().toLocaleTimeString()}</span>
+              {lastApiCallTime && (
+                <span style={{ 
+                  color: '#10B981', 
+                  fontSize: '0.8rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}>
+                  <div style={{
+                    width: '6px',
+                    height: '6px',
+                    backgroundColor: '#10B981',
+                    borderRadius: '50%',
+                    animation: 'pulse 2s infinite'
+                  }}></div>
+                  Live tracking updated: {lastApiCallTime.toLocaleTimeString()} ({getTimeDifference(lastApiCallTime)})
+                </span>
+              )}
+            </div>
             <span>{filteredRoutes.length} route{filteredRoutes.length !== 1 ? 's' : ''} matching current filters</span>
           </div>
         </div>
@@ -362,6 +405,7 @@ export default function AdvancedTrackingPage() {
             selectedRoute={selectedRoute}
             height="70vh"
             theme={theme}
+            onLastApiCallUpdate={setLastApiCallTime}
           />
         </div>
       </main>

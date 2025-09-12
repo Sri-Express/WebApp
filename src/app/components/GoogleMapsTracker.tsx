@@ -581,13 +581,15 @@ interface GoogleMapsTrackerProps {
   selectedRoute?: string | null;
   height?: string;
   theme?: 'light' | 'dark';
+  onLastApiCallUpdate?: (time: Date) => void;
 }
 
 const GoogleMapsTracker: React.FC<GoogleMapsTrackerProps> = ({
   routes = [],
   selectedRoute = null,
   height = '70vh',
-  theme = 'light'
+  theme = 'light',
+  onLastApiCallUpdate
 }) => {
   const [map, setMap] = useState<any>(null);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -773,7 +775,13 @@ const GoogleMapsTracker: React.FC<GoogleMapsTrackerProps> = ({
       console.log('🚌 Vehicle data received:', data);
       
       // Update API call time
-      setLastApiCallTime(new Date());
+      const now = new Date();
+      setLastApiCallTime(now);
+      
+      // Notify parent component about API call time
+      if (onLastApiCallUpdate) {
+        onLastApiCallUpdate(now);
+      }
       
       if (data.vehicles && Array.isArray(data.vehicles)) {
         setVehicles(data.vehicles);
@@ -1099,70 +1107,6 @@ const GoogleMapsTracker: React.FC<GoogleMapsTrackerProps> = ({
           {isRealTimeConnected ? 'Live Tracking' : 'Offline Mode'}
         </div>
 
-        {/* Live Clock and Update Status */}
-        <div style={{
-          fontSize: '11px',
-          backgroundColor: 'rgba(59, 130, 246, 0.1)',
-          padding: '6px 8px',
-          borderRadius: '6px',
-          marginBottom: '8px',
-          border: '1px solid rgba(59, 130, 246, 0.2)'
-        }}>
-          <div style={{
-            color: '#3B82F6',
-            fontWeight: '600',
-            fontFamily: 'monospace',
-            marginBottom: '2px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px'
-          }}>
-            🕐 {getLiveTimeFormat(currentTime)}
-            <div style={{
-              width: '6px',
-              height: '6px',
-              backgroundColor: '#3B82F6',
-              borderRadius: '50%',
-              animation: 'pulse 1s infinite'
-            }}></div>
-          </div>
-          <div style={{
-            color: vehiclesLoading ? '#F59E0B' : '#10B981',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px'
-          }}>
-            <div style={{
-              width: '4px',
-              height: '4px',
-              backgroundColor: vehiclesLoading ? '#F59E0B' : '#10B981',
-              borderRadius: '50%',
-              animation: vehiclesLoading ? 'pulse 0.5s infinite' : 'none'
-            }}></div>
-            {vehiclesLoading ? 'Fetching updates...' : `Updated: ${getLiveTimeFormat(lastUpdateTime)} (${getTimeDifference(lastUpdateTime)} ago)`}
-          </div>
-        </div>
-
-        {/* API Call Countdown */}
-        {lastApiCallTime && (
-          <div style={{
-            fontSize: '11px',
-            color: theme === 'dark' ? '#9ca3af' : '#6b7280',
-            marginBottom: '8px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between'
-          }}>
-            <span>📡 Next check in:</span>
-            <span style={{
-              color: '#3B82F6',
-              fontWeight: '600',
-              fontFamily: 'monospace'
-            }}>
-              {getNextUpdateCountdown()}
-            </span>
-          </div>
-        )}
 
         <div style={{
           fontSize: '12px',
