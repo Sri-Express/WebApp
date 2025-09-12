@@ -1305,11 +1305,34 @@ const GoogleMapsTracker: React.FC<GoogleMapsTrackerProps> = ({
           display: 'flex',
           alignItems: 'center',
           gap: '8px',
-          marginBottom: '4px'
+          marginBottom: '8px'
         }}>
           <span style={{ color: '#10B981' }}>🟢 {vehicles.filter(v => v.connectionStatus === 'online').length}</span>
           <span style={{ color: '#F59E0B' }}>🟡 {vehicles.filter(v => v.connectionStatus === 'recently_offline').length}</span>
           <span style={{ color: '#EF4444' }}>🔴 {vehicles.filter(v => v.connectionStatus === 'offline').length}</span>
+        </div>
+        
+        {/* Color Legend */}
+        <div style={{
+          fontSize: '10px',
+          color: theme === 'dark' ? '#6b7280' : '#9ca3af',
+          borderTop: '1px solid rgba(156, 163, 175, 0.2)',
+          paddingTop: '8px',
+          marginBottom: '4px',
+          lineHeight: '1.3'
+        }}>
+          <div style={{ marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span style={{ color: '#10B981', fontWeight: '600' }}>🟢 Online:</span>
+            <span>Last seen &lt; 2 min</span>
+          </div>
+          <div style={{ marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span style={{ color: '#F59E0B', fontWeight: '600' }}>🟡 Recent:</span>
+            <span>Last seen 2-10 min</span>
+          </div>
+          <div style={{ marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span style={{ color: '#EF4444', fontWeight: '600' }}>🔴 Offline:</span>
+            <span>Last seen &gt; 10 min</span>
+          </div>
         </div>
         <div style={{
           fontSize: '11px',
