@@ -338,7 +338,7 @@ export default function HybridLocationSelector({
           setShowSuggestions(true);
         } else {
           // Fallback to minimal hardcoded locations only if Google Places fails
-          const filtered = sriLankanLocationsFallback.filter(location =>
+          const filtered = sriLankanLocations.filter(location =>
             location.name.toLowerCase().includes(query.toLowerCase()) ||
             location.address.toLowerCase().includes(query.toLowerCase())
           ).slice(0, 3);
@@ -348,7 +348,7 @@ export default function HybridLocationSelector({
       });
     } else {
       // Fallback to minimal hardcoded locations if Places API not available
-      const filtered = sriLankanLocationsFallback.filter(location =>
+      const filtered = sriLankanLocations.filter(location =>
         location.name.toLowerCase().includes(query.toLowerCase()) ||
         location.address.toLowerCase().includes(query.toLowerCase())
       ).slice(0, 3);
@@ -442,7 +442,7 @@ export default function HybridLocationSelector({
           }
         } else {
           // Try minimal hardcoded locations as fallback
-          const exactMatch = sriLankanLocationsFallback.find(location =>
+          const exactMatch = sriLankanLocations.find(location =>
             location.name.toLowerCase() === searchValue.toLowerCase()
           );
 
@@ -455,7 +455,7 @@ export default function HybridLocationSelector({
       });
     } else {
       // Fallback to minimal hardcoded search if Google Places not available
-      const exactMatch = sriLankanLocationsFallback.find(location =>
+      const exactMatch = sriLankanLocations.find(location =>
         location.name.toLowerCase() === searchValue.toLowerCase()
       );
 
@@ -780,7 +780,7 @@ export default function HybridLocationSelector({
           <div style={{ marginBottom: '0.25rem' }}>
             <strong>⚠️ Avoid:</strong> Using old/hardcoded coordinates - they may be wrong!
           </div>
-          <div style={{ marginTop: '0.5rem', fontStyle: 'italic', color: currentTheme.textMuted }}>
+          <div style={{ marginTop: '0.5rem', fontStyle: 'italic', color: currentTheme.textSecondary }}>
             {isGoogleMapsLoaded ? 
               'Map is ready - search or click for precise location' : 
               'Loading map... Please wait'
