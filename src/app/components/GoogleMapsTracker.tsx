@@ -792,7 +792,7 @@ const GoogleMapsTracker: React.FC<GoogleMapsTrackerProps> = ({
       
       if (data.vehicles && Array.isArray(data.vehicles)) {
         console.log(`✅ Loaded ${data.vehicles.length} vehicles at ${now.toLocaleTimeString()}`);
-        data.vehicles.forEach(vehicle => {
+        data.vehicles.forEach((vehicle: Vehicle) => {
           console.log(`🚐 Vehicle ${vehicle.vehicleId}: timestamp=${vehicle.timestamp}, lat=${vehicle.location?.latitude}, lng=${vehicle.location?.longitude}`);
         });
         setVehicles(data.vehicles);
