@@ -608,6 +608,8 @@ const GoogleMapsTracker: React.FC<GoogleMapsTrackerProps> = ({
   const [lastUpdateTime, setLastUpdateTime] = useState<Date>(new Date());
   const [lastApiCallTime, setLastApiCallTime] = useState<Date | null>(null);
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
+  const [userMarker, setUserMarker] = useState<any>(null);
+  const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
 
   const mapRef = useRef<HTMLDivElement>(null);
   const markersRef = useRef<Map<string, any>>(new Map());
@@ -766,6 +768,140 @@ const GoogleMapsTracker: React.FC<GoogleMapsTrackerProps> = ({
     setMap(mapInstance);
     console.log('🗺️ Google Maps initialized with traffic layer and directions');
   }, [isLoaded, theme]);
+
+  // Get user location and add marker
+  useEffect(() => {
+    if (!map || !window.google) return;
+
+    console.log('📍 Requesting user location...');
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const userPos = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          };
+
+          console.log(`✅ User location obtained: ${userPos.lat}, ${userPos.lng}`);
+          setUserLocation(userPos);
+
+          // Create user location marker (blue dot like Google Maps)
+          const userLocationMarker = new window.google.maps.marker.AdvancedMarkerElement({
+            position: userPos,
+            map: map,
+            title: 'Your Location'
+          });
+
+          // Create blue dot content
+          const userMarkerElement = document.createElement('div');
+          userMarkerElement.innerHTML = `
+            <div style="
+              position: relative;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            ">
+              <div style="
+                width: 20px;
+                height: 20px;
+                background: #4285F4;
+                border: 3px solid white;
+                border-radius: 50%;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+                position: relative;
+              "></div>
+              <div style="
+                position: absolute;
+                width: 40px;
+                height: 40px;
+                background: rgba(66, 133, 244, 0.2);
+                border-radius: 50%;
+                animation: pulse-user 2s infinite;
+              "></div>
+            </div>
+          `;
+
+          userLocationMarker.content = userMarkerElement;
+          setUserMarker(userLocationMarker);
+
+          // Add info window for user location
+          userLocationMarker.addListener('click', () => {
+            const userInfoWindow = new window.google.maps.InfoWindow({
+              content: `
+                <div style="
+                  font-family: system-ui;
+                  padding: 8px;
+                  text-align: center;
+                ">
+                  <h4 style="
+                    margin: 0 0 8px 0;
+                    color: #4285F4;
+                    font-size: 16px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 8px;
+                  ">
+                    📍 Your Location
+                  </h4>
+                  <p style="
+                    margin: 0;
+                    color: #666;
+                    font-size: 12px;
+                    line-height: 1.4;
+                  ">
+                    Lat: ${userPos.lat.toFixed(6)}<br>
+                    Lng: ${userPos.lng.toFixed(6)}
+                  </p>
+                  <div style="
+                    margin-top: 8px;
+                    padding: 4px 8px;
+                    background: #4285F4;
+                    color: white;
+                    border-radius: 4px;
+                    font-size: 10px;
+                    font-weight: 600;
+                  ">
+                    LIVE LOCATION
+                  </div>
+                </div>
+              `
+            });
+            userInfoWindow.open(map, userLocationMarker);
+          });
+
+          console.log('🟢 User location marker added to map');
+        },
+        (error) => {
+          console.warn('❌ Unable to get user location:', error.message);
+          
+          // Show different messages based on error type
+          let errorMessage = 'Location access denied or unavailable';
+          switch(error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage = 'Location access denied by user';
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMessage = 'Location information unavailable';
+              break;
+            case error.TIMEOUT:
+              errorMessage = 'Location request timed out';
+              break;
+          }
+          
+          console.log(`📍 Location error: ${errorMessage}`);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 300000 // 5 minutes
+        }
+      );
+    } else {
+      console.warn('❌ Geolocation not supported by browser');
+    }
+  }, [map]);
 
   // Fetch vehicles
   const fetchVehicles = useCallback(async () => {
@@ -1176,6 +1312,20 @@ const GoogleMapsTracker: React.FC<GoogleMapsTrackerProps> = ({
       <style jsx>{`
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        @keyframes pulse-user { 
+          0% { 
+            transform: scale(0.8); 
+            opacity: 0.8; 
+          } 
+          50% { 
+            transform: scale(1.2); 
+            opacity: 0.4; 
+          } 
+          100% { 
+            transform: scale(0.8); 
+            opacity: 0.8; 
+          } 
+        }
       `}</style>
     </div>
   );
