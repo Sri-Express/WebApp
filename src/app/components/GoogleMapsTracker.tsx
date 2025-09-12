@@ -600,6 +600,7 @@ const GoogleMapsTracker: React.FC<GoogleMapsTrackerProps> = ({
   const [directionsService, setDirectionsService] = useState<any>(null);
   const [directionsRenderer, setDirectionsRenderer] = useState<any>(null);
   const [infoWindow, setInfoWindow] = useState<any>(null);
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [vehiclesLoading, setVehiclesLoading] = useState(false);
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -754,6 +755,12 @@ const GoogleMapsTracker: React.FC<GoogleMapsTrackerProps> = ({
 
     // Create info window
     const infoWin = new window.google.maps.InfoWindow();
+    
+    // Clear selected vehicle when info window is closed
+    infoWin.addListener('closeclick', () => {
+      setSelectedVehicleId(null);
+    });
+    
     setInfoWindow(infoWin);
 
     setMap(mapInstance);
@@ -784,9 +791,12 @@ const GoogleMapsTracker: React.FC<GoogleMapsTrackerProps> = ({
       }
       
       if (data.vehicles && Array.isArray(data.vehicles)) {
+        console.log(`✅ Loaded ${data.vehicles.length} vehicles at ${now.toLocaleTimeString()}`);
+        data.vehicles.forEach(vehicle => {
+          console.log(`🚐 Vehicle ${vehicle.vehicleId}: timestamp=${vehicle.timestamp}, lat=${vehicle.location?.latitude}, lng=${vehicle.location?.longitude}`);
+        });
         setVehicles(data.vehicles);
         setLastUpdateTime(new Date());
-        console.log(`✅ Loaded ${data.vehicles.length} vehicles`);
       } else {
         console.log('❌ No vehicles found in response');
         setVehicles([]);
@@ -803,6 +813,7 @@ const GoogleMapsTracker: React.FC<GoogleMapsTrackerProps> = ({
   const handleVehicleClick = useCallback((vehicle: Vehicle) => {
     if (!infoWindow || !map) return;
 
+    setSelectedVehicleId(vehicle.vehicleId);
     const content = createVehicleInfoWindow(vehicle);
     infoWindow.setContent(content);
     infoWindow.setPosition({
@@ -811,6 +822,18 @@ const GoogleMapsTracker: React.FC<GoogleMapsTrackerProps> = ({
     });
     infoWindow.open(map);
   }, [infoWindow, map]);
+
+  // Auto-update info window content when selected vehicle data changes
+  useEffect(() => {
+    if (!infoWindow || !selectedVehicleId || !map) return;
+
+    const selectedVehicle = vehicles.find(v => v.vehicleId === selectedVehicleId);
+    if (selectedVehicle) {
+      const updatedContent = createVehicleInfoWindow(selectedVehicle);
+      infoWindow.setContent(updatedContent);
+      console.log(`🔄 Updated info window for vehicle ${selectedVehicleId}`);
+    }
+  }, [vehicles, selectedVehicleId, infoWindow, map]);
 
   // Update vehicle markers - Smart update instead of recreating
   useEffect(() => {
@@ -888,6 +911,8 @@ const GoogleMapsTracker: React.FC<GoogleMapsTrackerProps> = ({
     // Listen for real-time vehicle updates
     socketInstance.on('vehicle_status_update', (data) => {
       console.log('🚐 Real-time vehicle update received:', data);
+      console.log('📍 Vehicle location:', data.location);
+      console.log('🕐 Update timestamp:', data.timestamp);
       handleRealTimeVehicleUpdate(data);
     });
 
