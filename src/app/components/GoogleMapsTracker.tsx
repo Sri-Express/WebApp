@@ -40,6 +40,7 @@ interface Vehicle {
   routeProgress?: RouteProgress;
   timestamp?: string | number | Date;
   lastSeenMinutesAgo?: number;
+  lastSeenTimestamp?: string | number | Date; // New field for accurate time calculation
   connectionStatus?: 'online' | 'recently_offline' | 'offline';
 }
 
@@ -80,9 +81,13 @@ declare global {
 const createVehicleMarker = (
   map: any, 
   vehicle: Vehicle, 
-  onMarkerClick: (vehicle: Vehicle) => void
+  onMarkerClick: (vehicle: Vehicle) => void,
+  calculateOfflineMinutes: (vehicle: Vehicle) => number
 ) => {
   const heading = vehicle.location?.heading || 0;
+
+  // Calculate real-time offline minutes
+  const actualMinutesOffline = calculateOfflineMinutes(vehicle);
 
   // Determine color based on connection status
   const getStatusColor = () => {
@@ -124,7 +129,7 @@ const createVehicleMarker = (
       ">
         🚐
       </div>
-      ${vehicle.lastSeenMinutesAgo !== undefined ? `
+      ${vehicle.connectionStatus !== 'online' && actualMinutesOffline > 0 ? `
         <div style="
           position: absolute;
           top: -8px;
@@ -141,7 +146,7 @@ const createVehicleMarker = (
           color: white;
           font-weight: bold;
         ">
-          ${vehicle.lastSeenMinutesAgo < 60 ? Math.round(vehicle.lastSeenMinutesAgo) : '60+'}
+          ${actualMinutesOffline < 60 ? actualMinutesOffline : '60+'}
         </div>
       ` : ''}
     </div>
@@ -161,7 +166,7 @@ const createVehicleMarker = (
   const marker = new window.google.maps.marker.AdvancedMarkerElement({
     position: { lat: vehicle.location.latitude, lng: vehicle.location.longitude },
     map: map,
-    title: `${vehicle.vehicleNumber || vehicle.vehicleId} - ${statusColor.label} ${vehicle.lastSeenMinutesAgo !== undefined ? `(${Math.round(vehicle.lastSeenMinutesAgo)}m ago)` : ''}`,
+    title: `${vehicle.vehicleNumber || vehicle.vehicleId} - ${statusColor.label} ${actualMinutesOffline > 0 ? `(${actualMinutesOffline}m ago)` : ''}`,
     content: markerElement
   });
 
@@ -181,10 +186,13 @@ const createVehicleMarker = (
 };
 
 // UPDATE EXISTING VEHICLE MARKER WITHOUT RECREATING
-const updateVehicleMarker = (marker: any, vehicle: Vehicle) => {
+const updateVehicleMarker = (marker: any, vehicle: Vehicle, calculateOfflineMinutes: (vehicle: Vehicle) => number) => {
   // Update marker position
   const newPosition = { lat: vehicle.location.latitude, lng: vehicle.location.longitude };
   marker.position = newPosition;
+
+  // Calculate real-time offline minutes
+  const actualMinutesOffline = calculateOfflineMinutes(vehicle);
 
   // Update marker content with new status
   const heading = vehicle.location?.heading || 0;
@@ -230,7 +238,7 @@ const updateVehicleMarker = (marker: any, vehicle: Vehicle) => {
         ">
           🚐
         </div>
-        ${vehicle.lastSeenMinutesAgo !== undefined ? `
+        ${vehicle.connectionStatus !== 'online' && actualMinutesOffline > 0 ? `
           <div style="
             position: absolute;
             top: -8px;
@@ -247,7 +255,7 @@ const updateVehicleMarker = (marker: any, vehicle: Vehicle) => {
             color: white;
             font-weight: bold;
           ">
-            ${vehicle.lastSeenMinutesAgo < 60 ? Math.round(vehicle.lastSeenMinutesAgo) : '60+'}
+            ${actualMinutesOffline < 60 ? actualMinutesOffline : '60+'}
           </div>
         ` : ''}
       </div>
@@ -255,7 +263,7 @@ const updateVehicleMarker = (marker: any, vehicle: Vehicle) => {
   }
 
   // Update marker title
-  marker.title = `${vehicle.vehicleNumber || vehicle.vehicleId} - ${statusColor.label} ${vehicle.lastSeenMinutesAgo !== undefined ? `(${Math.round(vehicle.lastSeenMinutesAgo)}m ago)` : ''}`;
+  marker.title = `${vehicle.vehicleNumber || vehicle.vehicleId} - ${statusColor.label} ${actualMinutesOffline > 0 ? `(${actualMinutesOffline}m ago)` : ''}`;
 
   console.log(`🔄 Updated marker for vehicle: ${vehicle.vehicleId} - ${statusColor.label}`);
 };
@@ -380,7 +388,7 @@ const createRouteMarker = (map: any, location: RouteLocation | RouteWaypoint, ty
 };
 
 // USER-FRIENDLY INFO WINDOW COMPONENT
-const createVehicleInfoWindow = (vehicle: Vehicle) => {
+const createVehicleInfoWindow = (vehicle: Vehicle, calculateOfflineMinutes: (vehicle: Vehicle) => number) => {
   const status = vehicle.operationalInfo?.status || 'unknown';
   const statusText = {
     'on_route': 'On Route',
@@ -398,9 +406,12 @@ const createVehicleInfoWindow = (vehicle: Vehicle) => {
     'offline': '#6B7280'
   }[status] || '#6B7280';
 
+  // Calculate real-time offline minutes
+  const actualMinutesOffline = calculateOfflineMinutes(vehicle);
+
   // Connection status info
   const getConnectionStatusDisplay = () => {
-    if (vehicle.connectionStatus && vehicle.lastSeenMinutesAgo !== undefined) {
+    if (vehicle.connectionStatus) {
       const connectionColors = {
         'online': '#10B981',
         'recently_offline': '#F59E0B', 
@@ -413,13 +424,13 @@ const createVehicleInfoWindow = (vehicle: Vehicle) => {
         'offline': 'Offline'
       };
       
-      // Calculate actual last seen time
-      const lastSeenTime = new Date(Date.now() - (vehicle.lastSeenMinutesAgo * 60 * 1000));
+      // Calculate actual last seen time based on timestamp
+      const lastSeenTime = new Date((vehicle.lastSeenTimestamp || vehicle.timestamp || Date.now()) as number);
       
       return {
         color: connectionColors[vehicle.connectionStatus],
         label: connectionLabels[vehicle.connectionStatus],
-        timeText: vehicle.lastSeenMinutesAgo < 1 ? 'Live now' : `${lastSeenTime.toLocaleTimeString('en-US', { hour12: true, hour: 'numeric', minute: '2-digit', second: '2-digit' })}`
+        timeText: actualMinutesOffline < 1 ? 'Live now' : `${lastSeenTime.toLocaleTimeString('en-US', { hour12: true, hour: 'numeric', minute: '2-digit', second: '2-digit' })}`
       };
     }
     return null;
@@ -613,6 +624,18 @@ const GoogleMapsTracker: React.FC<GoogleMapsTrackerProps> = ({
 
   const mapRef = useRef<HTMLDivElement>(null);
   const markersRef = useRef<Map<string, any>>(new Map());
+
+  // Helper function to calculate accurate offline time from timestamp
+  const calculateLastSeenMinutes = (vehicle: Vehicle) => {
+    if (!vehicle.lastSeenTimestamp && !vehicle.timestamp) return 0;
+    
+    const lastSeenTime = new Date(vehicle.lastSeenTimestamp || vehicle.timestamp || 0);
+    const now = currentTime;
+    const diffMs = now.getTime() - lastSeenTime.getTime();
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    
+    return Math.max(0, diffMinutes);
+  };
 
   // Helper function to get live time format
   const getLiveTimeFormat = (date: Date) => {
@@ -950,7 +973,7 @@ const GoogleMapsTracker: React.FC<GoogleMapsTrackerProps> = ({
     if (!infoWindow || !map) return;
 
     setSelectedVehicleId(vehicle.vehicleId);
-    const content = createVehicleInfoWindow(vehicle);
+    const content = createVehicleInfoWindow(vehicle, calculateLastSeenMinutes);
     infoWindow.setContent(content);
     infoWindow.setPosition({
       lat: vehicle.location.latitude,
@@ -965,7 +988,7 @@ const GoogleMapsTracker: React.FC<GoogleMapsTrackerProps> = ({
 
     const selectedVehicle = vehicles.find(v => v.vehicleId === selectedVehicleId);
     if (selectedVehicle) {
-      const updatedContent = createVehicleInfoWindow(selectedVehicle);
+      const updatedContent = createVehicleInfoWindow(selectedVehicle, calculateLastSeenMinutes);
       infoWindow.setContent(updatedContent);
       console.log(`🔄 Updated info window for vehicle ${selectedVehicleId}`);
     }
@@ -999,11 +1022,11 @@ const GoogleMapsTracker: React.FC<GoogleMapsTrackerProps> = ({
         
         if (existingMarker) {
           // Update existing marker position and content
-          updateVehicleMarker(existingMarker, vehicle);
+          updateVehicleMarker(existingMarker, vehicle, calculateLastSeenMinutes);
         } else {
           // Create new marker for new vehicles
           try {
-            const marker = createVehicleMarker(map, vehicle, handleVehicleClick);
+            const marker = createVehicleMarker(map, vehicle, handleVehicleClick, calculateLastSeenMinutes);
             markersRef.current.set(vehicle.vehicleId, marker);
             console.log(`✅ Created new marker for vehicle: ${vehicle.vehicleId}`);
           } catch (error) {

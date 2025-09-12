@@ -16,8 +16,10 @@ import {
   CogIcon,
   SignalIcon,
   ArrowLeftIcon,
-  ShieldCheckIcon
+  ShieldCheckIcon,
+  StarIcon
 } from '@heroicons/react/24/outline';
+import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 import { useTheme } from '@/app/context/ThemeContext';
 import ThemeSwitcher from '@/app/components/ThemeSwitcher';
 import AnimatedBackground from '@/app/sysadmin/components/AnimatedBackground';
@@ -78,6 +80,17 @@ interface Vehicle {
       fileName: string;
       uploadDate?: string;
     }>;
+  };
+  ratingStats?: {
+    averageRating: number;
+    totalRatings: number;
+    breakdown: {
+      cleanliness: number;
+      comfort: number;
+      condition: number;
+      safety: number;
+      punctuality: number;
+    };
   };
 }
 
