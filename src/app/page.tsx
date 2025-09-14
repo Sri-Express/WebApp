@@ -721,6 +721,7 @@ export default function LandingPage() {
               <h4>{t('footer.support.title', 'Support')}</h4>
               <ul>
                 <li><Link href="/help" className="footer-link">{t('footer.support.items.0', 'Help Center')}</Link></li>
+                <li><Link href="/lost-found" className="footer-link">Lost & Found</Link></li>
                 <li><Link href="/contact" className="footer-link">{t('footer.support.items.1', 'Contact Us')}</Link></li>
                 <li><Link href="/privacy" className="footer-link">{t('footer.support.items.2', 'Privacy Policy')}</Link></li>
                 <li><Link href="/terms" className="footer-link">{t('footer.support.items.3', 'Terms of Service')}</Link></li>
