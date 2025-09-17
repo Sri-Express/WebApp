@@ -154,9 +154,13 @@ export default function LostAndFoundPage() {
       } else {
         setError(data.message || 'Failed to fetch items');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching items:', error);
-      setError('Failed to fetch items');
+      if (error.message?.includes('fetch')) {
+        setError('Unable to connect to the server. Please ensure the backend is running on port 5000.');
+      } else {
+        setError('Failed to fetch items');
+      }
     } finally {
       setLoading(false);
     }

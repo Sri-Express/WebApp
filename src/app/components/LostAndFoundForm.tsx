@@ -162,12 +162,18 @@ export default function LostAndFoundForm({ isOpen, onClose, onSuccess }: LostAnd
         submitData.locationLost = '';
       }
 
+      const token = localStorage.getItem('token');
+      const headers: any = {
+        'Content-Type': 'application/json'
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch('http://localhost:5000/api/lost-found', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}` // Assuming JWT auth
-        },
+        headers,
         body: JSON.stringify(submitData)
       });
 
@@ -188,11 +194,13 @@ export default function LostAndFoundForm({ isOpen, onClose, onSuccess }: LostAnd
           setError(data.message || 'Failed to submit report');
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error submitting form:', error);
       if (error.message?.includes('401') || error.message?.includes('unauthorized')) {
         setError('Please log in to report lost/found items');
         setIsAuthenticated(false);
+      } else if (error.message?.includes('fetch')) {
+        setError('Unable to connect to the server. Please check if the backend is running.');
       } else {
         setError('Failed to submit report. Please try again.');
       }

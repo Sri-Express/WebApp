@@ -66,9 +66,13 @@ export default function ClaimItemModal({ isOpen, onClose, item, onSuccess }: Cla
         setError(data.message || 'Failed to claim item');
         setStep('error');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error claiming item:', error);
-      setError('Failed to claim item. Please try again.');
+      if (error.message?.includes('401') || error.message?.includes('unauthorized')) {
+        setError('Please log in to claim items');
+      } else {
+        setError('Failed to claim item. Please try again.');
+      }
       setStep('error');
     } finally {
       setLoading(false);
