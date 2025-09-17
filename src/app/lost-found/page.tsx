@@ -22,6 +22,7 @@ import ThemeSwitcher from '@/app/components/ThemeSwitcher';
 import AnimatedBackground from '@/app/components/AnimatedBackground';
 import LostAndFoundForm from '../components/LostAndFoundForm';
 import ClaimItemModal from '../components/ClaimItemModal';
+import TestModal from '../components/TestModal';
 
 interface LostAndFoundItem {
   _id: string;
@@ -1057,6 +1058,7 @@ export default function LostAndFoundPage() {
         onClose={() => setShowReportForm(false)}
         onSuccess={() => {
           fetchItems(); // Refresh the items list
+          setShowReportForm(false);
         }}
       />
 
